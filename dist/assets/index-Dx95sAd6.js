@@ -412,9 +412,11 @@ Error generating stack: `+i.message+`
           }
           tbody td {
             text-align: center;
+            white-space: nowrap;
           }
           td.number, .number {
             text-align: right;
+            white-space: nowrap;
           }
           td.left {
             text-align: left;
