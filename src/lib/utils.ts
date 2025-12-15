@@ -42,25 +42,34 @@ export function formatTime(value: unknown): string {
     return "-";
   }
 
-  const strValue = String(value);
+  const strValue = String(value).trim();
 
-  // Already in HH:mm format
-  if (/^\d{1,2}:\d{2}$/.test(strValue)) {
-    return strValue;
+  // Already in HH:mm or H:mm format (e.g., "14:30", "2:10", "07:21")
+  if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(strValue)) {
+    // Return just HH:mm part
+    const parts = strValue.split(":");
+    const hours = parts[0].padStart(2, "0");
+    const minutes = parts[1];
+    return `${hours}:${minutes}`;
   }
 
   // Handle Excel serial time (0.5 = 12:00, etc)
+  // Also handle values > 1 which could be days + time
   const numValue = parseFloat(strValue);
-  if (!isNaN(numValue) && numValue > 0 && numValue < 1) {
-    const totalMinutes = Math.round(numValue * 24 * 60);
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    return `${hours.toString().padStart(2, "0")}:${minutes
-      .toString()
-      .padStart(2, "0")}`;
+  if (!isNaN(numValue) && numValue >= 0) {
+    // If it's a decimal representing time
+    if (numValue < 1 || (numValue > 0 && strValue.includes("."))) {
+      const timeValue = numValue % 1; // Get just the time portion
+      const totalMinutes = Math.round(timeValue * 24 * 60);
+      const hours = Math.floor(totalMinutes / 60) % 24;
+      const minutes = totalMinutes % 60;
+      return `${hours.toString().padStart(2, "0")}:${minutes
+        .toString()
+        .padStart(2, "0")}`;
+    }
   }
 
-  // Try parsing as date
+  // Try parsing as date/time string
   try {
     const date = new Date(strValue);
     if (!isNaN(date.getTime())) {
