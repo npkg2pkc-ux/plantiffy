@@ -684,46 +684,47 @@ const TimesheetLoaderPage = ({ plant }: TimesheetLoaderPageProps) => {
         title="Timesheet Loader"
         plant={plant === "NPK1" ? "NPK Plant 1" : "NPK Plant 2"}
         data={data as unknown as Record<string, unknown>[]}
+        compactMode={false}
         columns={[
           {
             key: "tanggal",
             header: "Tanggal",
             render: (v) => formatDate(v as string),
-            width: "70px",
+            width: "75px",
           },
-          { key: "shift", header: "Shift", width: "50px" },
+          { key: "shift", header: "Shift", width: "55px" },
           {
             key: "deskripsiTemuan",
             header: "Deskripsi Temuan",
-            width: "120px",
+            width: "auto",
           },
           {
             key: "jamOff",
             header: "Jam Off",
             render: (v) => formatTime(v as string),
-            width: "50px",
+            width: "55px",
           },
           {
             key: "jamStart",
             header: "Jam Start",
             render: (v) => formatTime(v as string),
-            width: "55px",
+            width: "60px",
           },
           {
             key: "jamGrounded",
             header: "Grounded",
             render: (v) => formatNumber(parseNumber(v)),
             align: "right",
-            width: "55px",
+            width: "60px",
           },
           {
             key: "jamOperasi",
             header: "Operasi",
             render: (v) => formatNumber(parseNumber(v)),
             align: "right",
-            width: "50px",
+            width: "55px",
           },
-          { key: "keterangan", header: "Status", width: "60px" },
+          { key: "keterangan", header: "Status", width: "65px" },
         ]}
         filters={{
           shift: {

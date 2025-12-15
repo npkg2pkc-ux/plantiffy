@@ -658,46 +658,47 @@ const TimesheetForkliftPage = ({ plant }: TimesheetForkliftPageProps) => {
         title="Timesheet Forklift"
         plant={plant === "NPK1" ? "NPK Plant 1" : "NPK Plant 2"}
         data={data as unknown as Record<string, unknown>[]}
+        compactMode={true}
         columns={[
           {
             key: "tanggal",
             header: "Tanggal",
             render: (v) => formatDate(v as string),
-            width: "70px",
+            width: "65px",
           },
-          { key: "forklift", header: "Forklift", width: "50px" },
+          { key: "forklift", header: "Forklift", width: "45px" },
           {
             key: "deskripsiTemuan",
             header: "Deskripsi Temuan",
-            width: "120px",
+            width: "auto",
           },
           {
             key: "jamOff",
-            header: "Jam Off",
+            header: "Off",
             render: (v) => formatTime(v as string),
-            width: "50px",
+            width: "40px",
           },
           {
             key: "jamStart",
-            header: "Jam Start",
+            header: "Start",
             render: (v) => formatTime(v as string),
-            width: "55px",
+            width: "40px",
           },
           {
             key: "jamGrounded",
             header: "Grounded",
             render: (v) => formatNumber(parseNumber(v)),
             align: "right",
-            width: "55px",
+            width: "50px",
           },
           {
             key: "jamOperasi",
             header: "Operasi",
             render: (v) => formatNumber(parseNumber(v)),
             align: "right",
-            width: "50px",
+            width: "45px",
           },
-          { key: "keterangan", header: "Status", width: "60px" },
+          { key: "keterangan", header: "Status", width: "55px" },
         ]}
         filters={{
           forklift: {
