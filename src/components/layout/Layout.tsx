@@ -253,9 +253,7 @@ const Sidebar = () => {
       <div className="h-16 flex items-center justify-between px-4 border-b border-dark-100">
         {!sidebarCollapsed && (
           <Link to="/dashboard" className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary-600 to-primary-400 flex items-center justify-center">
-              <Factory className="h-5 w-5 text-white" />
-            </div>
+            <img src="/favicon.png" alt="PlantIQ Logo" className="h-9 w-9" />
             <span className="font-display font-bold text-dark-900">
               PlantIQ
             </span>
