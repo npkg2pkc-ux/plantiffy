@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Plus, Edit2, Trash2, Printer, Search } from "lucide-react";
+import { useSaveShortcut } from "@/hooks";
 import {
   Button,
   Card,
@@ -83,6 +84,16 @@ const TimesheetLoaderPage = ({ plant }: TimesheetLoaderPageProps) => {
   // Permission checks
   const userRole = user?.role || "";
   const userCanAdd = canAdd(userRole);
+
+  // Alt+S shortcut to save
+  const triggerSave = useCallback(() => {
+    if (showForm && !loading) {
+      const form = document.querySelector('form');
+      if (form) form.requestSubmit();
+    }
+  }, [showForm, loading]);
+  useSaveShortcut(triggerSave, showForm);
+
   const userNeedsApprovalEdit = needsApprovalForEdit(userRole);
   const userNeedsApprovalDelete = needsApprovalForDelete(userRole);
   const userIsViewOnly = isViewOnly(userRole);

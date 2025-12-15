@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Plus, Edit2, Trash2, FileText, Search } from "lucide-react";
+import { useSaveShortcut } from "@/hooks";
 import {
   Button,
   Card,
@@ -76,6 +77,16 @@ const WorkRequestPage = ({ plant }: WorkRequestPageProps) => {
   // Check if user is view only (manager/eksternal)
   const userIsViewOnly = isViewOnly(user?.role || "");
   const userCanAdd = canAdd(user?.role || "") && !userIsViewOnly;
+
+  // Alt+S shortcut to save
+  const triggerSave = useCallback(() => {
+    if (showForm && !loading) {
+      const form = document.querySelector('form');
+      if (form) form.requestSubmit();
+    }
+  }, [showForm, loading]);
+  useSaveShortcut(triggerSave, showForm);
+
   const userCanEditDirect = canEditDirect(user?.role || "");
   const userCanDeleteDirect = canDeleteDirect(user?.role || "");
   const userNeedsApprovalEdit = needsApprovalForEdit(user?.role || "");

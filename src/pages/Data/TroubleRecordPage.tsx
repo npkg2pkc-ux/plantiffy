@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Plus, Edit2, Trash2, Search, AlertCircle, Clock } from "lucide-react";
+import { useSaveShortcut } from "@/hooks";
 import {
   Button,
   Card,
@@ -75,6 +76,16 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
   // Permission checks
   const userRole = user?.role || "";
   const userCanAdd = canAdd(userRole);
+
+  // Alt+S shortcut to save
+  const triggerSave = useCallback(() => {
+    if (showForm && !loading) {
+      const form = document.querySelector('form');
+      if (form) form.requestSubmit();
+    }
+  }, [showForm, loading]);
+  useSaveShortcut(triggerSave, showForm);
+
   const userCanEditDirect = canEditDirect(userRole);
   const userCanDeleteDirect = canDeleteDirect(userRole);
   const userNeedsApprovalEdit = needsApprovalForEdit(userRole);

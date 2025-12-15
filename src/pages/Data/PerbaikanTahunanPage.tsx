@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Plus,
   Edit2,
@@ -9,6 +9,7 @@ import {
   PlusCircle,
   Minus,
 } from "lucide-react";
+import { useSaveShortcut } from "@/hooks";
 import {
   Button,
   Card,
@@ -76,6 +77,16 @@ const PerbaikanTahunanPage = ({ plant }: PerbaikanTahunanPageProps) => {
   // Check permissions
   const userIsViewOnly = isViewOnly(user?.role || "");
   const userCanAdd = canAdd(user?.role || "") && !userIsViewOnly;
+
+  // Alt+S shortcut to save
+  const triggerSave = useCallback(() => {
+    if (showForm && !loading) {
+      const form = document.querySelector('form');
+      if (form) form.requestSubmit();
+    }
+  }, [showForm, loading]);
+  useSaveShortcut(triggerSave, showForm);
+
   const userNeedsApprovalEdit = needsApprovalForEdit(user?.role || "");
   const userNeedsApprovalDelete = needsApprovalForDelete(user?.role || "");
 

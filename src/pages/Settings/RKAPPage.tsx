@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Plus,
   Edit2,
@@ -7,6 +7,7 @@ import {
   TrendingUp,
   Calendar,
 } from "lucide-react";
+import { useSaveShortcut } from "@/hooks";
 import {
   Button,
   Card,
@@ -299,6 +300,16 @@ const RKAPPage = () => {
 
   const isAdmin =
     user?.role === "admin" || user?.role === "manager" || user?.role === "avp";
+
+  // Alt+S shortcut to save
+  const triggerSave = useCallback(() => {
+    if (showForm && !loading) {
+      const form = document.querySelector('form');
+      if (form) form.requestSubmit();
+    }
+  }, [showForm, loading]);
+  useSaveShortcut(triggerSave, showForm);
+
   const plantLabel =
     plantFilter === "ALL"
       ? "Semua Plant"

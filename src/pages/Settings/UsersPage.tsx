@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Plus,
   Edit2,
@@ -9,6 +9,7 @@ import {
   UserCheck,
   UserX,
 } from "lucide-react";
+import { useSaveShortcut } from "@/hooks";
 import {
   Button,
   Card,
@@ -340,6 +341,16 @@ const UsersPage = () => {
   ];
 
   const isAdmin = user?.role === "admin";
+
+  // Alt+S shortcut to save
+  const triggerSave = useCallback(() => {
+    if (showForm && !loading) {
+      const form = document.querySelector('form');
+      if (form) form.requestSubmit();
+    }
+  }, [showForm, loading]);
+  useSaveShortcut(triggerSave, showForm);
+
   const activeUsers = filteredData.filter((u) => u.status === "active").length;
   const inactiveUsers = filteredData.filter(
     (u) => u.status === "inactive"
