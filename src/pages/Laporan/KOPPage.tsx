@@ -357,42 +357,46 @@ const KOPPage = ({ plant }: KOPPageProps) => {
     form.kursDollar,
   ]);
 
-  // Auto-fill awal shift dari akhir shift sebelumnya
+  // Auto-fill awal shift dari akhir shift sebelumnya (SELALU sync)
+  // Steam: Pagi awal = Malam akhir
   useEffect(() => {
-    // Steam: Pagi awal = Malam akhir
-    if (form.steamMalam?.akhir && !form.steamPagi?.awal) {
+    if (form.steamMalam?.akhir) {
       setForm((prev) => ({
         ...prev,
         steamPagi: { ...prev.steamPagi, awal: prev.steamMalam?.akhir || "" },
       }));
     }
-    // Steam: Sore awal = Pagi akhir
-    if (form.steamPagi?.akhir && !form.steamSore?.awal) {
+  }, [form.steamMalam?.akhir]);
+
+  // Steam: Sore awal = Pagi akhir
+  useEffect(() => {
+    if (form.steamPagi?.akhir) {
       setForm((prev) => ({
         ...prev,
         steamSore: { ...prev.steamSore, awal: prev.steamPagi?.akhir || "" },
       }));
     }
-    // Gas: Pagi awal = Malam akhir
-    if (form.gasMalam?.akhir && !form.gasPagi?.awal) {
+  }, [form.steamPagi?.akhir]);
+
+  // Gas: Pagi awal = Malam akhir
+  useEffect(() => {
+    if (form.gasMalam?.akhir) {
       setForm((prev) => ({
         ...prev,
         gasPagi: { ...prev.gasPagi, awal: prev.gasMalam?.akhir || "" },
       }));
     }
-    // Gas: Sore awal = Pagi akhir
-    if (form.gasPagi?.akhir && !form.gasSore?.awal) {
+  }, [form.gasMalam?.akhir]);
+
+  // Gas: Sore awal = Pagi akhir
+  useEffect(() => {
+    if (form.gasPagi?.akhir) {
       setForm((prev) => ({
         ...prev,
         gasSore: { ...prev.gasSore, awal: prev.gasPagi?.akhir || "" },
       }));
     }
-  }, [
-    form.steamMalam?.akhir,
-    form.steamPagi?.akhir,
-    form.gasMalam?.akhir,
-    form.gasPagi?.akhir,
-  ]);
+  }, [form.gasPagi?.akhir]);
 
   // Handle auto-fill button for Temp & Timbangan
   const handleAutoFill = () => {
