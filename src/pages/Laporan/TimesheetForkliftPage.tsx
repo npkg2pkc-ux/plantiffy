@@ -84,14 +84,23 @@ const TimesheetForkliftPage = ({ plant }: TimesheetForkliftPageProps) => {
   const userNeedsApprovalDelete = needsApprovalForDelete(userRole);
   const userIsViewOnly = isViewOnly(userRole);
 
-  const forkliftOptions = [
-    { value: "F19", label: "F19" },
-    { value: "F20", label: "F20" },
-    { value: "F21", label: "F21" },
-    { value: "F22", label: "F22" },
-    { value: "F23", label: "F23" },
-    { value: "ALL", label: "Semua Forklift" },
-  ];
+  const forkliftOptions =
+    plant === "NPK1"
+      ? [
+          { value: "F15", label: "F15" },
+          { value: "F16", label: "F16" },
+          { value: "F17", label: "F17" },
+          { value: "F18", label: "F18" },
+          { value: "ALL", label: "Semua Forklift" },
+        ]
+      : [
+          { value: "F19", label: "F19" },
+          { value: "F20", label: "F20" },
+          { value: "F21", label: "F21" },
+          { value: "F22", label: "F22" },
+          { value: "F23", label: "F23" },
+          { value: "ALL", label: "Semua Forklift" },
+        ];
 
   useEffect(() => {
     const fetchData = async () => {
