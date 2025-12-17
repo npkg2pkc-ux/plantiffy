@@ -226,6 +226,66 @@ const autoFillTimbangan = (): ParameterValue => ({
   sore: randomInRange(50.0, 50.3, 2),
 });
 
+// Helper component for parameter input row - HARUS DI LUAR KOMPONEN UTAMA
+// Agar tidak di-recreate setiap render dan input tidak kehilangan focus
+const ParameterInputRow = ({
+  label,
+  target,
+  value,
+  onChange,
+  indikator,
+  satuan,
+}: {
+  label: string;
+  target: string;
+  value: ParameterValue;
+  onChange: (val: ParameterValue) => void;
+  indikator: string;
+  satuan: string;
+}) => (
+  <div className="grid grid-cols-7 gap-2 items-center py-2 border-b border-dark-100">
+    <div className="col-span-2">
+      <span className="text-sm font-medium text-dark-700">{label}</span>
+      <p className="text-xs text-dark-400">
+        {indikator} | {satuan}
+      </p>
+    </div>
+    <div className="text-center">
+      <span className="text-xs text-dark-500 bg-dark-100 px-2 py-1 rounded">
+        {target}
+      </span>
+    </div>
+    <div>
+      <Input
+        type="text"
+        placeholder="Malam"
+        value={value.malam}
+        onChange={(e) => onChange({ ...value, malam: e.target.value })}
+        className="text-sm"
+      />
+    </div>
+    <div>
+      <Input
+        type="text"
+        placeholder="Pagi"
+        value={value.pagi}
+        onChange={(e) => onChange({ ...value, pagi: e.target.value })}
+        className="text-sm"
+      />
+    </div>
+    <div>
+      <Input
+        type="text"
+        placeholder="Sore"
+        value={value.sore}
+        onChange={(e) => onChange({ ...value, sore: e.target.value })}
+        className="text-sm"
+      />
+    </div>
+    <div></div>
+  </div>
+);
+
 interface KOPPageProps {
   plant: "NPK1" | "NPK2";
 }
@@ -980,65 +1040,6 @@ const KOPPage = ({ plant }: KOPPageProps) => {
       : true;
     return matchesSearch && matchesMonth;
   });
-
-  // Helper component for parameter input row
-  const ParameterInputRow = ({
-    label,
-    target,
-    value,
-    onChange,
-    indikator,
-    satuan,
-  }: {
-    label: string;
-    target: string;
-    value: ParameterValue;
-    onChange: (val: ParameterValue) => void;
-    indikator: string;
-    satuan: string;
-  }) => (
-    <div className="grid grid-cols-7 gap-2 items-center py-2 border-b border-dark-100">
-      <div className="col-span-2">
-        <span className="text-sm font-medium text-dark-700">{label}</span>
-        <p className="text-xs text-dark-400">
-          {indikator} | {satuan}
-        </p>
-      </div>
-      <div className="text-center">
-        <span className="text-xs text-dark-500 bg-dark-100 px-2 py-1 rounded">
-          {target}
-        </span>
-      </div>
-      <div>
-        <Input
-          type="text"
-          placeholder="Malam"
-          value={value.malam}
-          onChange={(e) => onChange({ ...value, malam: e.target.value })}
-          className="text-sm"
-        />
-      </div>
-      <div>
-        <Input
-          type="text"
-          placeholder="Pagi"
-          value={value.pagi}
-          onChange={(e) => onChange({ ...value, pagi: e.target.value })}
-          className="text-sm"
-        />
-      </div>
-      <div>
-        <Input
-          type="text"
-          placeholder="Sore"
-          value={value.sore}
-          onChange={(e) => onChange({ ...value, sore: e.target.value })}
-          className="text-sm"
-        />
-      </div>
-      <div></div>
-    </div>
-  );
 
   return (
     <div className="space-y-6">
