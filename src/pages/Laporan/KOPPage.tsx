@@ -172,13 +172,10 @@ const calculateGasFlow = (input: ShiftEnergyInput): ShiftEnergyCalculated => {
 
 /**
  * Menghitung Total Biaya Steam per shift (Rp)
- * Formula: steam x kurs dollar
+ * Formula: selisih / 1000 x 266263 Rp
  */
-const calculateSteamCost = (
-  selisihSteam: number,
-  kursDollar: number
-): number => {
-  return selisihSteam * kursDollar;
+const calculateSteamCost = (selisihSteam: number): number => {
+  return (selisihSteam / 1000) * 266263;
 };
 
 /**
@@ -314,18 +311,9 @@ const KOPPage = ({ plant }: KOPPageProps) => {
     const gasSoreCalc = calculateGasFlow(form.gasSore || emptyShiftEnergy);
 
     // Calculate costs
-    steamMalamCalc.costRp = calculateSteamCost(
-      steamMalamCalc.selisih,
-      kursDollar
-    );
-    steamPagiCalc.costRp = calculateSteamCost(
-      steamPagiCalc.selisih,
-      kursDollar
-    );
-    steamSoreCalc.costRp = calculateSteamCost(
-      steamSoreCalc.selisih,
-      kursDollar
-    );
+    steamMalamCalc.costRp = calculateSteamCost(steamMalamCalc.selisih);
+    steamPagiCalc.costRp = calculateSteamCost(steamPagiCalc.selisih);
+    steamSoreCalc.costRp = calculateSteamCost(steamSoreCalc.selisih);
 
     gasMalamCalc.costRp = calculateGasCost(gasMalamCalc.selisih, kursDollar);
     gasPagiCalc.costRp = calculateGasCost(gasPagiCalc.selisih, kursDollar);
@@ -604,18 +592,9 @@ const KOPPage = ({ plant }: KOPPageProps) => {
     const steamSoreCalc = calculateSteamFlow(
       printItem.steamSore || emptyShiftEnergy
     );
-    steamMalamCalc.costRp = calculateSteamCost(
-      steamMalamCalc.selisih,
-      kursDollar
-    );
-    steamPagiCalc.costRp = calculateSteamCost(
-      steamPagiCalc.selisih,
-      kursDollar
-    );
-    steamSoreCalc.costRp = calculateSteamCost(
-      steamSoreCalc.selisih,
-      kursDollar
-    );
+    steamMalamCalc.costRp = calculateSteamCost(steamMalamCalc.selisih);
+    steamPagiCalc.costRp = calculateSteamCost(steamPagiCalc.selisih);
+    steamSoreCalc.costRp = calculateSteamCost(steamSoreCalc.selisih);
 
     // Gas calculations
     const gasMalamCalc = calculateGasFlow(
@@ -1187,9 +1166,9 @@ const KOPPage = ({ plant }: KOPPageProps) => {
                   );
 
                   const totalSteamRp =
-                    calculateSteamCost(steamMalamCalc.selisih, kursDollar) +
-                    calculateSteamCost(steamPagiCalc.selisih, kursDollar) +
-                    calculateSteamCost(steamSoreCalc.selisih, kursDollar);
+                    calculateSteamCost(steamMalamCalc.selisih) +
+                    calculateSteamCost(steamPagiCalc.selisih) +
+                    calculateSteamCost(steamSoreCalc.selisih);
                   const totalGasRp =
                     calculateGasCost(gasMalamCalc.selisih, kursDollar) +
                     calculateGasCost(gasPagiCalc.selisih, kursDollar) +
