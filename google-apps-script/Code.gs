@@ -258,12 +258,23 @@ const SHEET_HEADERS = {
     "id",
     "tanggal",
     "jenisOperasi",
+    // Personel per shift (JSON)
     "shiftMalam",
     "shiftPagi",
     "shiftSore",
-    "granulatorFolwSteam",
-    "dryerFlowGas",
+    // Steam input per shift (JSON: {awal, akhir})
+    "steamMalam",
+    "steamPagi",
+    "steamSore",
+    // Gas input per shift (JSON: {awal, akhir})
+    "gasMalam",
+    "gasPagi",
+    "gasSore",
+    // Kurs Dollar
+    "kursDollar",
+    // Dryer Parameters (JSON)
     "dryerTempProdukOut",
+    // Produk NPK Parameters (JSON)
     "produkN",
     "produkP",
     "produkK",
@@ -271,13 +282,6 @@ const SHEET_HEADERS = {
     "produkKekerasan",
     "produkTimbangan",
     "produkTonase",
-    "steamKgH",
-    "steamM3H",
-    "steamTotal",
-    "gasNm3H",
-    "gasTotal",
-    "totalSteamRp",
-    "totalGasRp",
   ],
 };
 

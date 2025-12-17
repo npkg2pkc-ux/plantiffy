@@ -49,6 +49,19 @@ interface ParameterValue {
   sore: string;
 }
 
+// Energy input per shift (awal dan akhir)
+interface ShiftEnergyInput {
+  awal: string;
+  akhir: string;
+}
+
+// Calculated energy values per shift
+interface ShiftEnergyCalculated {
+  selisih: number; // akhir - awal
+  flowPerHour: number; // selisih / 8
+  costRp: number; // calculated cost in Rupiah
+}
+
 interface KOPEntry {
   id?: string;
   tanggal: string;
@@ -57,10 +70,17 @@ interface KOPEntry {
   shiftMalam: ShiftPersonel;
   shiftPagi: ShiftPersonel;
   shiftSore: ShiftPersonel;
-  // Granulator Parameters
-  granulatorFolwSteam: ParameterValue;
-  // Dryer Parameters
-  dryerFlowGas: ParameterValue;
+  // Steam Input per shift (M3)
+  steamMalam: ShiftEnergyInput;
+  steamPagi: ShiftEnergyInput;
+  steamSore: ShiftEnergyInput;
+  // Gas Input per shift (Nm3)
+  gasMalam: ShiftEnergyInput;
+  gasPagi: ShiftEnergyInput;
+  gasSore: ShiftEnergyInput;
+  // Kurs Dollar (untuk perhitungan biaya)
+  kursDollar: string;
+  // Dryer Parameters (auto-filled)
   dryerTempProdukOut: ParameterValue;
   // Produk NPK Parameters
   produkN: ParameterValue;
@@ -68,17 +88,8 @@ interface KOPEntry {
   produkK: ParameterValue;
   produkMoisture: ParameterValue;
   produkKekerasan: ParameterValue;
-  produkTimbangan: ParameterValue;
+  produkTimbangan: ParameterValue; // auto-filled
   produkTonase: ParameterValue;
-  // Energy Consumption
-  steamKgH: string;
-  steamM3H: string;
-  steamTotal: string;
-  gasNm3H: string;
-  gasTotal: string;
-  // Cost Summary
-  totalSteamRp: string;
-  totalGasRp: string;
   // Meta
   _plant?: "NPK1" | "NPK2";
 }
@@ -88,6 +99,7 @@ const emptyShiftPersonel: ShiftPersonel = {
   operatorPanel: "",
 };
 const emptyParameterValue: ParameterValue = { malam: "", pagi: "", sore: "" };
+const emptyShiftEnergy: ShiftEnergyInput = { awal: "", akhir: "" };
 
 const initialFormState: KOPEntry = {
   tanggal: getCurrentDate(),
@@ -95,8 +107,17 @@ const initialFormState: KOPEntry = {
   shiftMalam: { ...emptyShiftPersonel },
   shiftPagi: { ...emptyShiftPersonel },
   shiftSore: { ...emptyShiftPersonel },
-  granulatorFolwSteam: { ...emptyParameterValue },
-  dryerFlowGas: { ...emptyParameterValue },
+  // Steam per shift
+  steamMalam: { ...emptyShiftEnergy },
+  steamPagi: { ...emptyShiftEnergy },
+  steamSore: { ...emptyShiftEnergy },
+  // Gas per shift
+  gasMalam: { ...emptyShiftEnergy },
+  gasPagi: { ...emptyShiftEnergy },
+  gasSore: { ...emptyShiftEnergy },
+  // Kurs Dollar (default)
+  kursDollar: "16000",
+  // Parameters
   dryerTempProdukOut: { ...emptyParameterValue },
   produkN: { ...emptyParameterValue },
   produkP: { ...emptyParameterValue },
@@ -105,13 +126,6 @@ const initialFormState: KOPEntry = {
   produkKekerasan: { ...emptyParameterValue },
   produkTimbangan: { ...emptyParameterValue },
   produkTonase: { ...emptyParameterValue },
-  steamKgH: "",
-  steamM3H: "",
-  steamTotal: "",
-  gasNm3H: "",
-  gasTotal: "",
-  totalSteamRp: "",
-  totalGasRp: "",
 };
 
 // Target values for reference
@@ -127,6 +141,93 @@ const TARGETS = {
   timbangan: { min: 50.0, max: 50.3, unit: "Kg/Karung", label: "50.00 - 50.3" },
   tonase: { min: 110, max: 999, unit: "Ton/Shift", label: "Min 110 Ton/Shift" },
 };
+
+// ============================================
+// FUNGSI PERHITUNGAN ENERGI
+// ============================================
+
+/**
+ * Menghitung Flow Steam per shift
+ * Formula: steam = akhir - awal, flowSteam (M3/H) = steam / 8
+ */
+const calculateSteamFlow = (input: ShiftEnergyInput): ShiftEnergyCalculated => {
+  const awal = parseNumber(input.awal || "0");
+  const akhir = parseNumber(input.akhir || "0");
+  const selisih = akhir - awal;
+  const flowPerHour = selisih / 8; // 8 jam per shift
+  return { selisih, flowPerHour, costRp: 0 };
+};
+
+/**
+ * Menghitung Flow Gas per shift
+ * Formula: gas = akhir - awal, flowGas (Nm3/H) = gas / 8
+ */
+const calculateGasFlow = (input: ShiftEnergyInput): ShiftEnergyCalculated => {
+  const awal = parseNumber(input.awal || "0");
+  const akhir = parseNumber(input.akhir || "0");
+  const selisih = akhir - awal;
+  const flowPerHour = selisih / 8; // 8 jam per shift
+  return { selisih, flowPerHour, costRp: 0 };
+};
+
+/**
+ * Menghitung Total Biaya Steam per shift (Rp)
+ * Formula: steam x kurs dollar
+ */
+const calculateSteamCost = (
+  selisihSteam: number,
+  kursDollar: number
+): number => {
+  return selisihSteam * kursDollar;
+};
+
+/**
+ * Menghitung Total Biaya Gas per shift (Rp)
+ * Formula:
+ * BTU/h = gas x 0.02831 x 1043.3294
+ * MMBTU/H = BTU/h / 1,000,000
+ * $/h = MMBTU x 5.65
+ * Rp/h = $/h x kurs dollar
+ * Total Rp = Rp/h x 8 (jam per shift)
+ */
+const calculateGasCost = (selisihGas: number, kursDollar: number): number => {
+  const btuPerH = selisihGas * 0.02831 * 1043.3294;
+  const mmbtuPerH = btuPerH / 1000000;
+  const dollarPerH = mmbtuPerH * 5.65;
+  const rpPerH = dollarPerH * kursDollar;
+  const totalRp = rpPerH * 8; // 8 jam per shift
+  return totalRp;
+};
+
+/**
+ * Generate random value dalam range tertentu (untuk auto-fill)
+ */
+const randomInRange = (
+  min: number,
+  max: number,
+  decimals: number = 2
+): string => {
+  const value = Math.random() * (max - min) + min;
+  return value.toFixed(decimals);
+};
+
+/**
+ * Auto-fill Temperatur Produk Out (range 55-70)
+ */
+const autoFillTempProdukOut = (): ParameterValue => ({
+  malam: randomInRange(55, 70, 1),
+  pagi: randomInRange(55, 70, 1),
+  sore: randomInRange(55, 70, 1),
+});
+
+/**
+ * Auto-fill Timbangan (range 50.00-50.3)
+ */
+const autoFillTimbangan = (): ParameterValue => ({
+  malam: randomInRange(50.0, 50.3, 2),
+  pagi: randomInRange(50.0, 50.3, 2),
+  sore: randomInRange(50.0, 50.3, 2),
+});
 
 interface KOPPageProps {
   plant: "NPK1" | "NPK2";
@@ -154,6 +255,21 @@ const KOPPage = ({ plant }: KOPPageProps) => {
   );
   const [pendingEditItem, setPendingEditItem] = useState<KOPEntry | null>(null);
 
+  // Calculated values state
+  const [calculatedValues, setCalculatedValues] = useState({
+    // Steam calculations per shift
+    steamMalam: { selisih: 0, flowPerHour: 0, costRp: 0 },
+    steamPagi: { selisih: 0, flowPerHour: 0, costRp: 0 },
+    steamSore: { selisih: 0, flowPerHour: 0, costRp: 0 },
+    // Gas calculations per shift
+    gasMalam: { selisih: 0, flowPerHour: 0, costRp: 0 },
+    gasPagi: { selisih: 0, flowPerHour: 0, costRp: 0 },
+    gasSore: { selisih: 0, flowPerHour: 0, costRp: 0 },
+    // Totals
+    totalSteamRp: 0,
+    totalGasRp: 0,
+  });
+
   // Permission checks
   const userRole = user?.role || "";
   const userCanAdd = canAdd(userRole);
@@ -176,6 +292,116 @@ const KOPPage = ({ plant }: KOPPageProps) => {
     { value: "SHUTDOWN", label: "SHUTDOWN" },
     { value: "START UP", label: "START UP" },
   ];
+
+  // Auto-calculate energy values when form changes
+  useEffect(() => {
+    const kursDollar = parseNumber(form.kursDollar || "16000");
+
+    // Calculate Steam for each shift
+    const steamMalamCalc = calculateSteamFlow(
+      form.steamMalam || emptyShiftEnergy
+    );
+    const steamPagiCalc = calculateSteamFlow(
+      form.steamPagi || emptyShiftEnergy
+    );
+    const steamSoreCalc = calculateSteamFlow(
+      form.steamSore || emptyShiftEnergy
+    );
+
+    // Calculate Gas for each shift
+    const gasMalamCalc = calculateGasFlow(form.gasMalam || emptyShiftEnergy);
+    const gasPagiCalc = calculateGasFlow(form.gasPagi || emptyShiftEnergy);
+    const gasSoreCalc = calculateGasFlow(form.gasSore || emptyShiftEnergy);
+
+    // Calculate costs
+    steamMalamCalc.costRp = calculateSteamCost(
+      steamMalamCalc.selisih,
+      kursDollar
+    );
+    steamPagiCalc.costRp = calculateSteamCost(
+      steamPagiCalc.selisih,
+      kursDollar
+    );
+    steamSoreCalc.costRp = calculateSteamCost(
+      steamSoreCalc.selisih,
+      kursDollar
+    );
+
+    gasMalamCalc.costRp = calculateGasCost(gasMalamCalc.selisih, kursDollar);
+    gasPagiCalc.costRp = calculateGasCost(gasPagiCalc.selisih, kursDollar);
+    gasSoreCalc.costRp = calculateGasCost(gasSoreCalc.selisih, kursDollar);
+
+    // Calculate totals
+    const totalSteamRp =
+      steamMalamCalc.costRp + steamPagiCalc.costRp + steamSoreCalc.costRp;
+    const totalGasRp =
+      gasMalamCalc.costRp + gasPagiCalc.costRp + gasSoreCalc.costRp;
+
+    setCalculatedValues({
+      steamMalam: steamMalamCalc,
+      steamPagi: steamPagiCalc,
+      steamSore: steamSoreCalc,
+      gasMalam: gasMalamCalc,
+      gasPagi: gasPagiCalc,
+      gasSore: gasSoreCalc,
+      totalSteamRp,
+      totalGasRp,
+    });
+  }, [
+    form.steamMalam,
+    form.steamPagi,
+    form.steamSore,
+    form.gasMalam,
+    form.gasPagi,
+    form.gasSore,
+    form.kursDollar,
+  ]);
+
+  // Auto-fill awal shift dari akhir shift sebelumnya
+  useEffect(() => {
+    // Steam: Pagi awal = Malam akhir
+    if (form.steamMalam?.akhir && !form.steamPagi?.awal) {
+      setForm((prev) => ({
+        ...prev,
+        steamPagi: { ...prev.steamPagi, awal: prev.steamMalam?.akhir || "" },
+      }));
+    }
+    // Steam: Sore awal = Pagi akhir
+    if (form.steamPagi?.akhir && !form.steamSore?.awal) {
+      setForm((prev) => ({
+        ...prev,
+        steamSore: { ...prev.steamSore, awal: prev.steamPagi?.akhir || "" },
+      }));
+    }
+    // Gas: Pagi awal = Malam akhir
+    if (form.gasMalam?.akhir && !form.gasPagi?.awal) {
+      setForm((prev) => ({
+        ...prev,
+        gasPagi: { ...prev.gasPagi, awal: prev.gasMalam?.akhir || "" },
+      }));
+    }
+    // Gas: Sore awal = Pagi akhir
+    if (form.gasPagi?.akhir && !form.gasSore?.awal) {
+      setForm((prev) => ({
+        ...prev,
+        gasSore: { ...prev.gasSore, awal: prev.gasPagi?.akhir || "" },
+      }));
+    }
+  }, [
+    form.steamMalam?.akhir,
+    form.steamPagi?.akhir,
+    form.gasMalam?.akhir,
+    form.gasPagi?.akhir,
+  ]);
+
+  // Handle auto-fill button for Temp & Timbangan
+  const handleAutoFill = () => {
+    setForm((prev) => ({
+      ...prev,
+      dryerTempProdukOut: autoFillTempProdukOut(),
+      produkTimbangan: autoFillTimbangan(),
+    }));
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -361,6 +587,47 @@ const KOPPage = ({ plant }: KOPPageProps) => {
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
 
+    // Calculate values for print
+    const kursDollar = parseNumber(printItem.kursDollar || "16000");
+
+    // Steam calculations
+    const steamMalamCalc = calculateSteamFlow(
+      printItem.steamMalam || emptyShiftEnergy
+    );
+    const steamPagiCalc = calculateSteamFlow(
+      printItem.steamPagi || emptyShiftEnergy
+    );
+    const steamSoreCalc = calculateSteamFlow(
+      printItem.steamSore || emptyShiftEnergy
+    );
+    steamMalamCalc.costRp = calculateSteamCost(
+      steamMalamCalc.selisih,
+      kursDollar
+    );
+    steamPagiCalc.costRp = calculateSteamCost(
+      steamPagiCalc.selisih,
+      kursDollar
+    );
+    steamSoreCalc.costRp = calculateSteamCost(
+      steamSoreCalc.selisih,
+      kursDollar
+    );
+
+    // Gas calculations
+    const gasMalamCalc = calculateGasFlow(
+      printItem.gasMalam || emptyShiftEnergy
+    );
+    const gasPagiCalc = calculateGasFlow(printItem.gasPagi || emptyShiftEnergy);
+    const gasSoreCalc = calculateGasFlow(printItem.gasSore || emptyShiftEnergy);
+    gasMalamCalc.costRp = calculateGasCost(gasMalamCalc.selisih, kursDollar);
+    gasPagiCalc.costRp = calculateGasCost(gasPagiCalc.selisih, kursDollar);
+    gasSoreCalc.costRp = calculateGasCost(gasSoreCalc.selisih, kursDollar);
+
+    const totalSteamRp =
+      steamMalamCalc.costRp + steamPagiCalc.costRp + steamSoreCalc.costRp;
+    const totalGasRp =
+      gasMalamCalc.costRp + gasPagiCalc.costRp + gasSoreCalc.costRp;
+
     const totalTonase =
       parseNumber(printItem.produkTonase?.malam || "0") +
       parseNumber(printItem.produkTonase?.pagi || "0") +
@@ -387,14 +654,10 @@ const KOPPage = ({ plant }: KOPPageProps) => {
           .section-header { background-color: #e8e8e8; font-weight: bold; text-align: left !important; }
           .param-name { text-align: left !important; }
           .number { text-align: right !important; }
-          .highlight-orange { background-color: #FFB84D; }
-          .highlight-cyan { background-color: #4DD0E1; }
-          .highlight-yellow { background-color: #FFEB3B; }
-          .energy-table { margin-top: 10px; }
-          .energy-table td { padding: 4px 8px; }
+          .highlight-cyan { background-color: #E0F7FA; }
+          .highlight-blue { background-color: #E3F2FD; }
+          .highlight-orange { background-color: #FFF3E0; }
           .summary { margin-top: 15px; }
-          .summary-row { display: flex; gap: 20px; margin-bottom: 5px; }
-          .footer { margin-top: 20px; text-align: right; font-style: italic; }
           @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
         </style>
       </head>
@@ -473,13 +736,19 @@ const KOPPage = ({ plant }: KOPPageProps) => {
               </tr>
               <tr>
                 <td></td>
-                <td class="param-name">1.1. Folw steam</td>
+                <td class="param-name">1.1. Flow Steam</td>
                 <td>FI</td>
                 <td>M3/H</td>
                 <td>${TARGETS.folwSteam.label}</td>
-                <td>${printItem.granulatorFolwSteam?.malam || ""} M3/H</td>
-                <td>${printItem.granulatorFolwSteam?.pagi || ""} M3/H</td>
-                <td>${printItem.granulatorFolwSteam?.sore || ""} M3/H</td>
+                <td class="highlight-blue"><strong>${steamMalamCalc.flowPerHour.toFixed(
+                  2
+                )}</strong></td>
+                <td class="highlight-blue"><strong>${steamPagiCalc.flowPerHour.toFixed(
+                  2
+                )}</strong></td>
+                <td class="highlight-blue"><strong>${steamSoreCalc.flowPerHour.toFixed(
+                  2
+                )}</strong></td>
               </tr>
               <tr>
                 <td>2</td>
@@ -491,9 +760,15 @@ const KOPPage = ({ plant }: KOPPageProps) => {
                 <td>FT-202</td>
                 <td>NM3/H</td>
                 <td>${TARGETS.flowGas.label}</td>
-                <td>${printItem.dryerFlowGas?.malam || ""} Nm3/H</td>
-                <td>${printItem.dryerFlowGas?.pagi || ""} Nm3/H</td>
-                <td>${printItem.dryerFlowGas?.sore || ""} Nm3/H</td>
+                <td class="highlight-orange"><strong>${gasMalamCalc.flowPerHour.toFixed(
+                  2
+                )}</strong></td>
+                <td class="highlight-orange"><strong>${gasPagiCalc.flowPerHour.toFixed(
+                  2
+                )}</strong></td>
+                <td class="highlight-orange"><strong>${gasSoreCalc.flowPerHour.toFixed(
+                  2
+                )}</strong></td>
               </tr>
               <tr>
                 <td></td>
@@ -588,20 +863,93 @@ const KOPPage = ({ plant }: KOPPageProps) => {
             </tbody>
           </table>
 
+          <!-- Konsumsi Energi Detail -->
+          <table style="margin-top: 15px; width: 48%; display: inline-table;">
+            <tr>
+              <th colspan="4" style="background-color: #E3F2FD;">KONSUMSI STEAM (M3)</th>
+            </tr>
+            <tr>
+              <th>Shift</th>
+              <th>Selisih</th>
+              <th>Flow (M3/H)</th>
+              <th>Biaya (Rp)</th>
+            </tr>
+            <tr>
+              <td>Malam</td>
+              <td>${formatNumber(steamMalamCalc.selisih)}</td>
+              <td>${steamMalamCalc.flowPerHour.toFixed(2)}</td>
+              <td class="number">${formatNumber(steamMalamCalc.costRp)}</td>
+            </tr>
+            <tr>
+              <td>Pagi</td>
+              <td>${formatNumber(steamPagiCalc.selisih)}</td>
+              <td>${steamPagiCalc.flowPerHour.toFixed(2)}</td>
+              <td class="number">${formatNumber(steamPagiCalc.costRp)}</td>
+            </tr>
+            <tr>
+              <td>Sore</td>
+              <td>${formatNumber(steamSoreCalc.selisih)}</td>
+              <td>${steamSoreCalc.flowPerHour.toFixed(2)}</td>
+              <td class="number">${formatNumber(steamSoreCalc.costRp)}</td>
+            </tr>
+            <tr style="background-color: #E3F2FD;">
+              <td colspan="3"><strong>Total</strong></td>
+              <td class="number"><strong>Rp ${formatNumber(
+                totalSteamRp
+              )}</strong></td>
+            </tr>
+          </table>
+
+          <table style="margin-top: 15px; width: 48%; display: inline-table; margin-left: 2%;">
+            <tr>
+              <th colspan="4" style="background-color: #FFF3E0;">KONSUMSI GAS (Nm3)</th>
+            </tr>
+            <tr>
+              <th>Shift</th>
+              <th>Selisih</th>
+              <th>Flow (Nm3/H)</th>
+              <th>Biaya (Rp)</th>
+            </tr>
+            <tr>
+              <td>Malam</td>
+              <td>${formatNumber(gasMalamCalc.selisih)}</td>
+              <td>${gasMalamCalc.flowPerHour.toFixed(2)}</td>
+              <td class="number">${formatNumber(gasMalamCalc.costRp)}</td>
+            </tr>
+            <tr>
+              <td>Pagi</td>
+              <td>${formatNumber(gasPagiCalc.selisih)}</td>
+              <td>${gasPagiCalc.flowPerHour.toFixed(2)}</td>
+              <td class="number">${formatNumber(gasPagiCalc.costRp)}</td>
+            </tr>
+            <tr>
+              <td>Sore</td>
+              <td>${formatNumber(gasSoreCalc.selisih)}</td>
+              <td>${gasSoreCalc.flowPerHour.toFixed(2)}</td>
+              <td class="number">${formatNumber(gasSoreCalc.costRp)}</td>
+            </tr>
+            <tr style="background-color: #FFF3E0;">
+              <td colspan="3"><strong>Total</strong></td>
+              <td class="number"><strong>Rp ${formatNumber(
+                totalGasRp
+              )}</strong></td>
+            </tr>
+          </table>
+
           <div class="summary">
             <table style="width: auto;">
               <tr>
                 <td style="border: none;"><strong>* Total Steam Dalam Satu Hari</strong></td>
                 <td style="border: none;">Rp</td>
                 <td style="border: none; text-align: right;"><strong>${formatNumber(
-                  parseNumber(printItem.totalSteamRp || "0")
+                  totalSteamRp
                 )}</strong></td>
               </tr>
               <tr>
                 <td style="border: none;"><strong>* Total Gas Dalam Satu Hari</strong></td>
                 <td style="border: none;">Rp</td>
                 <td style="border: none; text-align: right;"><strong>${formatNumber(
-                  parseNumber(printItem.totalGasRp || "0")
+                  totalGasRp
                 )}</strong></td>
               </tr>
               <tr>
@@ -610,6 +958,13 @@ const KOPPage = ({ plant }: KOPPageProps) => {
                 <td style="border: none; text-align: right;"><strong>${formatNumber(
                   totalTonase
                 )} TON</strong></td>
+              </tr>
+              <tr>
+                <td style="border: none; font-size: 7pt; color: #666;">Kurs Dollar: Rp ${formatNumber(
+                  kursDollar
+                )}</td>
+                <td style="border: none;"></td>
+                <td style="border: none;"></td>
               </tr>
             </table>
           </div>
@@ -806,6 +1161,36 @@ const KOPPage = ({ plant }: KOPPageProps) => {
                     parseNumber(item.produkTonase?.pagi || "0") +
                     parseNumber(item.produkTonase?.sore || "0");
 
+                  // Calculate Steam & Gas costs for display
+                  const kursDollar = parseNumber(item.kursDollar || "16000");
+                  const steamMalamCalc = calculateSteamFlow(
+                    item.steamMalam || emptyShiftEnergy
+                  );
+                  const steamPagiCalc = calculateSteamFlow(
+                    item.steamPagi || emptyShiftEnergy
+                  );
+                  const steamSoreCalc = calculateSteamFlow(
+                    item.steamSore || emptyShiftEnergy
+                  );
+                  const gasMalamCalc = calculateGasFlow(
+                    item.gasMalam || emptyShiftEnergy
+                  );
+                  const gasPagiCalc = calculateGasFlow(
+                    item.gasPagi || emptyShiftEnergy
+                  );
+                  const gasSoreCalc = calculateGasFlow(
+                    item.gasSore || emptyShiftEnergy
+                  );
+
+                  const totalSteamRp =
+                    calculateSteamCost(steamMalamCalc.selisih, kursDollar) +
+                    calculateSteamCost(steamPagiCalc.selisih, kursDollar) +
+                    calculateSteamCost(steamSoreCalc.selisih, kursDollar);
+                  const totalGasRp =
+                    calculateGasCost(gasMalamCalc.selisih, kursDollar) +
+                    calculateGasCost(gasPagiCalc.selisih, kursDollar) +
+                    calculateGasCost(gasSoreCalc.selisih, kursDollar);
+
                   return (
                     <tr
                       key={item.id}
@@ -830,11 +1215,11 @@ const KOPPage = ({ plant }: KOPPageProps) => {
                       <td className="px-4 py-3 font-semibold text-primary-600">
                         {formatNumber(totalTonase)} TON
                       </td>
-                      <td className="px-4 py-3 text-dark-700">
-                        Rp {formatNumber(parseNumber(item.totalSteamRp || "0"))}
+                      <td className="px-4 py-3 text-blue-700">
+                        Rp {formatNumber(totalSteamRp)}
                       </td>
-                      <td className="px-4 py-3 text-dark-700">
-                        Rp {formatNumber(parseNumber(item.totalGasRp || "0"))}
+                      <td className="px-4 py-3 text-orange-700">
+                        Rp {formatNumber(totalGasRp)}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-center gap-1">
@@ -1023,13 +1408,419 @@ const KOPPage = ({ plant }: KOPPageProps) => {
             </div>
           </Card>
 
-          {/* Parameter Operasi */}
+          {/* Konsumsi Energi - Steam */}
           <Card className="p-4">
             <div className="flex items-center gap-2 mb-4">
-              <Gauge className="h-5 w-5 text-primary-600" />
+              <Zap className="h-5 w-5 text-blue-600" />
               <h3 className="text-lg font-semibold text-dark-900">
-                Parameter Operasi
+                Konsumsi Steam (M3)
               </h3>
+            </div>
+
+            {/* Kurs Dollar */}
+            <div className="mb-4 p-3 bg-amber-50 rounded-lg">
+              <Input
+                label="Kurs Dollar (Rp)"
+                type="number"
+                value={form.kursDollar}
+                onChange={(e) =>
+                  setForm({ ...form, kursDollar: e.target.value })
+                }
+                placeholder="Contoh: 16000"
+              />
+              <p className="text-xs text-amber-600 mt-1">
+                * Kurs digunakan untuk perhitungan biaya Steam & Gas
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Steam Malam */}
+              <div className="p-4 bg-slate-100 rounded-xl">
+                <h4 className="font-medium text-dark-700 mb-3">
+                  Shift Malam (23:00 - 07:00)
+                </h4>
+                <div className="space-y-3">
+                  <Input
+                    label="Awal Shift (M3)"
+                    type="number"
+                    step="0.01"
+                    value={form.steamMalam?.awal || ""}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        steamMalam: {
+                          ...form.steamMalam,
+                          awal: e.target.value,
+                        },
+                      })
+                    }
+                  />
+                  <Input
+                    label="Akhir Shift (M3)"
+                    type="number"
+                    step="0.01"
+                    value={form.steamMalam?.akhir || ""}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        steamMalam: {
+                          ...form.steamMalam,
+                          akhir: e.target.value,
+                        },
+                      })
+                    }
+                  />
+                  <div className="p-2 bg-white rounded text-sm">
+                    <div className="flex justify-between">
+                      <span>Selisih:</span>
+                      <span className="font-semibold">
+                        {formatNumber(calculatedValues.steamMalam.selisih)} M3
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Flow (M3/H):</span>
+                      <span className="font-semibold text-blue-600">
+                        {calculatedValues.steamMalam.flowPerHour.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Biaya:</span>
+                      <span className="font-semibold text-green-600">
+                        Rp {formatNumber(calculatedValues.steamMalam.costRp)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Steam Pagi */}
+              <div className="p-4 bg-amber-100 rounded-xl">
+                <h4 className="font-medium text-dark-700 mb-3">
+                  Shift Pagi (07:00 - 15:00)
+                </h4>
+                <div className="space-y-3">
+                  <Input
+                    label="Awal Shift (M3)"
+                    type="number"
+                    step="0.01"
+                    value={form.steamPagi?.awal || ""}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        steamPagi: { ...form.steamPagi, awal: e.target.value },
+                      })
+                    }
+                    placeholder="Auto dari akhir malam"
+                  />
+                  <Input
+                    label="Akhir Shift (M3)"
+                    type="number"
+                    step="0.01"
+                    value={form.steamPagi?.akhir || ""}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        steamPagi: { ...form.steamPagi, akhir: e.target.value },
+                      })
+                    }
+                  />
+                  <div className="p-2 bg-white rounded text-sm">
+                    <div className="flex justify-between">
+                      <span>Selisih:</span>
+                      <span className="font-semibold">
+                        {formatNumber(calculatedValues.steamPagi.selisih)} M3
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Flow (M3/H):</span>
+                      <span className="font-semibold text-blue-600">
+                        {calculatedValues.steamPagi.flowPerHour.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Biaya:</span>
+                      <span className="font-semibold text-green-600">
+                        Rp {formatNumber(calculatedValues.steamPagi.costRp)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Steam Sore */}
+              <div className="p-4 bg-orange-100 rounded-xl">
+                <h4 className="font-medium text-dark-700 mb-3">
+                  Shift Sore (15:00 - 23:00)
+                </h4>
+                <div className="space-y-3">
+                  <Input
+                    label="Awal Shift (M3)"
+                    type="number"
+                    step="0.01"
+                    value={form.steamSore?.awal || ""}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        steamSore: { ...form.steamSore, awal: e.target.value },
+                      })
+                    }
+                    placeholder="Auto dari akhir pagi"
+                  />
+                  <Input
+                    label="Akhir Shift (M3)"
+                    type="number"
+                    step="0.01"
+                    value={form.steamSore?.akhir || ""}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        steamSore: { ...form.steamSore, akhir: e.target.value },
+                      })
+                    }
+                  />
+                  <div className="p-2 bg-white rounded text-sm">
+                    <div className="flex justify-between">
+                      <span>Selisih:</span>
+                      <span className="font-semibold">
+                        {formatNumber(calculatedValues.steamSore.selisih)} M3
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Flow (M3/H):</span>
+                      <span className="font-semibold text-blue-600">
+                        {calculatedValues.steamSore.flowPerHour.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Biaya:</span>
+                      <span className="font-semibold text-green-600">
+                        Rp {formatNumber(calculatedValues.steamSore.costRp)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Total Steam */}
+            <div className="mt-4 p-4 bg-blue-100 rounded-xl">
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-blue-800">
+                  Total Steam Dalam Satu Hari
+                </span>
+                <span className="text-xl font-bold text-blue-900">
+                  Rp {formatNumber(calculatedValues.totalSteamRp)}
+                </span>
+              </div>
+            </div>
+          </Card>
+
+          {/* Konsumsi Energi - Gas */}
+          <Card className="p-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Flame className="h-5 w-5 text-orange-600" />
+              <h3 className="text-lg font-semibold text-dark-900">
+                Konsumsi Gas (Nm3)
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Gas Malam */}
+              <div className="p-4 bg-slate-100 rounded-xl">
+                <h4 className="font-medium text-dark-700 mb-3">
+                  Shift Malam (23:00 - 07:00)
+                </h4>
+                <div className="space-y-3">
+                  <Input
+                    label="Awal Shift (Nm3)"
+                    type="number"
+                    step="0.01"
+                    value={form.gasMalam?.awal || ""}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        gasMalam: { ...form.gasMalam, awal: e.target.value },
+                      })
+                    }
+                  />
+                  <Input
+                    label="Akhir Shift (Nm3)"
+                    type="number"
+                    step="0.01"
+                    value={form.gasMalam?.akhir || ""}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        gasMalam: { ...form.gasMalam, akhir: e.target.value },
+                      })
+                    }
+                  />
+                  <div className="p-2 bg-white rounded text-sm">
+                    <div className="flex justify-between">
+                      <span>Selisih:</span>
+                      <span className="font-semibold">
+                        {formatNumber(calculatedValues.gasMalam.selisih)} Nm3
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Flow (Nm3/H):</span>
+                      <span className="font-semibold text-orange-600">
+                        {calculatedValues.gasMalam.flowPerHour.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Biaya:</span>
+                      <span className="font-semibold text-green-600">
+                        Rp {formatNumber(calculatedValues.gasMalam.costRp)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Gas Pagi */}
+              <div className="p-4 bg-amber-100 rounded-xl">
+                <h4 className="font-medium text-dark-700 mb-3">
+                  Shift Pagi (07:00 - 15:00)
+                </h4>
+                <div className="space-y-3">
+                  <Input
+                    label="Awal Shift (Nm3)"
+                    type="number"
+                    step="0.01"
+                    value={form.gasPagi?.awal || ""}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        gasPagi: { ...form.gasPagi, awal: e.target.value },
+                      })
+                    }
+                    placeholder="Auto dari akhir malam"
+                  />
+                  <Input
+                    label="Akhir Shift (Nm3)"
+                    type="number"
+                    step="0.01"
+                    value={form.gasPagi?.akhir || ""}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        gasPagi: { ...form.gasPagi, akhir: e.target.value },
+                      })
+                    }
+                  />
+                  <div className="p-2 bg-white rounded text-sm">
+                    <div className="flex justify-between">
+                      <span>Selisih:</span>
+                      <span className="font-semibold">
+                        {formatNumber(calculatedValues.gasPagi.selisih)} Nm3
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Flow (Nm3/H):</span>
+                      <span className="font-semibold text-orange-600">
+                        {calculatedValues.gasPagi.flowPerHour.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Biaya:</span>
+                      <span className="font-semibold text-green-600">
+                        Rp {formatNumber(calculatedValues.gasPagi.costRp)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Gas Sore */}
+              <div className="p-4 bg-orange-100 rounded-xl">
+                <h4 className="font-medium text-dark-700 mb-3">
+                  Shift Sore (15:00 - 23:00)
+                </h4>
+                <div className="space-y-3">
+                  <Input
+                    label="Awal Shift (Nm3)"
+                    type="number"
+                    step="0.01"
+                    value={form.gasSore?.awal || ""}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        gasSore: { ...form.gasSore, awal: e.target.value },
+                      })
+                    }
+                    placeholder="Auto dari akhir pagi"
+                  />
+                  <Input
+                    label="Akhir Shift (Nm3)"
+                    type="number"
+                    step="0.01"
+                    value={form.gasSore?.akhir || ""}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        gasSore: { ...form.gasSore, akhir: e.target.value },
+                      })
+                    }
+                  />
+                  <div className="p-2 bg-white rounded text-sm">
+                    <div className="flex justify-between">
+                      <span>Selisih:</span>
+                      <span className="font-semibold">
+                        {formatNumber(calculatedValues.gasSore.selisih)} Nm3
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Flow (Nm3/H):</span>
+                      <span className="font-semibold text-orange-600">
+                        {calculatedValues.gasSore.flowPerHour.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Biaya:</span>
+                      <span className="font-semibold text-green-600">
+                        Rp {formatNumber(calculatedValues.gasSore.costRp)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Total Gas */}
+            <div className="mt-4 p-4 bg-orange-100 rounded-xl">
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-orange-800">
+                  Total Gas Dalam Satu Hari
+                </span>
+                <span className="text-xl font-bold text-orange-900">
+                  Rp {formatNumber(calculatedValues.totalGasRp)}
+                </span>
+              </div>
+              <p className="text-xs text-orange-600 mt-1">
+                * Rumus: BTU/h = gas × 0.02831 × 1043.3294, MMBTU =
+                BTU/1,000,000, $/h = MMBTU × 5.65, Rp = $ × kurs × 8 jam
+              </p>
+            </div>
+          </Card>
+
+          {/* Parameter Operasi */}
+          <Card className="p-4">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Gauge className="h-5 w-5 text-primary-600" />
+                <h3 className="text-lg font-semibold text-dark-900">
+                  Parameter Operasi
+                </h3>
+              </div>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={handleAutoFill}
+              >
+                Auto-Fill Temp & Timbangan
+              </Button>
             </div>
 
             {/* Header */}
@@ -1052,36 +1843,64 @@ const KOPPage = ({ plant }: KOPPageProps) => {
               <div></div>
             </div>
 
-            {/* Granulator Section */}
+            {/* Granulator Section - Flow Steam dari perhitungan */}
             <div className="mb-4">
               <div className="bg-primary-50 text-primary-700 font-semibold px-3 py-2 rounded-lg mb-2">
                 1. Granulator
               </div>
-              <ParameterInputRow
-                label="1.1. Folw Steam"
-                indikator="FI"
-                satuan="M3/H"
-                target={TARGETS.folwSteam.label}
-                value={form.granulatorFolwSteam || emptyParameterValue}
-                onChange={(val) =>
-                  setForm({ ...form, granulatorFolwSteam: val })
-                }
-              />
+              <div className="grid grid-cols-7 gap-2 items-center py-2 border-b border-dark-100">
+                <div className="col-span-2">
+                  <span className="text-sm font-medium text-dark-700">
+                    1.1. Flow Steam
+                  </span>
+                  <p className="text-xs text-dark-400">FI | M3/H</p>
+                </div>
+                <div className="text-center">
+                  <span className="text-xs text-dark-500 bg-dark-100 px-2 py-1 rounded">
+                    {TARGETS.folwSteam.label}
+                  </span>
+                </div>
+                <div className="text-center font-semibold text-blue-600">
+                  {calculatedValues.steamMalam.flowPerHour.toFixed(2)}
+                </div>
+                <div className="text-center font-semibold text-blue-600">
+                  {calculatedValues.steamPagi.flowPerHour.toFixed(2)}
+                </div>
+                <div className="text-center font-semibold text-blue-600">
+                  {calculatedValues.steamSore.flowPerHour.toFixed(2)}
+                </div>
+                <div className="text-xs text-dark-400 text-center">Auto</div>
+              </div>
             </div>
 
-            {/* Dryer Section */}
+            {/* Dryer Section - Flow Gas dari perhitungan */}
             <div className="mb-4">
               <div className="bg-secondary-50 text-secondary-700 font-semibold px-3 py-2 rounded-lg mb-2">
                 2. Dryer
               </div>
-              <ParameterInputRow
-                label="2.1. Flow Gas"
-                indikator="FT-202"
-                satuan="NM3/H"
-                target={TARGETS.flowGas.label}
-                value={form.dryerFlowGas || emptyParameterValue}
-                onChange={(val) => setForm({ ...form, dryerFlowGas: val })}
-              />
+              <div className="grid grid-cols-7 gap-2 items-center py-2 border-b border-dark-100">
+                <div className="col-span-2">
+                  <span className="text-sm font-medium text-dark-700">
+                    2.1. Flow Gas
+                  </span>
+                  <p className="text-xs text-dark-400">FT-202 | NM3/H</p>
+                </div>
+                <div className="text-center">
+                  <span className="text-xs text-dark-500 bg-dark-100 px-2 py-1 rounded">
+                    {TARGETS.flowGas.label}
+                  </span>
+                </div>
+                <div className="text-center font-semibold text-orange-600">
+                  {calculatedValues.gasMalam.flowPerHour.toFixed(2)}
+                </div>
+                <div className="text-center font-semibold text-orange-600">
+                  {calculatedValues.gasPagi.flowPerHour.toFixed(2)}
+                </div>
+                <div className="text-center font-semibold text-orange-600">
+                  {calculatedValues.gasSore.flowPerHour.toFixed(2)}
+                </div>
+                <div className="text-xs text-dark-400 text-center">Auto</div>
+              </div>
               <ParameterInputRow
                 label="2.2. Temperatur Produk Out"
                 indikator="Temp R-002"
@@ -1154,78 +1973,6 @@ const KOPPage = ({ plant }: KOPPageProps) => {
                 target={TARGETS.tonase.label}
                 value={form.produkTonase || emptyParameterValue}
                 onChange={(val) => setForm({ ...form, produkTonase: val })}
-              />
-            </div>
-          </Card>
-
-          {/* Energy Consumption */}
-          <Card className="p-4">
-            <div className="flex items-center gap-2 mb-4">
-              <Zap className="h-5 w-5 text-primary-600" />
-              <h3 className="text-lg font-semibold text-dark-900">
-                Perhitungan Konsumsi Energy
-              </h3>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Input
-                label="Steam (Kg/H)"
-                type="number"
-                step="0.01"
-                value={form.steamKgH}
-                onChange={(e) => setForm({ ...form, steamKgH: e.target.value })}
-              />
-              <Input
-                label="Steam (M3/H)"
-                type="number"
-                step="0.01"
-                value={form.steamM3H}
-                onChange={(e) => setForm({ ...form, steamM3H: e.target.value })}
-              />
-              <Input
-                label="Gas (Nm3/H)"
-                type="number"
-                step="0.01"
-                value={form.gasNm3H}
-                onChange={(e) => setForm({ ...form, gasNm3H: e.target.value })}
-              />
-              <Input
-                label="Total Steam"
-                value={form.steamTotal}
-                onChange={(e) =>
-                  setForm({ ...form, steamTotal: e.target.value })
-                }
-              />
-            </div>
-          </Card>
-
-          {/* Cost Summary */}
-          <Card className="p-4">
-            <div className="flex items-center gap-2 mb-4">
-              <Flame className="h-5 w-5 text-primary-600" />
-              <h3 className="text-lg font-semibold text-dark-900">
-                Total Biaya Harian
-              </h3>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label="Total Steam Dalam Satu Hari (Rp)"
-                type="number"
-                step="0.01"
-                value={form.totalSteamRp}
-                onChange={(e) =>
-                  setForm({ ...form, totalSteamRp: e.target.value })
-                }
-                placeholder="Contoh: 3946017.66"
-              />
-              <Input
-                label="Total Gas Dalam Satu Hari (Rp)"
-                type="number"
-                step="0.01"
-                value={form.totalGasRp}
-                onChange={(e) =>
-                  setForm({ ...form, totalGasRp: e.target.value })
-                }
-                placeholder="Contoh: 21302.19"
               />
             </div>
           </Card>
