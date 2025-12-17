@@ -128,6 +128,76 @@ const initialFormState: KOPEntry = {
   produkTonase: { ...emptyParameterValue },
 };
 
+// ============================================
+// FUNGSI SERIALIZE/DESERIALIZE UNTUK GOOGLE SHEETS
+// ============================================
+
+// Fields yang perlu di-stringify saat simpan dan di-parse saat baca
+const JSON_FIELDS = [
+  "shiftMalam",
+  "shiftPagi",
+  "shiftSore",
+  "steamMalam",
+  "steamPagi",
+  "steamSore",
+  "gasMalam",
+  "gasPagi",
+  "gasSore",
+  "dryerTempProdukOut",
+  "produkN",
+  "produkP",
+  "produkK",
+  "produkMoisture",
+  "produkKekerasan",
+  "produkTimbangan",
+  "produkTonase",
+];
+
+/**
+ * Serialize data sebelum disimpan ke Google Sheets
+ * Mengubah objek menjadi JSON string
+ */
+const serializeKOPData = (data: KOPEntry): Record<string, unknown> => {
+  const serialized: Record<string, unknown> = { ...data };
+  JSON_FIELDS.forEach((field) => {
+    if (serialized[field] && typeof serialized[field] === "object") {
+      serialized[field] = JSON.stringify(serialized[field]);
+    }
+  });
+  return serialized;
+};
+
+/**
+ * Deserialize data setelah dibaca dari Google Sheets
+ * Mengubah JSON string kembali menjadi objek
+ */
+const deserializeKOPData = (data: Record<string, unknown>): KOPEntry => {
+  const deserialized: Record<string, unknown> = { ...data };
+  JSON_FIELDS.forEach((field) => {
+    if (deserialized[field] && typeof deserialized[field] === "string") {
+      try {
+        deserialized[field] = JSON.parse(deserialized[field] as string);
+      } catch {
+        // Jika gagal parse, coba parse format {key=value, key=value}
+        const str = deserialized[field] as string;
+        if (str.startsWith("{") && str.includes("=")) {
+          const obj: Record<string, string> = {};
+          const content = str.slice(1, -1); // remove { }
+          const pairs = content.split(", ");
+          pairs.forEach((pair) => {
+            const [key, value] = pair.split("=");
+            if (key && value !== undefined) {
+              obj[key.trim()] = value.trim();
+            }
+          });
+          deserialized[field] = obj;
+        }
+      }
+    }
+  });
+  return deserialized as unknown as KOPEntry;
+};
+
 // Target values for reference
 const TARGETS = {
   folwSteam: { min: 0.5, max: 2.5, unit: "M3/H", label: "0.5 - 2.5" },
@@ -463,10 +533,14 @@ const KOPPage = ({ plant }: KOPPageProps) => {
           "@/services/api"
         );
         const sheetName = getSheetNameByPlant(SHEETS.KOP, plant);
-        const result = await readData<KOPEntry>(sheetName);
+        const result = await readData<Record<string, unknown>>(sheetName);
         if (result.success && result.data) {
+          // Deserialize setiap item dari Google Sheets
           const sortedData = result.data
-            .map((item) => ({ ...item, _plant: plant }))
+            .map((item) => {
+              const deserialized = deserializeKOPData(item);
+              return { ...deserialized, _plant: plant };
+            })
             .sort(
               (a, b) =>
                 new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime()
@@ -495,10 +569,15 @@ const KOPPage = ({ plant }: KOPPageProps) => {
       const sheetName = getSheetNameByPlant(SHEETS.KOP, plant);
 
       if (editingId) {
-        const dataToUpdate = { ...form, id: editingId, _plant: plant };
+        // Serialize data sebelum update
+        const dataToUpdate = serializeKOPData({
+          ...form,
+          id: editingId,
+          _plant: plant,
+        });
         const updateResult = await updateData<KOPEntry>(
           sheetName,
-          dataToUpdate
+          dataToUpdate as unknown as KOPEntry
         );
         if (updateResult.success) {
           setData((prev) =>
@@ -512,10 +591,17 @@ const KOPPage = ({ plant }: KOPPageProps) => {
           throw new Error(updateResult.error || "Gagal mengupdate data");
         }
       } else {
-        const newData = { ...form, _plant: plant };
-        const createResult = await createData<KOPEntry>(sheetName, newData);
+        // Serialize data sebelum create
+        const newData = serializeKOPData({ ...form, _plant: plant });
+        const createResult = await createData<KOPEntry>(
+          sheetName,
+          newData as unknown as KOPEntry
+        );
         if (createResult.success && createResult.data) {
-          const newItem: KOPEntry = { ...createResult.data, _plant: plant };
+          const newItem: KOPEntry = { ...form, _plant: plant };
+          if (createResult.data.id) {
+            newItem.id = createResult.data.id;
+          }
           setData((prev) => [newItem, ...prev]);
         } else {
           throw new Error(createResult.error || "Gagal menyimpan data");
