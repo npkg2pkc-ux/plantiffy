@@ -367,10 +367,10 @@ const Header = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
 
-  // Handle mark notification as read - also update backend
+  // Handle mark notification as read - also update backend.
   const handleMarkAsRead = async (notifId: string) => {
     try {
-      // Update local state first for instant feedback
+      // Update local state first for instant feedback.
       markAsRead(notifId);
 
       // Update backend
