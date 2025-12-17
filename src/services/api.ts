@@ -235,6 +235,7 @@ export const SHEETS = {
   PERTA: "perta",
   PERBAIKAN_TAHUNAN: "perbaikan_tahunan",
   TROUBLE_RECORD: "trouble_record",
+  KOP: "kop",
 
   // Shared
   USERS: "users",

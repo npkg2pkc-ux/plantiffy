@@ -22,6 +22,7 @@ import {
   DowntimePage,
   TimesheetForkliftPage,
   TimesheetLoaderPage,
+  KOPPage,
 } from "@/pages/Laporan";
 import {
   WorkRequestPage,
@@ -137,6 +138,8 @@ function App() {
 
         {/* Laporan Routes */}
         <Route path="laporan">
+          <Route path="kop-npk1" element={<KOPPage plant="NPK1" />} />
+          <Route path="kop-npk2" element={<KOPPage plant="NPK2" />} />
           <Route path="downtime-npk1" element={<DowntimePage plant="NPK1" />} />
           <Route path="downtime-npk2" element={<DowntimePage plant="NPK2" />} />
           <Route

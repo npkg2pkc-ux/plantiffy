@@ -26,6 +26,7 @@
  * - gatepass, gatepass_NPK1
  * - perta, perta_NPK1
  * - trouble_record, trouble_record_NPK1
+ * - kop, kop_NPK1
  * - akun
  * - rkap
  * - approval_requests
@@ -253,6 +254,31 @@ const SHEET_HEADERS = {
     "toUser",
   ],
   chat_messages: ["id", "sender", "role", "message", "timestamp"],
+  kop: [
+    "id",
+    "tanggal",
+    "jenisOperasi",
+    "shiftMalam",
+    "shiftPagi",
+    "shiftSore",
+    "granulatorFolwSteam",
+    "dryerFlowGas",
+    "dryerTempProdukOut",
+    "produkN",
+    "produkP",
+    "produkK",
+    "produkMoisture",
+    "produkKekerasan",
+    "produkTimbangan",
+    "produkTonase",
+    "steamKgH",
+    "steamM3H",
+    "steamTotal",
+    "gasNm3H",
+    "gasTotal",
+    "totalSteamRp",
+    "totalGasRp",
+  ],
 };
 
 // ============================================

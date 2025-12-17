@@ -66,6 +66,8 @@ const navItems: NavItemProps[] = [
     path: "/laporan",
     icon: <FileText className="h-5 w-5" />,
     children: [
+      { name: "KOP NPK1", path: "/laporan/kop-npk1" },
+      { name: "KOP NPK2", path: "/laporan/kop-npk2" },
       {
         name: "Timesheet Forklift NPK1",
         path: "/laporan/timesheet-forklift-npk1",
