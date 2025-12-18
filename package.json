@@ -11,16 +11,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@vercel/analytics": "^1.6.1",
+    "clsx": "^2.0.0",
+    "date-fns": "^3.0.0",
+    "framer-motion": "^10.16.16",
+    "lucide-react": "^0.294.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.21.0",
     "recharts": "^2.10.3",
-    "lucide-react": "^0.294.0",
-    "date-fns": "^3.0.0",
-    "clsx": "^2.0.0",
     "tailwind-merge": "^2.2.0",
-    "zustand": "^4.4.7",
-    "framer-motion": "^10.16.16"
+    "zustand": "^4.4.7"
   },
   "devDependencies": {
     "@types/node": "^20.10.5",
