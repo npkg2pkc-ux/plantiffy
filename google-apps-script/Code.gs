@@ -1365,6 +1365,148 @@ function clearSheetData(sheetName) {
 }
 
 // ============================================
+// FILL EMPTY IDs FOR MANUAL INPUT
+// ============================================
+
+/**
+ * Fill empty IDs in rekap_bbm sheets (both NPK1 and NPK2)
+ * Run this function after manually inputting data without IDs
+ */
+function fillEmptyIdsRekapBBM() {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetNames = ["rekap_bbm", "rekap_bbm_NPK1"];
+  let totalFilled = 0;
+
+  sheetNames.forEach((sheetName) => {
+    const sheet = spreadsheet.getSheetByName(sheetName);
+    if (!sheet) {
+      Logger.log("Sheet " + sheetName + " not found");
+      return;
+    }
+
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 1) {
+      Logger.log("No data in " + sheetName);
+      return;
+    }
+
+    // Get all data starting from row 2 (skip header)
+    const dataRange = sheet.getRange(2, 1, lastRow - 1, 1); // Column A (id)
+    const ids = dataRange.getValues();
+
+    let filledCount = 0;
+    for (let i = 0; i < ids.length; i++) {
+      if (!ids[i][0] || ids[i][0] === "") {
+        // Generate new ID and set it
+        const newId = generateId();
+        sheet.getRange(i + 2, 1).setValue(newId);
+        filledCount++;
+      }
+    }
+
+    Logger.log("Filled " + filledCount + " empty IDs in " + sheetName);
+    totalFilled += filledCount;
+  });
+
+  Logger.log("=== Total IDs filled: " + totalFilled + " ===");
+  SpreadsheetApp.getActiveSpreadsheet().toast(
+    "Berhasil mengisi " + totalFilled + " ID kosong di rekap_bbm!",
+    "✅ Selesai",
+    5
+  );
+}
+
+/**
+ * Fill empty IDs in any specified sheet
+ * @param {string} sheetName - Name of the sheet to fill IDs
+ */
+function fillEmptyIdsInSheet(sheetName) {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = spreadsheet.getSheetByName(sheetName);
+
+  if (!sheet) {
+    Logger.log("Sheet " + sheetName + " not found");
+    return 0;
+  }
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) {
+    Logger.log("No data in " + sheetName);
+    return 0;
+  }
+
+  // Get all data starting from row 2 (skip header)
+  const dataRange = sheet.getRange(2, 1, lastRow - 1, 1); // Column A (id)
+  const ids = dataRange.getValues();
+
+  let filledCount = 0;
+  for (let i = 0; i < ids.length; i++) {
+    if (!ids[i][0] || ids[i][0] === "") {
+      // Generate new ID and set it
+      const newId = generateId();
+      sheet.getRange(i + 2, 1).setValue(newId);
+      filledCount++;
+    }
+  }
+
+  Logger.log("Filled " + filledCount + " empty IDs in " + sheetName);
+  return filledCount;
+}
+
+/**
+ * Fill empty IDs in ALL data sheets
+ * Useful for bulk manual data entry
+ */
+function fillEmptyIdsAllSheets() {
+  const allDataSheets = [
+    "rekap_bbm",
+    "rekap_bbm_NPK1",
+    "produksi_npk",
+    "produksi_npk_NPK1",
+    "produksi_blending",
+    "produksi_blending_NPK1",
+    "produksi_npk_mini",
+    "produksi_npk_mini_NPK1",
+    "timesheet_forklift",
+    "timesheet_forklift_NPK1",
+    "timesheet_loader",
+    "timesheet_loader_NPK1",
+    "downtime",
+    "downtime_NPK1",
+    "workrequest",
+    "workrequest_NPK1",
+    "bahanbaku",
+    "bahanbaku_NPK1",
+    "vibrasi",
+    "vibrasi_NPK1",
+    "gatepass",
+    "gatepass_NPK1",
+    "perta",
+    "perta_NPK1",
+    "trouble_record",
+    "trouble_record_NPK1",
+    "dokumentasi_foto",
+    "dokumentasi_foto_NPK1",
+    "kop",
+    "kop_NPK1",
+    "perbaikan_tahunan",
+    "perbaikan_tahunan_NPK1",
+  ];
+
+  let totalFilled = 0;
+  allDataSheets.forEach((sheetName) => {
+    totalFilled += fillEmptyIdsInSheet(sheetName);
+  });
+
+  Logger.log("=== Total IDs filled across all sheets: " + totalFilled + " ===");
+  SpreadsheetApp.getActiveSpreadsheet().toast(
+    "Berhasil mengisi " + totalFilled + " ID kosong di semua sheet!",
+    "✅ Selesai",
+    5
+  );
+}
+
+// ============================================
 // MENU FOR SPREADSHEET
 // ============================================
 
@@ -1377,6 +1519,9 @@ function onOpen() {
     .addItem("Initialize All Sheets", "initializeAllSheets")
     .addItem("Create Default Admin", "createDefaultAdmin")
     .addItem("Create Sample RKAP", "createSampleRKAP")
+    .addSeparator()
+    .addItem("🔑 Fill Empty IDs - Rekap BBM", "fillEmptyIdsRekapBBM")
+    .addItem("🔑 Fill Empty IDs - All Sheets", "fillEmptyIdsAllSheets")
     .addSeparator()
     .addItem("Test Read Users", "testRead")
     .addToUi();
