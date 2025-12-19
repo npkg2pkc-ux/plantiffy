@@ -447,19 +447,93 @@ function readSheet(sheetName) {
     const headers = data[0];
     const rows = data.slice(1);
 
+    // Columns that should be formatted as time (HH:mm)
+    const timeColumns = [
+      "jamOff",
+      "jamStart",
+      "jamMulai",
+      "jamSelesai",
+      "waktuMulai",
+      "waktuSelesai",
+    ];
+    // Columns that should be formatted as date (yyyy-MM-dd)
+    const dateColumns = [
+      "tanggal",
+      "createdAt",
+      "updatedAt",
+      "lastLogin",
+      "lastActivity",
+      "tglMasuk",
+      "tglKeluar",
+    ];
+
     const result = rows
       .map((row) => {
         const obj = {};
         headers.forEach((header, index) => {
           let value = row[index];
-          // Convert date objects to ISO string
+
+          // Handle Date objects
           if (value instanceof Date) {
-            value = Utilities.formatDate(
-              value,
-              Session.getScriptTimeZone(),
-              "yyyy-MM-dd"
-            );
+            // Check if this is a time column
+            if (timeColumns.includes(header)) {
+              // Format as time HH:mm
+              value = Utilities.formatDate(
+                value,
+                Session.getScriptTimeZone(),
+                "HH:mm"
+              );
+            } else if (dateColumns.includes(header)) {
+              // Format as date yyyy-MM-dd
+              value = Utilities.formatDate(
+                value,
+                Session.getScriptTimeZone(),
+                "yyyy-MM-dd"
+              );
+            } else {
+              // For other date columns, check if it has meaningful time
+              const hours = value.getHours();
+              const minutes = value.getMinutes();
+              const year = value.getFullYear();
+
+              // If year is 1899 or 1900, it's likely a time-only value from Excel/Sheets
+              if (year === 1899 || year === 1900) {
+                value = Utilities.formatDate(
+                  value,
+                  Session.getScriptTimeZone(),
+                  "HH:mm"
+                );
+              } else if (hours === 0 && minutes === 0) {
+                // If time is midnight, probably just a date
+                value = Utilities.formatDate(
+                  value,
+                  Session.getScriptTimeZone(),
+                  "yyyy-MM-dd"
+                );
+              } else {
+                // Has both date and time
+                value = Utilities.formatDate(
+                  value,
+                  Session.getScriptTimeZone(),
+                  "yyyy-MM-dd HH:mm"
+                );
+              }
+            }
           }
+          // Handle numbers that might be time values (0.0 - 1.0 range from Excel)
+          else if (typeof value === "number" && timeColumns.includes(header)) {
+            if (value > 0 && value < 1) {
+              // Convert Excel serial time to HH:mm
+              const totalMinutes = Math.round(value * 24 * 60);
+              const hours = Math.floor(totalMinutes / 60) % 24;
+              const minutes = totalMinutes % 60;
+              value =
+                String(hours).padStart(2, "0") +
+                ":" +
+                String(minutes).padStart(2, "0");
+            }
+          }
+
           obj[header] = value;
         });
         return obj;
