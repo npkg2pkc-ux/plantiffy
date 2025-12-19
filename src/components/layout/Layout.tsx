@@ -109,7 +109,7 @@ const navItems: NavItemProps[] = [
     path: "/settings",
     icon: <Settings className="h-5 w-5" />,
     children: [
-      { name: "Akun", path: "/settings/akun" },
+      { name: "Profil", path: "/settings/profil" },
       { name: "RKAP", path: "/settings/rkap" },
       { name: "Users", path: "/settings/users" },
       { name: "Approval", path: "/settings/approval" },
