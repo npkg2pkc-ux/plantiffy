@@ -322,10 +322,10 @@ const RKAPPage = () => {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-dark-900">
+          <h1 className="text-2xl font-display font-bold text-dark-900 dark:text-white">
             RKAP (Target Produksi)
           </h1>
-          <p className="text-dark-500 mt-1">
+          <p className="text-dark-500 dark:text-dark-400 mt-1">
             Rencana Kerja dan Anggaran Perusahaan - {plantLabel}
           </p>
         </div>
@@ -372,7 +372,7 @@ const RKAPPage = () => {
               <Target className="h-6 w-6 text-primary-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500">
+              <p className="text-sm text-dark-500 dark:text-dark-400">
                 Total Target RKAP {yearFilter}
               </p>
               <p className="text-2xl font-bold text-primary-600">
@@ -387,7 +387,7 @@ const RKAPPage = () => {
               <TrendingUp className="h-6 w-6 text-secondary-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500">Total Realisasi</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">Total Realisasi</p>
               <p className="text-2xl font-bold text-secondary-600">
                 {formatNumber(totalProduksi)} Ton
               </p>
@@ -410,7 +410,7 @@ const RKAPPage = () => {
               />
             </div>
             <div>
-              <p className="text-sm text-dark-500">Pencapaian</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">Pencapaian</p>
               <p
                 className={`text-2xl font-bold ${
                   Number(percentage) >= 100

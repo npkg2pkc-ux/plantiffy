@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { Analytics } from "@vercel/analytics/next";
 import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -18,15 +17,14 @@ import {
   ChevronLeft,
   Send,
   X,
-  Check,
-  CheckCheck,
+  Sun,
+  Moon,
 } from "lucide-react";
 import {
   cn,
   canViewSettings,
   canViewUsersPage,
   canViewRKAPPage,
-  isViewOnly,
   formatDateTime,
 } from "@/lib/utils";
 import {
@@ -35,7 +33,7 @@ import {
   useNotificationStore,
   useChatStore,
 } from "@/stores";
-import { Badge, Button } from "@/components/ui";
+import { Badge } from "@/components/ui";
 
 interface NavItemProps {
   name: string;
@@ -102,6 +100,8 @@ const navItems: NavItemProps[] = [
       { name: "Trouble Record NPK2", path: "/data/trouble-record-npk2" },
       { name: "Dokumentasi Foto NPK1", path: "/data/dokumentasi-foto-npk1" },
       { name: "Dokumentasi Foto NPK2", path: "/data/dokumentasi-foto-npk2" },
+      { name: "Rekap BBM NPK1", path: "/data/rekap-bbm-npk1" },
+      { name: "Rekap BBM NPK2", path: "/data/rekap-bbm-npk2" },
     ],
   },
   {
@@ -250,24 +250,26 @@ const Sidebar = () => {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 h-screen bg-white border-r border-dark-100 transition-all duration-300",
+        "fixed left-0 top-0 z-40 h-screen bg-white dark:bg-dark-800 border-r border-dark-100 dark:border-dark-700 transition-all duration-300",
         sidebarCollapsed ? "w-20" : "w-64"
       )}
     >
       {/* Logo */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-dark-100">
+      <div className="h-16 flex items-center justify-between px-4 border-b border-dark-100 dark:border-dark-700">
         {!sidebarCollapsed && (
           <Link to="/dashboard" className="flex items-center gap-3">
             <img src="/favicon.png" alt="PlantIQ Logo" className="h-9 w-9" />
-            <span className="font-display font-bold text-dark-900">
+            <span className="font-display font-bold text-dark-900 dark:text-white">
               Plantiffy
             </span>
-            <span className="text-xs text-dark-500">v2.1.3</span>
+            <span className="text-xs text-dark-500 dark:text-dark-400">
+              v2.2.0
+            </span>
           </Link>
         )}
         <button
           onClick={toggleSidebarCollapse}
-          className="p-2 text-dark-500 hover:bg-dark-100 rounded-lg transition-colors"
+          className="p-2 text-dark-500 dark:text-dark-400 hover:bg-dark-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
         >
           {sidebarCollapsed ? (
             <ChevronRight className="h-5 w-5" />
@@ -288,8 +290,8 @@ const Sidebar = () => {
                   className={cn(
                     "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200",
                     isParentActive(item)
-                      ? "bg-primary-50 text-primary-700"
-                      : "text-dark-600 hover:bg-dark-50 hover:text-dark-900"
+                      ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400"
+                      : "text-dark-600 dark:text-dark-300 hover:bg-dark-50 dark:hover:bg-dark-700 hover:text-dark-900 dark:hover:text-white"
                   )}
                 >
                   {item.icon}
@@ -323,8 +325,8 @@ const Sidebar = () => {
                               className={cn(
                                 "block px-4 py-2 text-sm rounded-lg transition-colors",
                                 isActive(child.path)
-                                  ? "bg-primary-100 text-primary-700 font-medium"
-                                  : "text-dark-500 hover:text-dark-900 hover:bg-dark-50"
+                                  ? "bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-400 font-medium"
+                                  : "text-dark-500 dark:text-dark-400 hover:text-dark-900 dark:hover:text-white hover:bg-dark-50 dark:hover:bg-dark-700"
                               )}
                             >
                               {child.name}
@@ -342,8 +344,8 @@ const Sidebar = () => {
                 className={cn(
                   "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200",
                   isActive(item.path)
-                    ? "bg-primary-50 text-primary-700 shadow-sm"
-                    : "text-dark-600 hover:bg-dark-50 hover:text-dark-900"
+                    ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 shadow-sm"
+                    : "text-dark-600 dark:text-dark-300 hover:bg-dark-50 dark:hover:bg-dark-700 hover:text-dark-900 dark:hover:text-white"
                 )}
               >
                 {item.icon}
@@ -360,7 +362,8 @@ const Sidebar = () => {
 const Header = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
-  const { sidebarCollapsed, toggleSidebar } = useUIStore();
+  const { sidebarCollapsed, toggleSidebar, darkMode, toggleDarkMode } =
+    useUIStore();
   const {
     notifications,
     unreadCount,
@@ -470,7 +473,7 @@ const Header = () => {
   return (
     <header
       className={cn(
-        "fixed top-0 right-0 z-30 h-16 bg-white/80 backdrop-blur-md border-b border-dark-100 transition-all duration-300",
+        "fixed top-0 right-0 z-30 h-16 bg-white/80 dark:bg-dark-800/80 backdrop-blur-md border-b border-dark-100 dark:border-dark-700 transition-all duration-300",
         sidebarCollapsed ? "left-20" : "left-64"
       )}
     >
@@ -478,7 +481,7 @@ const Header = () => {
         {/* Mobile menu button */}
         <button
           onClick={toggleSidebar}
-          className="lg:hidden p-2 text-dark-500 hover:bg-dark-100 rounded-lg"
+          className="lg:hidden p-2 text-dark-500 hover:bg-dark-100 dark:text-dark-300 dark:hover:bg-dark-700 rounded-lg"
         >
           <Menu className="h-5 w-5" />
         </button>
@@ -488,14 +491,30 @@ const Header = () => {
 
         {/* Right side */}
         <div className="flex items-center gap-2">
+          {/* Dark Mode Toggle */}
+          <button
+            onClick={toggleDarkMode}
+            className={cn(
+              "p-2 rounded-lg transition-colors",
+              "text-dark-500 hover:bg-dark-100 dark:text-dark-300 dark:hover:bg-dark-700"
+            )}
+            title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          >
+            {darkMode ? (
+              <Sun className="h-5 w-5" />
+            ) : (
+              <Moon className="h-5 w-5" />
+            )}
+          </button>
+
           {/* Chat */}
           <button
             onClick={toggleChat}
             className={cn(
               "p-2 rounded-lg transition-colors",
               chatOpen
-                ? "bg-primary-100 text-primary-600"
-                : "text-dark-500 hover:bg-dark-100"
+                ? "bg-primary-100 text-primary-600 dark:bg-primary-900/50 dark:text-primary-400"
+                : "text-dark-500 hover:bg-dark-100 dark:text-dark-300 dark:hover:bg-dark-700"
             )}
           >
             <MessageCircle className="h-5 w-5" />
@@ -508,8 +527,8 @@ const Header = () => {
               className={cn(
                 "relative p-2 rounded-lg transition-colors",
                 showNotifications
-                  ? "bg-primary-100 text-primary-600"
-                  : "text-dark-500 hover:bg-dark-100"
+                  ? "bg-primary-100 text-primary-600 dark:bg-primary-900/50 dark:text-primary-400"
+                  : "text-dark-500 hover:bg-dark-100 dark:text-dark-300 dark:hover:bg-dark-700"
               )}
             >
               <Bell className="h-5 w-5" />
@@ -527,14 +546,16 @@ const Header = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
-                  className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-dark-100 z-50 overflow-hidden"
+                  className="absolute right-0 mt-2 w-80 bg-white dark:bg-dark-800 rounded-xl shadow-lg border border-dark-100 dark:border-dark-700 z-50 overflow-hidden"
                 >
-                  <div className="px-4 py-3 border-b border-dark-100 flex items-center justify-between">
-                    <h3 className="font-semibold text-dark-900">Notifikasi</h3>
+                  <div className="px-4 py-3 border-b border-dark-100 dark:border-dark-700 flex items-center justify-between">
+                    <h3 className="font-semibold text-dark-900 dark:text-white">
+                      Notifikasi
+                    </h3>
                     {unreadCount > 0 && (
                       <button
                         onClick={handleMarkAllAsRead}
-                        className="text-xs text-primary-600 hover:text-primary-700"
+                        className="text-xs text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
                       >
                         Tandai semua dibaca
                       </button>
@@ -552,19 +573,22 @@ const Header = () => {
                           key={notif.id}
                           onClick={() => handleMarkAsRead(notif.id)}
                           className={cn(
-                            "px-4 py-3 border-b border-dark-50 cursor-pointer hover:bg-dark-50 transition-colors",
-                            !notif.read && "bg-primary-50"
+                            "px-4 py-3 border-b border-dark-50 dark:border-dark-700 cursor-pointer hover:bg-dark-50 dark:hover:bg-dark-700 transition-colors",
+                            !notif.read &&
+                              "bg-primary-50 dark:bg-primary-900/30"
                           )}
                         >
                           <div className="flex items-start gap-3">
                             <div
                               className={cn(
                                 "mt-1 h-2 w-2 rounded-full flex-shrink-0",
-                                notif.read ? "bg-dark-300" : "bg-primary-500"
+                                notif.read
+                                  ? "bg-dark-300 dark:bg-dark-500"
+                                  : "bg-primary-500"
                               )}
                             />
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm text-dark-700 line-clamp-2">
+                              <p className="text-sm text-dark-700 dark:text-dark-200 line-clamp-2">
                                 {notif.message}
                               </p>
                               <p className="text-xs text-dark-400 mt-1">
@@ -585,16 +609,18 @@ const Header = () => {
           <div className="relative">
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center gap-3 px-3 py-2 hover:bg-dark-50 rounded-xl transition-colors"
+              className="flex items-center gap-3 px-3 py-2 hover:bg-dark-50 dark:hover:bg-dark-700 rounded-xl transition-colors"
             >
               <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center">
                 <User className="h-4 w-4 text-white" />
               </div>
               <div className="hidden md:block text-left">
-                <p className="text-sm font-medium text-dark-900">
+                <p className="text-sm font-medium text-dark-900 dark:text-white">
                   {user?.namaLengkap}
                 </p>
-                <p className="text-xs text-dark-500 capitalize">{user?.role}</p>
+                <p className="text-xs text-dark-500 dark:text-dark-400 capitalize">
+                  {user?.role}
+                </p>
               </div>
               <ChevronDown className="h-4 w-4 text-dark-400" />
             </button>
@@ -605,10 +631,10 @@ const Header = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
-                  className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-dark-100 py-2 z-50"
+                  className="absolute right-0 mt-2 w-48 bg-white dark:bg-dark-800 rounded-xl shadow-lg border border-dark-100 dark:border-dark-700 py-2 z-50"
                 >
-                  <div className="px-4 py-2 border-b border-dark-100">
-                    <p className="text-sm font-medium text-dark-900">
+                  <div className="px-4 py-2 border-b border-dark-100 dark:border-dark-700">
+                    <p className="text-sm font-medium text-dark-900 dark:text-white">
                       {user?.namaLengkap}
                     </p>
                     <div className="flex items-center gap-2 mt-1">
@@ -622,7 +648,7 @@ const Header = () => {
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                   >
                     <LogOut className="h-4 w-4" />
                     Keluar
@@ -824,11 +850,20 @@ interface LayoutProps {
 }
 
 const Layout = ({ children }: LayoutProps) => {
-  const { sidebarCollapsed } = useUIStore();
+  const { sidebarCollapsed, darkMode } = useUIStore();
   const { isOpen: chatOpen } = useChatStore();
 
+  // Apply dark mode class to document
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [darkMode]);
+
   return (
-    <div className="min-h-screen bg-dark-50">
+    <div className="min-h-screen bg-dark-50 dark:bg-dark-900 transition-colors duration-300">
       <Sidebar />
       <Header />
       <main

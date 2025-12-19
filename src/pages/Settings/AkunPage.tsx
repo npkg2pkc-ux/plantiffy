@@ -171,10 +171,10 @@ const AkunPage = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-display font-bold text-dark-900">
+        <h1 className="text-2xl font-display font-bold text-dark-900 dark:text-white">
           Pengaturan Akun
         </h1>
-        <p className="text-dark-500 mt-1">
+        <p className="text-dark-500 dark:text-dark-400 mt-1">
           Kelola informasi akun dan preferensi Anda
         </p>
       </div>
@@ -186,10 +186,10 @@ const AkunPage = () => {
             {user?.nama?.charAt(0).toUpperCase() || "U"}
           </div>
           <div className="flex-1">
-            <h2 className="text-xl font-semibold text-dark-900">
+            <h2 className="text-xl font-semibold text-dark-900 dark:text-white">
               {user?.nama || "User"}
             </h2>
-            <p className="text-dark-500">{user?.email || "user@example.com"}</p>
+            <p className="text-dark-500 dark:text-dark-400">{user?.email || "user@example.com"}</p>
             <div className="flex items-center gap-3 mt-2">
               <Badge variant={getRoleBadge(user?.role || "user")}>
                 <Shield className="h-3 w-3 mr-1" />
@@ -375,15 +375,15 @@ const AkunPage = () => {
               <CardContent>
                 <form onSubmit={handleNotificationSubmit} className="space-y-6">
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-dark-900">
+                    <h3 className="font-semibold text-dark-900 dark:text-white">
                       Notifikasi Umum
                     </h3>
                     <label className="flex items-center justify-between p-4 bg-dark-50 rounded-xl cursor-pointer">
                       <div>
-                        <p className="font-medium text-dark-900">
+                        <p className="font-medium text-dark-900 dark:text-white">
                           Email Notifications
                         </p>
-                        <p className="text-sm text-dark-500">
+                        <p className="text-sm text-dark-500 dark:text-dark-400">
                           Terima notifikasi via email
                         </p>
                       </div>
@@ -401,10 +401,10 @@ const AkunPage = () => {
                     </label>
                     <label className="flex items-center justify-between p-4 bg-dark-50 rounded-xl cursor-pointer">
                       <div>
-                        <p className="font-medium text-dark-900">
+                        <p className="font-medium text-dark-900 dark:text-white">
                           Push Notifications
                         </p>
-                        <p className="text-sm text-dark-500">
+                        <p className="text-sm text-dark-500 dark:text-dark-400">
                           Notifikasi browser/app
                         </p>
                       </div>
@@ -423,13 +423,13 @@ const AkunPage = () => {
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-dark-900">Laporan</h3>
+                    <h3 className="font-semibold text-dark-900 dark:text-white">Laporan</h3>
                     <label className="flex items-center justify-between p-4 bg-dark-50 rounded-xl cursor-pointer">
                       <div>
-                        <p className="font-medium text-dark-900">
+                        <p className="font-medium text-dark-900 dark:text-white">
                           Laporan Harian
                         </p>
-                        <p className="text-sm text-dark-500">
+                        <p className="text-sm text-dark-500 dark:text-dark-400">
                           Ringkasan produksi harian
                         </p>
                       </div>
@@ -447,10 +447,10 @@ const AkunPage = () => {
                     </label>
                     <label className="flex items-center justify-between p-4 bg-dark-50 rounded-xl cursor-pointer">
                       <div>
-                        <p className="font-medium text-dark-900">
+                        <p className="font-medium text-dark-900 dark:text-white">
                           Laporan Mingguan
                         </p>
-                        <p className="text-sm text-dark-500">
+                        <p className="text-sm text-dark-500 dark:text-dark-400">
                           Ringkasan produksi mingguan
                         </p>
                       </div>
@@ -469,13 +469,13 @@ const AkunPage = () => {
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-dark-900">Alert</h3>
+                    <h3 className="font-semibold text-dark-900 dark:text-white">Alert</h3>
                     <label className="flex items-center justify-between p-4 bg-dark-50 rounded-xl cursor-pointer">
                       <div>
-                        <p className="font-medium text-dark-900">
+                        <p className="font-medium text-dark-900 dark:text-white">
                           Alert Downtime
                         </p>
-                        <p className="text-sm text-dark-500">
+                        <p className="text-sm text-dark-500 dark:text-dark-400">
                           Notifikasi saat terjadi downtime
                         </p>
                       </div>
@@ -493,10 +493,10 @@ const AkunPage = () => {
                     </label>
                     <label className="flex items-center justify-between p-4 bg-dark-50 rounded-xl cursor-pointer">
                       <div>
-                        <p className="font-medium text-dark-900">
+                        <p className="font-medium text-dark-900 dark:text-white">
                           Alert Work Request
                         </p>
-                        <p className="text-sm text-dark-500">
+                        <p className="text-sm text-dark-500 dark:text-dark-400">
                           Notifikasi work request baru
                         </p>
                       </div>

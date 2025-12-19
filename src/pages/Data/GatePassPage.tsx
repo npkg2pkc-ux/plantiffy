@@ -372,10 +372,10 @@ const GatePassPage = ({ plant }: GatePassPageProps) => {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-dark-900">
+          <h1 className="text-2xl font-display font-bold text-dark-900 dark:text-white">
             Gate Pass {currentPlant === "NPK1" ? "NPK 1" : "NPK 2"}
           </h1>
-          <p className="text-dark-500 mt-1">
+          <p className="text-dark-500 dark:text-dark-400 mt-1">
             Kelola data gate pass barang masuk/keluar
           </p>
         </div>
@@ -398,7 +398,7 @@ const GatePassPage = ({ plant }: GatePassPageProps) => {
               <Truck className="h-5 w-5 text-primary-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500">Total Gate Pass</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">Total Gate Pass</p>
               <p className="text-2xl font-bold text-primary-600">{totalData}</p>
             </div>
           </div>

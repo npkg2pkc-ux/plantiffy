@@ -339,14 +339,14 @@ const DowntimePage = ({ plant }: DowntimePageProps) => {
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-display font-bold text-dark-900">
+            <h1 className="text-2xl font-display font-bold text-dark-900 dark:text-white">
               Data Downtime
             </h1>
             <Badge variant={plant === "NPK1" ? "primary" : "success"}>
               {plant}
             </Badge>
           </div>
-          <p className="text-dark-500 mt-1">
+          <p className="text-dark-500 dark:text-dark-400 mt-1">
             Kelola data downtime equipment untuk {plant}
           </p>
         </div>
@@ -368,20 +368,20 @@ const DowntimePage = ({ plant }: DowntimePageProps) => {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="p-4">
-          <p className="text-sm text-dark-500">Total Downtime</p>
+          <p className="text-sm text-dark-500 dark:text-dark-400">Total Downtime</p>
           <p className="text-2xl font-bold text-amber-600">
             {formatNumber(totalDowntime)} Jam
           </p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-dark-500">Jumlah Kejadian</p>
-          <p className="text-2xl font-bold text-dark-900">
+          <p className="text-sm text-dark-500 dark:text-dark-400">Jumlah Kejadian</p>
+          <p className="text-2xl font-bold text-dark-900 dark:text-white">
             {filteredData.length}
           </p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-dark-500">Rata-rata Downtime</p>
-          <p className="text-2xl font-bold text-dark-900">
+          <p className="text-sm text-dark-500 dark:text-dark-400">Rata-rata Downtime</p>
+          <p className="text-2xl font-bold text-dark-900 dark:text-white">
             {formatNumber(
               filteredData.length > 0 ? totalDowntime / filteredData.length : 0
             )}{" "}
@@ -389,8 +389,8 @@ const DowntimePage = ({ plant }: DowntimePageProps) => {
           </p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-dark-500">Equipment Terdampak</p>
-          <p className="text-2xl font-bold text-dark-900">
+          <p className="text-sm text-dark-500 dark:text-dark-400">Equipment Terdampak</p>
+          <p className="text-2xl font-bold text-dark-900 dark:text-white">
             {new Set(filteredData.map((item) => item.item)).size}
           </p>
         </Card>

@@ -364,12 +364,12 @@ const ProduksiNPKMiniPage = () => {
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-display font-bold text-dark-900">
+            <h1 className="text-2xl font-display font-bold text-dark-900 dark:text-white">
               Produksi NPK Mini
             </h1>
             <Badge variant="success">NPK2</Badge>
           </div>
-          <p className="text-dark-500 mt-1">
+          <p className="text-dark-500 dark:text-dark-400 mt-1">
             Kelola data produksi NPK Mini untuk NPK2
           </p>
         </div>
@@ -430,7 +430,7 @@ const ProduksiNPKMiniPage = () => {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-4">
-          <p className="text-sm text-dark-500">Total Tonase</p>
+          <p className="text-sm text-dark-500 dark:text-dark-400">Total Tonase</p>
           <p className="text-2xl font-bold text-primary-600">
             {formatNumber(
               data.reduce((sum, item) => sum + parseNumber(item.tonase), 0)
@@ -439,14 +439,14 @@ const ProduksiNPKMiniPage = () => {
           </p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-dark-500">Jumlah Formulasi</p>
-          <p className="text-2xl font-bold text-dark-900">
+          <p className="text-sm text-dark-500 dark:text-dark-400">Jumlah Formulasi</p>
+          <p className="text-2xl font-bold text-dark-900 dark:text-white">
             {new Set(data.map((item) => item.formulasi)).size}
           </p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-dark-500">Jumlah Entry</p>
-          <p className="text-2xl font-bold text-dark-900">{data.length}</p>
+          <p className="text-sm text-dark-500 dark:text-dark-400">Jumlah Entry</p>
+          <p className="text-2xl font-bold text-dark-900 dark:text-white">{data.length}</p>
         </Card>
       </div>
 

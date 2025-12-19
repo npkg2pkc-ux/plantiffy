@@ -48,26 +48,39 @@ interface UIState {
   activeTab: string;
   dashboardPlantFilter: PlantType;
   dashboardYear: number;
+  darkMode: boolean;
   toggleSidebar: () => void;
   toggleSidebarCollapse: () => void;
   setActiveTab: (tab: string) => void;
   setDashboardPlantFilter: (plant: PlantType) => void;
   setDashboardYear: (year: number) => void;
+  toggleDarkMode: () => void;
 }
 
-export const useUIStore = create<UIState>((set) => ({
-  sidebarOpen: true,
-  sidebarCollapsed: false,
-  activeTab: "dashboard",
-  dashboardPlantFilter: "ALL",
-  dashboardYear: new Date().getFullYear(),
-  toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
-  toggleSidebarCollapse: () =>
-    set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
-  setActiveTab: (tab) => set({ activeTab: tab }),
-  setDashboardPlantFilter: (plant) => set({ dashboardPlantFilter: plant }),
-  setDashboardYear: (year) => set({ dashboardYear: year }),
-}));
+export const useUIStore = create<UIState>()(
+  persist(
+    (set) => ({
+      sidebarOpen: true,
+      sidebarCollapsed: false,
+      activeTab: "dashboard",
+      dashboardPlantFilter: "ALL",
+      dashboardYear: new Date().getFullYear(),
+      darkMode: false,
+      toggleSidebar: () =>
+        set((state) => ({ sidebarOpen: !state.sidebarOpen })),
+      toggleSidebarCollapse: () =>
+        set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
+      setActiveTab: (tab) => set({ activeTab: tab }),
+      setDashboardPlantFilter: (plant) => set({ dashboardPlantFilter: plant }),
+      setDashboardYear: (year) => set({ dashboardYear: year }),
+      toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
+    }),
+    {
+      name: "ui-storage",
+      partialize: (state) => ({ darkMode: state.darkMode }),
+    }
+  )
+);
 
 // Notification Store
 interface NotificationState {

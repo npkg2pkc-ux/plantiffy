@@ -400,10 +400,10 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-dark-900">
+          <h1 className="text-2xl font-display font-bold text-dark-900 dark:text-white">
             Trouble Record {currentPlant === "NPK1" ? "NPK 1" : "NPK 2"}
           </h1>
-          <p className="text-dark-500 mt-1">
+          <p className="text-dark-500 dark:text-dark-400 mt-1">
             Catatan masalah dan tindak lanjut
           </p>
         </div>
@@ -426,7 +426,7 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
               <AlertCircle className="h-5 w-5 text-red-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500">Open</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">Open</p>
               <p className="text-2xl font-bold text-red-600">
                 {statusCounts.open}
               </p>
@@ -439,7 +439,7 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
               <Clock className="h-5 w-5 text-amber-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500">In Progress</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">In Progress</p>
               <p className="text-2xl font-bold text-amber-600">
                 {statusCounts.progress}
               </p>
@@ -452,7 +452,7 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
               <AlertCircle className="h-5 w-5 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500">Closed</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">Closed</p>
               <p className="text-2xl font-bold text-green-600">
                 {statusCounts.closed}
               </p>
@@ -465,7 +465,7 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
               <AlertCircle className="h-5 w-5 text-gray-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500">Pending</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">Pending</p>
               <p className="text-2xl font-bold text-gray-600">
                 {statusCounts.pending}
               </p>

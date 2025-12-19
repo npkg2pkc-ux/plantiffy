@@ -94,6 +94,17 @@ export interface TimesheetLoader {
   _plant?: PlantType;
 }
 
+// Rekap BBM Alat Berat
+export interface RekapBBM {
+  id?: string;
+  tanggal: string;
+  namaAlatBerat: string;
+  pengajuanSolar: number;
+  realisasiPengisian: number;
+  keterangan?: string;
+  _plant?: PlantType;
+}
+
 // Downtime
 export interface Downtime {
   id?: string;

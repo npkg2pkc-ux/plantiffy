@@ -36,6 +36,7 @@ import {
   PerbaikanTahunanPage,
   TroubleRecordPage,
   DokumentasiFotoPage,
+  RekapBBMPage,
 } from "@/pages/Data";
 import { AkunPage, RKAPPage, UsersPage, ApprovalPage } from "@/pages/Settings";
 
@@ -222,6 +223,14 @@ function App() {
             <Route
               path="dokumentasi-foto-npk2"
               element={<DokumentasiFotoPage plant="NPK2" />}
+            />
+            <Route
+              path="rekap-bbm-npk1"
+              element={<RekapBBMPage plant="NPK1" />}
+            />
+            <Route
+              path="rekap-bbm-npk2"
+              element={<RekapBBMPage plant="NPK2" />}
             />
             {/* Legacy routes for backwards compatibility */}
             <Route path="perta" element={<PertaPage />} />

@@ -43,6 +43,7 @@
  * - trouble_record, trouble_record_NPK1
  * - dokumentasi_foto, dokumentasi_foto_NPK1
  * - kop, kop_NPK1
+ * - rekap_bbm, rekap_bbm_NPK1
  * - akun
  * - rkap
  * - approval_requests
@@ -310,6 +311,14 @@ const SHEET_HEADERS = {
     "toUser",
   ],
   chat_messages: ["id", "sender", "role", "message", "timestamp"],
+  rekap_bbm: [
+    "id",
+    "tanggal",
+    "namaAlatBerat",
+    "pengajuanSolar",
+    "realisasiPengisian",
+    "keterangan",
+  ],
   kop: [
     "id",
     "tanggal",
@@ -1216,6 +1225,10 @@ function initializeAllSheets() {
     "trouble_record_NPK1",
     "dokumentasi_foto",
     "dokumentasi_foto_NPK1",
+    "kop",
+    "kop_NPK1",
+    "rekap_bbm",
+    "rekap_bbm_NPK1",
     "akun",
     "rkap",
     "approval_requests",

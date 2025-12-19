@@ -363,7 +363,7 @@ const PertaPage = () => {
       key: "volumeAkhir",
       header: "Vol. Akhir (L)",
       render: (value: unknown) => (
-        <span className="font-bold text-dark-900">
+        <span className="font-bold text-dark-900 dark:text-white">
           {formatNumber(parseNumber(value))}
         </span>
       ),
@@ -376,10 +376,10 @@ const PertaPage = () => {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-dark-900">
+          <h1 className="text-2xl font-display font-bold text-dark-900 dark:text-white">
             Data Perta (BBM)
           </h1>
-          <p className="text-dark-500 mt-1">
+          <p className="text-dark-500 dark:text-dark-400 mt-1">
             Kelola data pemakaian bahan bakar
           </p>
         </div>
@@ -415,7 +415,7 @@ const PertaPage = () => {
               <Droplets className="h-5 w-5 text-amber-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500">Stock Saat Ini</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">Stock Saat Ini</p>
               <p className="text-2xl font-bold text-amber-600">
                 {formatNumber(latestStock)} L
               </p>
@@ -428,7 +428,7 @@ const PertaPage = () => {
               <Droplets className="h-5 w-5 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500">Total Pengisian</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">Total Pengisian</p>
               <p className="text-2xl font-bold text-green-600">
                 +{formatNumber(totals.pengisian)} L
               </p>
@@ -441,7 +441,7 @@ const PertaPage = () => {
               <Droplets className="h-5 w-5 text-red-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500">Total Pemakaian</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">Total Pemakaian</p>
               <p className="text-2xl font-bold text-red-600">
                 -{formatNumber(totals.pemakaian)} L
               </p>
@@ -454,8 +454,8 @@ const PertaPage = () => {
               <Droplets className="h-5 w-5 text-dark-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500">Jumlah Entry</p>
-              <p className="text-2xl font-bold text-dark-900">
+              <p className="text-sm text-dark-500 dark:text-dark-400">Jumlah Entry</p>
+              <p className="text-2xl font-bold text-dark-900 dark:text-white">
                 {filteredData.length}
               </p>
             </div>

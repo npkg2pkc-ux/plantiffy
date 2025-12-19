@@ -11,7 +11,7 @@ const Card = ({ children, className, onClick }: CardProps) => {
   return (
     <div
       className={cn(
-        "bg-white rounded-2xl border border-dark-100 shadow-soft overflow-hidden",
+        "bg-white dark:bg-dark-800 rounded-2xl border border-dark-100 dark:border-dark-700 shadow-soft overflow-hidden",
         className
       )}
       onClick={onClick}
@@ -28,7 +28,12 @@ interface CardHeaderProps {
 
 const CardHeader = ({ children, className }: CardHeaderProps) => {
   return (
-    <div className={cn("px-6 py-4 border-b border-dark-100", className)}>
+    <div
+      className={cn(
+        "px-6 py-4 border-b border-dark-100 dark:border-dark-700",
+        className
+      )}
+    >
       {children}
     </div>
   );
@@ -41,7 +46,12 @@ interface CardTitleProps {
 
 const CardTitle = ({ children, className }: CardTitleProps) => {
   return (
-    <h3 className={cn("text-lg font-semibold text-dark-900", className)}>
+    <h3
+      className={cn(
+        "text-lg font-semibold text-dark-900 dark:text-white",
+        className
+      )}
+    >
       {children}
     </h3>
   );
@@ -54,7 +64,11 @@ interface CardDescriptionProps {
 
 const CardDescription = ({ children, className }: CardDescriptionProps) => {
   return (
-    <p className={cn("text-sm text-dark-500 mt-1", className)}>{children}</p>
+    <p
+      className={cn("text-sm text-dark-500 dark:text-dark-400 mt-1", className)}
+    >
+      {children}
+    </p>
   );
 };
 
@@ -76,7 +90,7 @@ const CardFooter = ({ children, className }: CardFooterProps) => {
   return (
     <div
       className={cn(
-        "px-6 py-4 border-t border-dark-100 bg-dark-50/50",
+        "px-6 py-4 border-t border-dark-100 dark:border-dark-700 bg-dark-50/50 dark:bg-dark-900/50",
         className
       )}
     >

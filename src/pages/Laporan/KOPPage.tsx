@@ -323,7 +323,7 @@ const ParameterInputRow = ({
       </p>
     </div>
     <div className="text-center">
-      <span className="text-xs text-dark-500 bg-dark-100 px-2 py-1 rounded">
+      <span className="text-xs text-dark-500 dark:text-dark-400 bg-dark-100 px-2 py-1 rounded">
         {target}
       </span>
     </div>
@@ -1555,14 +1555,14 @@ const KOPPage = ({ plant }: KOPPageProps) => {
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-display font-bold text-dark-900">
+            <h1 className="text-2xl font-display font-bold text-dark-900 dark:text-white">
               Key Operating Parameter (KOP)
             </h1>
             <Badge variant={plant === "NPK1" ? "primary" : "success"}>
               {plant}
             </Badge>
           </div>
-          <p className="text-dark-500 mt-1">
+          <p className="text-dark-500 dark:text-dark-400 mt-1">
             Pabrik NPK Granular {plant === "NPK1" ? "1" : "2"}
           </p>
         </div>
@@ -1701,7 +1701,7 @@ const KOPPage = ({ plant }: KOPPageProps) => {
                       className="hover:bg-dark-50 transition-colors"
                     >
                       <td className="px-4 py-3">
-                        <span className="font-medium text-dark-900">
+                        <span className="font-medium text-dark-900 dark:text-white">
                           {formatDate(item.tanggal)}
                         </span>
                       </td>
@@ -1794,7 +1794,7 @@ const KOPPage = ({ plant }: KOPPageProps) => {
           <Card className="p-4">
             <div className="flex items-center gap-2 mb-4">
               <Users className="h-5 w-5 text-primary-600" />
-              <h3 className="text-lg font-semibold text-dark-900">
+              <h3 className="text-lg font-semibold text-dark-900 dark:text-white">
                 Personel Shift
               </h3>
             </div>
@@ -1916,7 +1916,7 @@ const KOPPage = ({ plant }: KOPPageProps) => {
           <Card className="p-4">
             <div className="flex items-center gap-2 mb-4">
               <Zap className="h-5 w-5 text-blue-600" />
-              <h3 className="text-lg font-semibold text-dark-900">
+              <h3 className="text-lg font-semibold text-dark-900 dark:text-white">
                 Konsumsi Steam (M3)
               </h3>
             </div>
@@ -2152,7 +2152,7 @@ const KOPPage = ({ plant }: KOPPageProps) => {
           <Card className="p-4">
             <div className="flex items-center gap-2 mb-4">
               <Flame className="h-5 w-5 text-orange-600" />
-              <h3 className="text-lg font-semibold text-dark-900">
+              <h3 className="text-lg font-semibold text-dark-900 dark:text-white">
                 Konsumsi Gas (Nm3)
               </h3>
             </div>
@@ -2336,7 +2336,7 @@ const KOPPage = ({ plant }: KOPPageProps) => {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Gauge className="h-5 w-5 text-primary-600" />
-                <h3 className="text-lg font-semibold text-dark-900">
+                <h3 className="text-lg font-semibold text-dark-900 dark:text-white">
                   Parameter Operasi
                 </h3>
               </div>
@@ -2383,7 +2383,7 @@ const KOPPage = ({ plant }: KOPPageProps) => {
                   <p className="text-xs text-dark-400">FI | M3/H</p>
                 </div>
                 <div className="text-center">
-                  <span className="text-xs text-dark-500 bg-dark-100 px-2 py-1 rounded">
+                  <span className="text-xs text-dark-500 dark:text-dark-400 bg-dark-100 px-2 py-1 rounded">
                     {TARGETS.folwSteam.label}
                   </span>
                 </div>
@@ -2413,7 +2413,7 @@ const KOPPage = ({ plant }: KOPPageProps) => {
                   <p className="text-xs text-dark-400">FT-202 | NM3/H</p>
                 </div>
                 <div className="text-center">
-                  <span className="text-xs text-dark-500 bg-dark-100 px-2 py-1 rounded">
+                  <span className="text-xs text-dark-500 dark:text-dark-400 bg-dark-100 px-2 py-1 rounded">
                     {TARGETS.flowGas.label}
                   </span>
                 </div>

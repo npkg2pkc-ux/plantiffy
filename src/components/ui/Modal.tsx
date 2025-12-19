@@ -96,7 +96,7 @@ const Modal = ({
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
               className={cn(
-                "relative w-full bg-white rounded-2xl shadow-xl",
+                "relative w-full bg-white dark:bg-dark-800 rounded-2xl shadow-xl",
                 sizeClasses[size],
                 className
               )}
@@ -104,15 +104,15 @@ const Modal = ({
             >
               {/* Header */}
               {(title || showCloseButton) && (
-                <div className="flex items-start justify-between px-6 py-4 border-b border-dark-100">
+                <div className="flex items-start justify-between px-6 py-4 border-b border-dark-100 dark:border-dark-700">
                   <div>
                     {title && (
-                      <h2 className="text-lg font-semibold text-dark-900">
+                      <h2 className="text-lg font-semibold text-dark-900 dark:text-white">
                         {title}
                       </h2>
                     )}
                     {description && (
-                      <p className="mt-1 text-sm text-dark-500">
+                      <p className="mt-1 text-sm text-dark-500 dark:text-dark-400">
                         {description}
                       </p>
                     )}
@@ -120,7 +120,7 @@ const Modal = ({
                   {showCloseButton && (
                     <button
                       onClick={onClose}
-                      className="p-2 text-dark-400 hover:text-dark-600 hover:bg-dark-100 rounded-lg transition-colors"
+                      className="p-2 text-dark-400 hover:text-dark-600 dark:hover:text-dark-200 hover:bg-dark-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
                     >
                       <X className="h-5 w-5" />
                     </button>
@@ -176,12 +176,16 @@ const ConfirmDialog = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="sm" showCloseButton={false}>
       <div className="text-center py-4">
-        <h3 className="text-lg font-semibold text-dark-900 mb-2">{title}</h3>
-        <p className="text-sm text-dark-500 mb-6">{message}</p>
+        <h3 className="text-lg font-semibold text-dark-900 dark:text-white mb-2">
+          {title}
+        </h3>
+        <p className="text-sm text-dark-500 dark:text-dark-400 mb-6">
+          {message}
+        </p>
         <div className="flex justify-center gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2.5 text-sm font-medium text-dark-700 bg-white border border-dark-200 rounded-xl hover:bg-dark-50 transition-colors"
+            className="px-4 py-2.5 text-sm font-medium text-dark-700 dark:text-dark-200 bg-white dark:bg-dark-700 border border-dark-200 dark:border-dark-600 rounded-xl hover:bg-dark-50 dark:hover:bg-dark-600 transition-colors"
             disabled={isLoading}
           >
             {cancelText}

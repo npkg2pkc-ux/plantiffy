@@ -449,14 +449,14 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-display font-bold text-dark-900">
+            <h1 className="text-2xl font-display font-bold text-dark-900 dark:text-white">
               Produksi NPK Granul
             </h1>
             <Badge variant={plant === "NPK1" ? "primary" : "success"}>
               {plant}
             </Badge>
           </div>
-          <p className="text-dark-500 mt-1">
+          <p className="text-dark-500 dark:text-dark-400 mt-1">
             Kelola data produksi NPK Granul untuk {plant}
           </p>
         </div>
@@ -530,7 +530,7 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="p-4">
-          <p className="text-sm text-dark-500">Total Onspek</p>
+          <p className="text-sm text-dark-500 dark:text-dark-400">Total Onspek</p>
           <p className="text-2xl font-bold text-primary-600">
             {formatNumber(
               data.reduce((sum, item) => sum + parseNumber(item.totalOnspek), 0)
@@ -538,7 +538,7 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
           </p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-dark-500">Total Offspek</p>
+          <p className="text-sm text-dark-500 dark:text-dark-400">Total Offspek</p>
           <p className="text-2xl font-bold text-red-600">
             {formatNumber(
               data.reduce(
@@ -549,16 +549,16 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
           </p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-dark-500">Total Produksi</p>
-          <p className="text-2xl font-bold text-dark-900">
+          <p className="text-sm text-dark-500 dark:text-dark-400">Total Produksi</p>
+          <p className="text-2xl font-bold text-dark-900 dark:text-white">
             {formatNumber(
               data.reduce((sum, item) => sum + parseNumber(item.total), 0)
             )}
           </p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-dark-500">Jumlah Entry</p>
-          <p className="text-2xl font-bold text-dark-900">{data.length}</p>
+          <p className="text-sm text-dark-500 dark:text-dark-400">Jumlah Entry</p>
+          <p className="text-2xl font-bold text-dark-900 dark:text-white">{data.length}</p>
         </Card>
       </div>
 
@@ -748,20 +748,20 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
               </h4>
               <div className="p-4 bg-dark-50 rounded-xl">
                 <div className="flex justify-between mb-2">
-                  <span className="text-dark-500">Total Onspek:</span>
+                  <span className="text-dark-500 dark:text-dark-400">Total Onspek:</span>
                   <span className="font-semibold text-primary-600">
                     {formatNumber(form.totalOnspek || 0)} Ton
                   </span>
                 </div>
                 <div className="flex justify-between mb-2">
-                  <span className="text-dark-500">Total Offspek:</span>
+                  <span className="text-dark-500 dark:text-dark-400">Total Offspek:</span>
                   <span className="font-semibold text-red-600">
                     {formatNumber(form.totalOffspek || 0)} Ton
                   </span>
                 </div>
                 <div className="flex justify-between pt-2 border-t">
                   <span className="font-medium text-dark-700">Total:</span>
-                  <span className="font-bold text-dark-900">
+                  <span className="font-bold text-dark-900 dark:text-white">
                     {formatNumber(form.total || 0)} Ton
                   </span>
                 </div>

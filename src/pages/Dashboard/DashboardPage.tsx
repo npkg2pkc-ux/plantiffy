@@ -28,6 +28,7 @@ import {
   Gauge,
   Loader2,
   CalendarDays,
+  Fuel,
 } from "lucide-react";
 import {
   Card,
@@ -53,6 +54,7 @@ import type {
   TroubleRecord,
   RKAP,
   PlantType,
+  RekapBBM,
 } from "@/types";
 
 const COLORS = [
@@ -107,6 +109,7 @@ interface DashboardData {
   timesheetLoader: TimesheetLoader[];
   troubleRecord: TroubleRecord[];
   rkap: RKAP[];
+  rekapBBM: RekapBBM[];
 }
 
 const MetricCard = ({
@@ -142,8 +145,8 @@ const MetricCard = ({
     >
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-medium text-dark-500">{title}</p>
-          <p className="text-2xl font-bold text-dark-900 mt-1">{value}</p>
+          <p className="text-sm font-medium text-dark-500 dark:text-dark-400">{title}</p>
+          <p className="text-2xl font-bold text-dark-900 dark:text-white mt-1">{value}</p>
           {subtitle && <p className="text-sm text-dark-400 mt-1">{subtitle}</p>}
           {trend && trendValue && (
             <div className="flex items-center gap-1 mt-2">
@@ -158,7 +161,7 @@ const MetricCard = ({
                     ? "text-secondary-600"
                     : trend === "down"
                     ? "text-red-600"
-                    : "text-dark-500"
+                    : "text-dark-500 dark:text-dark-400"
                 }`}
               >
                 {trendValue}
@@ -211,6 +214,7 @@ const DashboardPage = () => {
     timesheetLoader: [],
     troubleRecord: [],
     rkap: [],
+    rekapBBM: [],
   });
 
   // Determine if user can view all plants
@@ -254,6 +258,7 @@ const DashboardPage = () => {
           timesheetLoaderResult,
           troubleRecordResult,
           rkapResult,
+          rekapBBMResult,
         ] = await Promise.all([
           fetchDataByPlant<ProduksiNPK>(SHEETS.PRODUKSI_NPK),
           fetchDataByPlant<ProduksiBlending>(SHEETS.PRODUKSI_BLENDING),
@@ -267,6 +272,7 @@ const DashboardPage = () => {
           fetchDataByPlant<TimesheetLoader>(SHEETS.TIMESHEET_LOADER),
           fetchDataByPlant<TroubleRecord>(SHEETS.TROUBLE_RECORD),
           readData<RKAP>(SHEETS.RKAP),
+          fetchDataByPlant<RekapBBM>(SHEETS.REKAP_BBM),
         ]);
 
         setDashboardData({
@@ -315,6 +321,10 @@ const DashboardPage = () => {
               ? troubleRecordResult.data
               : [],
           rkap: rkapResult.success && rkapResult.data ? rkapResult.data : [],
+          rekapBBM:
+            rekapBBMResult.success && rekapBBMResult.data
+              ? rekapBBMResult.data
+              : [],
         });
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
@@ -369,6 +379,7 @@ const DashboardPage = () => {
         filterByPlant(dashboardData.timesheetLoader)
       ),
       troubleRecord: filterByYear(filterByPlant(dashboardData.troubleRecord)),
+      rekapBBM: filterByYear(filterByPlant(dashboardData.rekapBBM)),
       rkap: filterRKAPByPlant(dashboardData.rkap).filter(
         (item) => Number(item.tahun) === dashboardYear
       ),
@@ -479,6 +490,17 @@ const DashboardPage = () => {
       0
     );
 
+    // BBM Statistics
+    const bbmPengajuan = filteredData.rekapBBM.reduce(
+      (sum, item) => sum + parseNumber(item.pengajuanSolar),
+      0
+    );
+    const bbmRealisasi = filteredData.rekapBBM.reduce(
+      (sum, item) => sum + parseNumber(item.realisasiPengisian),
+      0
+    );
+    const bbmSelisih = bbmRealisasi - bbmPengajuan;
+
     return {
       totalProduksiNPK,
       totalOnspek,
@@ -495,6 +517,10 @@ const DashboardPage = () => {
       troubleRecordOpen,
       forkliftHours,
       loaderHours,
+      bbmPengajuan,
+      bbmRealisasi,
+      bbmSelisih,
+      bbmRecordCount: filteredData.rekapBBM.length,
       percentage:
         totalRKAP > 0 ? ((totalProduksiNPK / totalRKAP) * 100).toFixed(1) : "0",
     };
@@ -759,7 +785,7 @@ const DashboardPage = () => {
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-primary-500 mx-auto" />
-          <p className="mt-4 text-dark-500">Memuat data dashboard...</p>
+          <p className="mt-4 text-dark-500 dark:text-dark-400">Memuat data dashboard...</p>
         </div>
       </div>
     );
@@ -770,10 +796,10 @@ const DashboardPage = () => {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-dark-900">
+          <h1 className="text-2xl font-display font-bold text-dark-900 dark:text-white">
             Dashboard - {plantLabel}
           </h1>
-          <p className="text-dark-500 mt-1">
+          <p className="text-dark-500 dark:text-dark-400 dark:text-dark-400 mt-1">
             Selamat datang, {user?.namaLengkap || user?.nama}! Berikut ringkasan
             data {plantLabel.toLowerCase()} tahun {dashboardYear}.
           </p>
@@ -897,113 +923,235 @@ const DashboardPage = () => {
       </motion.div>
 
       {/* Main Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <MetricCard
-          title="Total Produksi NPK"
-          value={formatNumber(metrics.totalProduksiNPK) + " Ton"}
-          subtitle={`${metrics.percentage}% dari RKAP`}
-          trend={Number(metrics.percentage) >= 100 ? "up" : "neutral"}
-          trendValue={
-            Number(metrics.percentage) >= 100 ? "Target Tercapai" : ""
-          }
-          icon={Factory}
-          color="primary"
-        />
-        <MetricCard
-          title="Target RKAP"
-          value={formatNumber(metrics.totalRKAP) + " Ton"}
-          subtitle={`Tahun ${dashboardYear}`}
-          icon={TrendingUp}
-          color="success"
-        />
-        <MetricCard
-          title="Total Downtime"
-          value={formatNumber(metrics.totalDowntime) + " Jam"}
-          subtitle={`${filteredData.downtime.length} kejadian`}
-          icon={Clock}
-          color="warning"
-        />
-        <MetricCard
-          title="Work Request"
-          value={metrics.workRequestTotal.toString()}
-          subtitle={`${metrics.workRequestPending} belum dieksekusi`}
-          icon={FileText}
-          color="danger"
-        />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Produksi Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-5 text-white shadow-lg"
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <Factory className="h-5 w-5" />
+            <h3 className="font-bold">Produksi Tahunan {dashboardYear}</h3>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="bg-white/20 rounded-xl px-4 py-3 backdrop-blur-sm">
+              <p className="text-blue-100 text-[10px] uppercase tracking-wider">
+                NPK Granul
+              </p>
+              <p className="text-xl font-bold">
+                {formatNumber(metrics.totalProduksiNPK)}
+              </p>
+              <p className="text-blue-100 text-[10px]">
+                Ton ({metrics.percentage}% RKAP)
+              </p>
+            </div>
+            <div className="bg-white/20 rounded-xl px-4 py-3 backdrop-blur-sm">
+              <p className="text-blue-100 text-[10px] uppercase tracking-wider">
+                Onspek
+              </p>
+              <p className="text-xl font-bold">
+                {formatNumber(metrics.totalOnspek)}
+              </p>
+              <p className="text-blue-100 text-[10px]">Ton</p>
+            </div>
+            <div className="bg-white/20 rounded-xl px-4 py-3 backdrop-blur-sm">
+              <p className="text-blue-100 text-[10px] uppercase tracking-wider">
+                Offspek
+              </p>
+              <p className="text-xl font-bold">
+                {formatNumber(metrics.totalOffspek)}
+              </p>
+              <p className="text-blue-100 text-[10px]">Ton</p>
+            </div>
+            <div className="bg-white/20 rounded-xl px-4 py-3 backdrop-blur-sm">
+              <p className="text-blue-100 text-[10px] uppercase tracking-wider">
+                Target RKAP
+              </p>
+              <p className="text-xl font-bold">
+                {formatNumber(metrics.totalRKAP)}
+              </p>
+              <p className="text-blue-100 text-[10px]">Ton</p>
+            </div>
+          </div>
+          <div className="mt-3 pt-3 border-t border-white/20 grid grid-cols-2 gap-3">
+            <div className="bg-white/10 rounded-lg px-3 py-2">
+              <p className="text-blue-100 text-[10px]">Blending/Retail</p>
+              <p className="font-semibold">
+                {formatNumber(metrics.totalProduksiBlending)} Ton
+              </p>
+            </div>
+            <div className="bg-white/10 rounded-lg px-3 py-2">
+              <p className="text-blue-100 text-[10px]">NPK Mini</p>
+              <p className="font-semibold">
+                {formatNumber(metrics.totalProduksiNPKMini)} Ton
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Operasional Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-gradient-to-r from-slate-600 to-slate-700 rounded-2xl p-5 text-white shadow-lg"
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <Truck className="h-5 w-5" />
+            <h3 className="font-bold">Operasional & Logistik</h3>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="bg-white/20 rounded-xl px-4 py-3 backdrop-blur-sm">
+              <p className="text-slate-200 text-[10px] uppercase tracking-wider">
+                Forklift
+              </p>
+              <p className="text-xl font-bold">
+                {formatNumber(metrics.forkliftHours)}
+              </p>
+              <p className="text-slate-200 text-[10px]">
+                Jam ({filteredData.timesheetForklift.length} rec)
+              </p>
+            </div>
+            <div className="bg-white/20 rounded-xl px-4 py-3 backdrop-blur-sm">
+              <p className="text-slate-200 text-[10px] uppercase tracking-wider">
+                Loader
+              </p>
+              <p className="text-xl font-bold">
+                {formatNumber(metrics.loaderHours)}
+              </p>
+              <p className="text-slate-200 text-[10px]">
+                Jam ({filteredData.timesheetLoader.length} rec)
+              </p>
+            </div>
+            <div className="bg-white/20 rounded-xl px-4 py-3 backdrop-blur-sm">
+              <p className="text-slate-200 text-[10px] uppercase tracking-wider">
+                Gate Pass
+              </p>
+              <p className="text-xl font-bold">{metrics.gatePassCount}</p>
+              <p className="text-slate-200 text-[10px]">Transaksi</p>
+            </div>
+            <div className="bg-white/20 rounded-xl px-4 py-3 backdrop-blur-sm">
+              <p className="text-slate-200 text-[10px] uppercase tracking-wider">
+                Bahan Baku
+              </p>
+              <p className="text-xl font-bold">
+                {formatNumber(metrics.totalBahanBaku)}
+              </p>
+              <p className="text-slate-200 text-[10px]">
+                {filteredData.bahanBaku.length} item
+              </p>
+            </div>
+          </div>
+        </motion.div>
       </div>
 
-      {/* Secondary Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-        <MetricCard
-          title="Produksi Onspek"
-          value={formatNumber(metrics.totalOnspek) + " Ton"}
-          icon={TrendingUp}
-          color="success"
-        />
-        <MetricCard
-          title="Produksi Offspek"
-          value={formatNumber(metrics.totalOffspek) + " Ton"}
-          icon={TrendingDown}
-          color="danger"
-        />
-        <MetricCard
-          title="Blending/Retail"
-          value={formatNumber(metrics.totalProduksiBlending) + " Ton"}
-          icon={Package}
-          color="info"
-        />
-        <MetricCard
-          title="NPK Mini"
-          value={formatNumber(metrics.totalProduksiNPKMini) + " Ton"}
-          icon={Package}
-          color="primary"
-        />
-        <MetricCard
-          title="Bahan Baku"
-          value={formatNumber(metrics.totalBahanBaku)}
-          subtitle={`${filteredData.bahanBaku.length} item`}
-          icon={Package}
-          color="info"
-        />
-        <MetricCard
-          title="Gate Pass"
-          value={metrics.gatePassCount.toString()}
-          subtitle="Total transaksi"
-          icon={Truck}
-          color="warning"
-        />
-      </div>
+      {/* Maintenance & Issues Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Downtime & Issues */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-gradient-to-r from-red-500 to-rose-500 rounded-2xl p-5 text-white shadow-lg"
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <Clock className="h-5 w-5" />
+            <h3 className="font-bold">Downtime & Issues</h3>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="bg-white/20 rounded-xl px-4 py-3 backdrop-blur-sm">
+              <p className="text-red-100 text-[10px] uppercase tracking-wider">
+                Total Downtime
+              </p>
+              <p className="text-xl font-bold">
+                {formatNumber(metrics.totalDowntime)}
+              </p>
+              <p className="text-red-100 text-[10px]">
+                Jam ({filteredData.downtime.length} kejadian)
+              </p>
+            </div>
+            <div className="bg-white/20 rounded-xl px-4 py-3 backdrop-blur-sm">
+              <p className="text-red-100 text-[10px] uppercase tracking-wider">
+                Work Request
+              </p>
+              <p className="text-xl font-bold">{metrics.workRequestTotal}</p>
+              <p className="text-red-100 text-[10px]">
+                {metrics.workRequestPending} pending
+              </p>
+            </div>
+            <div className="bg-white/20 rounded-xl px-4 py-3 backdrop-blur-sm">
+              <p className="text-red-100 text-[10px] uppercase tracking-wider">
+                Trouble Open
+              </p>
+              <p className="text-xl font-bold">{metrics.troubleRecordOpen}</p>
+              <p className="text-red-100 text-[10px]">
+                dari {filteredData.troubleRecord.length} total
+              </p>
+            </div>
+            <div className="bg-white/20 rounded-xl px-4 py-3 backdrop-blur-sm">
+              <p className="text-red-100 text-[10px] uppercase tracking-wider">
+                Vibrasi Alert
+              </p>
+              <p className="text-xl font-bold">{metrics.vibrasiWarnings}</p>
+              <p className="text-red-100 text-[10px]">
+                dari {filteredData.vibrasi.length} ukur
+              </p>
+            </div>
+          </div>
+        </motion.div>
 
-      {/* Third Row Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard
-          title="Vibrasi Alert"
-          value={metrics.vibrasiWarnings.toString()}
-          subtitle={`dari ${filteredData.vibrasi.length} pengukuran`}
-          icon={Gauge}
-          color={metrics.vibrasiWarnings > 0 ? "danger" : "success"}
-        />
-        <MetricCard
-          title="Trouble Record Open"
-          value={metrics.troubleRecordOpen.toString()}
-          subtitle={`dari ${filteredData.troubleRecord.length} total`}
-          icon={AlertTriangle}
-          color={metrics.troubleRecordOpen > 0 ? "warning" : "success"}
-        />
-        <MetricCard
-          title="Jam Operasi Forklift"
-          value={formatNumber(metrics.forkliftHours) + " Jam"}
-          subtitle={`${filteredData.timesheetForklift.length} record`}
-          icon={Truck}
-          color="primary"
-        />
-        <MetricCard
-          title="Jam Operasi Loader"
-          value={formatNumber(metrics.loaderHours) + " Jam"}
-          subtitle={`${filteredData.timesheetLoader.length} record`}
-          icon={Truck}
-          color="info"
-        />
+        {/* BBM Summary Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl p-5 text-white shadow-lg"
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <Fuel className="h-5 w-5" />
+            <h3 className="font-bold">Rekap BBM Alat Berat {dashboardYear}</h3>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="bg-white/20 rounded-xl px-4 py-3 backdrop-blur-sm">
+              <p className="text-amber-100 text-[10px] uppercase tracking-wider">
+                Pengajuan
+              </p>
+              <p className="text-xl font-bold">
+                {formatNumber(metrics.bbmPengajuan)}
+              </p>
+              <p className="text-amber-100 text-[10px]">Liter</p>
+            </div>
+            <div className="bg-white/20 rounded-xl px-4 py-3 backdrop-blur-sm">
+              <p className="text-amber-100 text-[10px] uppercase tracking-wider">
+                Realisasi
+              </p>
+              <p className="text-xl font-bold">
+                {formatNumber(metrics.bbmRealisasi)}
+              </p>
+              <p className="text-amber-100 text-[10px]">Liter</p>
+            </div>
+            <div className="bg-white/20 rounded-xl px-4 py-3 backdrop-blur-sm">
+              <p className="text-amber-100 text-[10px] uppercase tracking-wider">
+                Selisih
+              </p>
+              <p className="text-xl font-bold">
+                {metrics.bbmSelisih >= 0 ? "+" : ""}
+                {formatNumber(metrics.bbmSelisih)}
+              </p>
+              <p className="text-amber-100 text-[10px]">
+                {metrics.bbmSelisih >= 0 ? "Surplus" : "Defisit"}
+              </p>
+            </div>
+            <div className="bg-white/20 rounded-xl px-4 py-3 backdrop-blur-sm">
+              <p className="text-amber-100 text-[10px] uppercase tracking-wider">
+                Record
+              </p>
+              <p className="text-xl font-bold">{metrics.bbmRecordCount}</p>
+              <p className="text-amber-100 text-[10px]">Pengajuan</p>
+            </div>
+          </div>
+        </motion.div>
       </div>
 
       {/* Charts Row 1 */}
@@ -1457,7 +1605,7 @@ const DashboardPage = () => {
                 <p className="text-2xl font-bold text-primary-600">
                   {filteredData.produksiNPK.length}
                 </p>
-                <p className="text-xs text-dark-500 mt-1">
+                <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">
                   Record Produksi NPK
                 </p>
               </div>
@@ -1465,43 +1613,43 @@ const DashboardPage = () => {
                 <p className="text-2xl font-bold text-secondary-600">
                   {filteredData.produksiBlending.length}
                 </p>
-                <p className="text-xs text-dark-500 mt-1">Record Blending</p>
+                <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">Record Blending</p>
               </div>
               <div className="p-4 bg-dark-50 rounded-xl text-center">
                 <p className="text-2xl font-bold text-amber-600">
                   {filteredData.downtime.length}
                 </p>
-                <p className="text-xs text-dark-500 mt-1">Record Downtime</p>
+                <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">Record Downtime</p>
               </div>
               <div className="p-4 bg-dark-50 rounded-xl text-center">
                 <p className="text-2xl font-bold text-red-600">
                   {filteredData.workRequest.length}
                 </p>
-                <p className="text-xs text-dark-500 mt-1">Work Request</p>
+                <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">Work Request</p>
               </div>
               <div className="p-4 bg-dark-50 rounded-xl text-center">
                 <p className="text-2xl font-bold text-cyan-600">
                   {filteredData.bahanBaku.length}
                 </p>
-                <p className="text-xs text-dark-500 mt-1">Bahan Baku</p>
+                <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">Bahan Baku</p>
               </div>
               <div className="p-4 bg-dark-50 rounded-xl text-center">
                 <p className="text-2xl font-bold text-purple-600">
                   {filteredData.vibrasi.length}
                 </p>
-                <p className="text-xs text-dark-500 mt-1">Data Vibrasi</p>
+                <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">Data Vibrasi</p>
               </div>
               <div className="p-4 bg-dark-50 rounded-xl text-center">
                 <p className="text-2xl font-bold text-indigo-600">
                   {filteredData.gatePass.length}
                 </p>
-                <p className="text-xs text-dark-500 mt-1">Gate Pass</p>
+                <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">Gate Pass</p>
               </div>
               <div className="p-4 bg-dark-50 rounded-xl text-center">
                 <p className="text-2xl font-bold text-pink-600">
                   {filteredData.troubleRecord.length}
                 </p>
-                <p className="text-xs text-dark-500 mt-1">Trouble Record</p>
+                <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">Trouble Record</p>
               </div>
             </div>
           </CardContent>

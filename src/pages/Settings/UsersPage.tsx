@@ -281,10 +281,10 @@ const UsersPage = () => {
               .toUpperCase()}
           </div>
           <div>
-            <p className="font-medium text-dark-900">
+            <p className="font-medium text-dark-900 dark:text-white">
               {row.namaLengkap || row.nama || row.username}
             </p>
-            <p className="text-sm text-dark-500">
+            <p className="text-sm text-dark-500 dark:text-dark-400">
               @{row.username} • {row.email}
             </p>
           </div>
@@ -361,10 +361,10 @@ const UsersPage = () => {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-dark-900">
+          <h1 className="text-2xl font-display font-bold text-dark-900 dark:text-white">
             Manajemen User
           </h1>
-          <p className="text-dark-500 mt-1">Kelola pengguna sistem</p>
+          <p className="text-dark-500 dark:text-dark-400 mt-1">Kelola pengguna sistem</p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -391,8 +391,8 @@ const UsersPage = () => {
               <Users className="h-6 w-6 text-primary-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500">Total Users</p>
-              <p className="text-2xl font-bold text-dark-900">
+              <p className="text-sm text-dark-500 dark:text-dark-400">Total Users</p>
+              <p className="text-2xl font-bold text-dark-900 dark:text-white">
                 {filteredData.length}
               </p>
             </div>
@@ -404,7 +404,7 @@ const UsersPage = () => {
               <UserCheck className="h-6 w-6 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500">Active Users</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">Active Users</p>
               <p className="text-2xl font-bold text-green-600">{activeUsers}</p>
             </div>
           </div>
@@ -415,7 +415,7 @@ const UsersPage = () => {
               <UserX className="h-6 w-6 text-red-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500">Inactive Users</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">Inactive Users</p>
               <p className="text-2xl font-bold text-red-600">{inactiveUsers}</p>
             </div>
           </div>

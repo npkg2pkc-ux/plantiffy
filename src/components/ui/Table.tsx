@@ -25,13 +25,19 @@ const Table = ({ children, className }: TableProps) => {
 
 // Table Header
 const TableHeader = ({ children, className }: TableProps) => {
-  return <thead className={cn("bg-dark-50", className)}>{children}</thead>;
+  return (
+    <thead className={cn("bg-dark-50 dark:bg-dark-800", className)}>
+      {children}
+    </thead>
+  );
 };
 
 // Table Body
 const TableBody = ({ children, className }: TableProps) => {
   return (
-    <tbody className={cn("divide-y divide-dark-100", className)}>
+    <tbody
+      className={cn("divide-y divide-dark-100 dark:divide-dark-700", className)}
+    >
       {children}
     </tbody>
   );
@@ -53,7 +59,8 @@ const TableRow = ({
     <tr
       className={cn(
         "transition-colors",
-        isClickable && "cursor-pointer hover:bg-primary-50/50",
+        isClickable &&
+          "cursor-pointer hover:bg-primary-50/50 dark:hover:bg-primary-900/20",
         className
       )}
       onClick={onClick}
@@ -82,8 +89,9 @@ const TableHead = ({
   return (
     <th
       className={cn(
-        "px-6 py-4 text-left text-xs font-semibold text-dark-500 uppercase tracking-wider",
-        sortable && "cursor-pointer select-none hover:text-dark-700",
+        "px-6 py-4 text-left text-xs font-semibold text-dark-500 dark:text-dark-400 uppercase tracking-wider",
+        sortable &&
+          "cursor-pointer select-none hover:text-dark-700 dark:hover:text-dark-200",
         className
       )}
       onClick={sortable ? onSort : undefined}
@@ -96,13 +104,17 @@ const TableHead = ({
             <ChevronUp
               className={cn(
                 "h-3 w-3 -mb-1",
-                sorted === "asc" ? "text-primary-600" : "text-dark-300"
+                sorted === "asc"
+                  ? "text-primary-600"
+                  : "text-dark-300 dark:text-dark-500"
               )}
             />
             <ChevronDown
               className={cn(
                 "h-3 w-3",
-                sorted === "desc" ? "text-primary-600" : "text-dark-300"
+                sorted === "desc"
+                  ? "text-primary-600"
+                  : "text-dark-300 dark:text-dark-500"
               )}
             />
           </span>
@@ -117,7 +129,7 @@ const TableCell = ({ children, className }: TableProps) => {
   return (
     <td
       className={cn(
-        "px-6 py-4 text-sm text-dark-700 whitespace-nowrap",
+        "px-6 py-4 text-sm text-dark-700 dark:text-dark-200 whitespace-nowrap",
         className
       )}
     >
@@ -152,7 +164,9 @@ const TableLoading = () => {
       <td colSpan={100} className="px-6 py-12 text-center">
         <div className="flex items-center justify-center gap-3">
           <div className="h-5 w-5 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
-          <span className="text-sm text-dark-500">Memuat data...</span>
+          <span className="text-sm text-dark-500 dark:text-dark-400">
+            Memuat data...
+          </span>
         </div>
       </td>
     </tr>
@@ -208,9 +222,9 @@ const Pagination = ({
   if (totalPages <= 1) return null;
 
   return (
-    <div className="flex items-center justify-between px-6 py-4 border-t border-dark-100">
+    <div className="flex items-center justify-between px-6 py-4 border-t border-dark-100 dark:border-dark-700">
       {totalItems && (
-        <p className="text-sm text-dark-500">
+        <p className="text-sm text-dark-500 dark:text-dark-400">
           Menampilkan {startItem} - {endItem} dari {totalItems} data
         </p>
       )}
@@ -219,7 +233,7 @@ const Pagination = ({
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="p-2 text-dark-500 hover:text-dark-700 hover:bg-dark-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="p-2 text-dark-500 dark:text-dark-400 hover:text-dark-700 dark:hover:text-dark-200 hover:bg-dark-100 dark:hover:bg-dark-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
@@ -235,7 +249,7 @@ const Pagination = ({
                 ? "bg-primary-600 text-white"
                 : page === "..."
                 ? "text-dark-400 cursor-default"
-                : "text-dark-600 hover:bg-dark-100"
+                : "text-dark-600 dark:text-dark-300 hover:bg-dark-100 dark:hover:bg-dark-700"
             )}
           >
             {page}
@@ -245,7 +259,7 @@ const Pagination = ({
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="p-2 text-dark-500 hover:text-dark-700 hover:bg-dark-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="p-2 text-dark-500 dark:text-dark-400 hover:text-dark-700 dark:hover:text-dark-200 hover:bg-dark-100 dark:hover:bg-dark-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <ChevronRight className="h-5 w-5" />
         </button>

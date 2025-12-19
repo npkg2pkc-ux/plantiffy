@@ -329,7 +329,7 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
       key: "jumlah",
       header: "Jumlah",
       render: (value: unknown, row: BahanBaku) => (
-        <span className="font-semibold text-dark-900">
+        <span className="font-semibold text-dark-900 dark:text-white">
           {formatNumber(parseNumber(value))} {row.satuan}
         </span>
       ),
@@ -342,10 +342,10 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-dark-900">
+          <h1 className="text-2xl font-display font-bold text-dark-900 dark:text-white">
             Data Bahan Baku {currentPlant === "NPK1" ? "NPK 1" : "NPK 2"}
           </h1>
-          <p className="text-dark-500 mt-1">Kelola data pemakaian bahan baku</p>
+          <p className="text-dark-500 dark:text-dark-400 mt-1">Kelola data pemakaian bahan baku</p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -369,8 +369,8 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
                   <Package className="h-5 w-5 text-primary-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-dark-500">{name}</p>
-                  <p className="text-lg font-bold text-dark-900">
+                  <p className="text-sm text-dark-500 dark:text-dark-400">{name}</p>
+                  <p className="text-lg font-bold text-dark-900 dark:text-white">
                     {formatNumber(total)} Kg
                   </p>
                 </div>

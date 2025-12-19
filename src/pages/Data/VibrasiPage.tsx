@@ -407,10 +407,10 @@ const VibrasiPage = ({ plant }: VibrasiPageProps) => {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-dark-900">
+          <h1 className="text-2xl font-display font-bold text-dark-900 dark:text-white">
             Data Vibrasi {currentPlant === "NPK1" ? "NPK 1" : "NPK 2"}
           </h1>
-          <p className="text-dark-500 mt-1">
+          <p className="text-dark-500 dark:text-dark-400 mt-1">
             Monitoring vibrasi equipment produksi
           </p>
         </div>
@@ -433,7 +433,7 @@ const VibrasiPage = ({ plant }: VibrasiPageProps) => {
               <Activity className="h-5 w-5 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500">Normal</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">Normal</p>
               <p className="text-2xl font-bold text-green-600">
                 {statusCounts.normal}
               </p>
@@ -446,7 +446,7 @@ const VibrasiPage = ({ plant }: VibrasiPageProps) => {
               <AlertTriangle className="h-5 w-5 text-amber-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500">Warning</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">Warning</p>
               <p className="text-2xl font-bold text-amber-600">
                 {statusCounts.warning}
               </p>
@@ -459,7 +459,7 @@ const VibrasiPage = ({ plant }: VibrasiPageProps) => {
               <AlertTriangle className="h-5 w-5 text-red-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500">Alert</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">Alert</p>
               <p className="text-2xl font-bold text-red-600">
                 {statusCounts.alert}
               </p>
@@ -472,8 +472,8 @@ const VibrasiPage = ({ plant }: VibrasiPageProps) => {
               <Activity className="h-5 w-5 text-dark-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500">Total Pengukuran</p>
-              <p className="text-2xl font-bold text-dark-900">
+              <p className="text-sm text-dark-500 dark:text-dark-400">Total Pengukuran</p>
+              <p className="text-2xl font-bold text-dark-900 dark:text-white">
                 {filteredData.length}
               </p>
             </div>
@@ -488,7 +488,7 @@ const VibrasiPage = ({ plant }: VibrasiPageProps) => {
             <Activity className="h-5 w-5 text-blue-600" />
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold text-dark-900">
+            <h3 className="font-semibold text-dark-900 dark:text-white">
               Panduan Status Vibrasi
             </h3>
             <div className="mt-2 grid grid-cols-3 gap-4 text-sm">

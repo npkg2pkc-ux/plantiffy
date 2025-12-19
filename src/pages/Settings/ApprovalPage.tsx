@@ -217,8 +217,8 @@ const ApprovalPage = () => {
       header: "Judul",
       render: (value: unknown, row: ApprovalItem) => (
         <div>
-          <p className="font-medium text-dark-900">{value as string}</p>
-          <p className="text-sm text-dark-500 line-clamp-1">
+          <p className="font-medium text-dark-900 dark:text-white">{value as string}</p>
+          <p className="text-sm text-dark-500 dark:text-dark-400 line-clamp-1">
             {row.description}
           </p>
         </div>
@@ -268,10 +268,10 @@ const ApprovalPage = () => {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-dark-900">
+          <h1 className="text-2xl font-display font-bold text-dark-900 dark:text-white">
             Approval
           </h1>
-          <p className="text-dark-500 mt-1">
+          <p className="text-dark-500 dark:text-dark-400 mt-1">
             Kelola persetujuan dokumen dan request
           </p>
         </div>
@@ -302,7 +302,7 @@ const ApprovalPage = () => {
               <Clock className="h-6 w-6 text-amber-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500">Menunggu Approval</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">Menunggu Approval</p>
               <p className="text-2xl font-bold text-amber-600">
                 {pendingCount}
               </p>
@@ -318,7 +318,7 @@ const ApprovalPage = () => {
               <CheckCircle className="h-6 w-6 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500">Approved</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">Approved</p>
               <p className="text-2xl font-bold text-green-600">
                 {approvedCount}
               </p>
@@ -334,7 +334,7 @@ const ApprovalPage = () => {
               <XCircle className="h-6 w-6 text-red-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500">Rejected</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">Rejected</p>
               <p className="text-2xl font-bold text-red-600">{rejectedCount}</p>
             </div>
           </div>
@@ -419,32 +419,32 @@ const ApprovalPage = () => {
             <div className="flex items-start gap-4 p-4 bg-dark-50 rounded-xl">
               <FileText className="h-10 w-10 text-primary-600" />
               <div className="flex-1">
-                <h3 className="font-semibold text-dark-900">
+                <h3 className="font-semibold text-dark-900 dark:text-white">
                   {selectedItem.title}
                 </h3>
-                <p className="text-dark-500 mt-1">{selectedItem.description}</p>
+                <p className="text-dark-500 dark:text-dark-400 mt-1">{selectedItem.description}</p>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-dark-500">Tipe</p>
+                <p className="text-sm text-dark-500 dark:text-dark-400">Tipe</p>
                 <Badge variant={getTypeBadge(selectedItem.type).variant}>
                   {getTypeBadge(selectedItem.type).label}
                 </Badge>
               </div>
               <div>
-                <p className="text-sm text-dark-500">Status</p>
+                <p className="text-sm text-dark-500 dark:text-dark-400">Status</p>
                 <Badge variant={getStatusBadge(selectedItem.status).variant}>
                   {getStatusBadge(selectedItem.status).label}
                 </Badge>
               </div>
               <div>
-                <p className="text-sm text-dark-500">Diajukan Oleh</p>
+                <p className="text-sm text-dark-500 dark:text-dark-400">Diajukan Oleh</p>
                 <p className="font-medium">{selectedItem.submittedBy}</p>
               </div>
               <div>
-                <p className="text-sm text-dark-500">Tanggal</p>
+                <p className="text-sm text-dark-500 dark:text-dark-400">Tanggal</p>
                 <p className="font-medium">
                   {formatDate(selectedItem.submittedAt)}
                 </p>
@@ -459,7 +459,7 @@ const ApprovalPage = () => {
                 <div className="space-y-1">
                   {Object.entries(selectedItem.data).map(([key, value]) => (
                     <div key={key} className="flex justify-between text-sm">
-                      <span className="text-dark-500 capitalize">
+                      <span className="text-dark-500 dark:text-dark-400 capitalize">
                         {key.replace(/([A-Z])/g, " $1").trim()}:
                       </span>
                       <span className="font-medium">{String(value)}</span>
