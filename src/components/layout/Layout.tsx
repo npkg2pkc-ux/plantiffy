@@ -262,6 +262,7 @@ const Sidebar = () => {
             <span className="font-display font-bold text-dark-900">
               Plantiffy
             </span>
+            <span className="text-xs text-dark-500">v2.1.3</span>
           </Link>
         )}
         <button
