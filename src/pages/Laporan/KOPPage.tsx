@@ -206,8 +206,8 @@ const TARGETS = {
   flowGas: { min: 200, max: 300, unit: "NM3/H", label: "200 - 300" },
   tempProdukOut: { min: 55, max: 70, unit: "°C", label: "55 - 70" },
   produkN: { min: 13.8, max: 16.2, unit: "%", label: "13.8 - 16.2" },
-  produkP: { min: 13.8, max: 16.2, unit: "%", label: "13.8 - 16.2" },
-  produkK: { min: 13.8, max: 16.2, unit: "%", label: "13.8 - 16.2" },
+  produkP: { min: 9.2, max: 10.2, unit: "%", label: "9.2 - 10.2" },
+  produkK: { min: 11.04, max: 12.96, unit: "%", label: "11.04 - 12.96" },
   moisture: { min: 0, max: 3, unit: "%", label: "Maks. 3" },
   kekerasan: { min: 1, max: 999, unit: "Kgf", label: "Min. 1" },
   timbangan: { min: 50.0, max: 50.3, unit: "Kg/Karung", label: "50.00 - 50.3" },
@@ -1422,14 +1422,14 @@ const KOPPage = ({ plant }: KOPPageProps) => {
               </tr>
               <tr>
                 <td class="text-left">P (%)</td>
-                <td>13.8 - 16.2</td>
+                <td>9.2 - 10.2</td>
                 <td>${reportItem.produkP?.malam || "-"}</td>
                 <td>${reportItem.produkP?.pagi || "-"}</td>
                 <td>${reportItem.produkP?.sore || "-"}</td>
               </tr>
               <tr>
                 <td class="text-left">K (%)</td>
-                <td>13.8 - 16.2</td>
+                <td>11.04 - 12.96</td>
                 <td>${reportItem.produkK?.malam || "-"}</td>
                 <td>${reportItem.produkK?.pagi || "-"}</td>
                 <td>${reportItem.produkK?.sore || "-"}</td>
