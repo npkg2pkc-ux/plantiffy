@@ -142,6 +142,18 @@ export interface BahanBaku {
   _plant?: PlantType;
 }
 
+// Pemantauan Bahan Baku
+export interface PemantauanBahanBaku {
+  id?: string;
+  tanggal: string;
+  bahanBaku: string; // Urea, DAP, KCL, ZA, Dolomite, Clay
+  stockAwal: number;
+  bahanBakuIn: number;
+  bahanBakuOut: number;
+  stockAkhir: number;
+  _plant?: PlantType;
+}
+
 // Vibrasi
 export interface Vibrasi {
   id?: string;

@@ -55,7 +55,18 @@ import type {
   RKAP,
   PlantType,
   RekapBBM,
+  PemantauanBahanBaku,
 } from "@/types";
+
+// Bahan Baku options for filter
+const BAHAN_BAKU_OPTIONS = [
+  "Urea",
+  "DAP",
+  "KCL",
+  "ZA",
+  "Dolomite",
+  "Clay",
+] as const;
 
 const COLORS = [
   "#3b82f6",
@@ -145,8 +156,12 @@ const MetricCard = ({
     >
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-medium text-dark-500 dark:text-dark-400">{title}</p>
-          <p className="text-2xl font-bold text-dark-900 dark:text-white mt-1">{value}</p>
+          <p className="text-sm font-medium text-dark-500 dark:text-dark-400">
+            {title}
+          </p>
+          <p className="text-2xl font-bold text-dark-900 dark:text-white mt-1">
+            {value}
+          </p>
           {subtitle && <p className="text-sm text-dark-400 mt-1">{subtitle}</p>}
           {trend && trendValue && (
             <div className="flex items-center gap-1 mt-2">
@@ -201,6 +216,12 @@ const DashboardPage = () => {
     new Date().getMonth()
   );
 
+  // Pemantauan Bahan Baku state
+  const [pemantauanBBFilter, setPemantauanBBFilter] = useState<string>("Urea");
+  const [pemantauanBBData, setPemantauanBBData] = useState<
+    PemantauanBahanBaku[]
+  >([]);
+
   const [dashboardData, setDashboardData] = useState<DashboardData>({
     produksiNPK: [],
     produksiBlending: [],
@@ -244,7 +265,7 @@ const DashboardPage = () => {
           "@/services/api"
         );
 
-        // Fetch all data in parallel
+        // Fetch all data in parallel (tanpa pemantauanBB dulu)
         const [
           produksiNPKResult,
           produksiBlendingResult,
@@ -334,6 +355,26 @@ const DashboardPage = () => {
     };
 
     fetchAllData();
+  }, []);
+
+  // Fetch pemantauan bahan baku data terpisah
+  useEffect(() => {
+    const fetchPemantauanBB = async () => {
+      try {
+        const { fetchDataByPlant, SHEETS } = await import("@/services/api");
+        if (SHEETS.PEMANTAUAN_BAHAN_BAKU) {
+          const result = await fetchDataByPlant<PemantauanBahanBaku>(
+            SHEETS.PEMANTAUAN_BAHAN_BAKU
+          );
+          if (result.success && result.data) {
+            setPemantauanBBData(result.data);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching pemantauan bahan baku:", error);
+      }
+    };
+    fetchPemantauanBB();
   }, []);
 
   // Filter data by plant - use effectivePlantFilter
@@ -785,7 +826,9 @@ const DashboardPage = () => {
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-primary-500 mx-auto" />
-          <p className="mt-4 text-dark-500 dark:text-dark-400">Memuat data dashboard...</p>
+          <p className="mt-4 text-dark-500 dark:text-dark-400">
+            Memuat data dashboard...
+          </p>
         </div>
       </div>
     );
@@ -799,7 +842,7 @@ const DashboardPage = () => {
           <h1 className="text-2xl font-display font-bold text-dark-900 dark:text-white">
             Dashboard - {plantLabel}
           </h1>
-          <p className="text-dark-500 dark:text-dark-400 dark:text-dark-400 mt-1">
+          <p className="text-dark-500 dark:text-dark-400 mt-1">
             Selamat datang, {user?.namaLengkap || user?.nama}! Berikut ringkasan
             data {plantLabel.toLowerCase()} tahun {dashboardYear}.
           </p>
@@ -1153,6 +1196,94 @@ const DashboardPage = () => {
           </div>
         </motion.div>
       </div>
+
+      {/* Pemantauan Bahan Baku Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35 }}
+        className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl p-5 text-white shadow-lg"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+          <div className="flex items-center gap-2">
+            <Package className="h-5 w-5" />
+            <h3 className="font-bold">Pemantauan Stok Bahan Baku</h3>
+          </div>
+          <Select
+            value={pemantauanBBFilter}
+            onChange={(e) => setPemantauanBBFilter(e.target.value)}
+            className="w-full sm:w-40 bg-white/20 border-white/30 text-white text-sm"
+            options={BAHAN_BAKU_OPTIONS.map((opt) => ({
+              value: opt,
+              label: opt,
+            }))}
+          />
+        </div>
+        {(() => {
+          const filteredBBData = pemantauanBBData.filter(
+            (item) =>
+              item._plant === effectivePlantFilter ||
+              effectivePlantFilter === "ALL"
+          );
+          const selectedData = filteredBBData
+            .filter((item) => item.bahanBaku === pemantauanBBFilter)
+            .sort(
+              (a, b) =>
+                new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime()
+            );
+          const latestData = selectedData[0];
+          const totalRecords = selectedData.length;
+          const yearData = selectedData.filter((item) => {
+            const year = new Date(item.tanggal).getFullYear();
+            return year === dashboardYear;
+          });
+          const totalIn = yearData.reduce(
+            (sum, item) => sum + (item.bahanBakuIn || 0),
+            0
+          );
+          const totalOut = yearData.reduce(
+            (sum, item) => sum + (item.bahanBakuOut || 0),
+            0
+          );
+
+          return (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="bg-white/20 rounded-xl px-4 py-3 backdrop-blur-sm">
+                <p className="text-emerald-100 text-[10px] uppercase tracking-wider">
+                  Stok Terakhir
+                </p>
+                <p className="text-xl font-bold">
+                  {formatNumber(latestData?.stockAkhir || 0)}
+                </p>
+                <p className="text-emerald-100 text-[10px]">
+                  Ton ({latestData?.tanggal || "-"})
+                </p>
+              </div>
+              <div className="bg-white/20 rounded-xl px-4 py-3 backdrop-blur-sm">
+                <p className="text-emerald-100 text-[10px] uppercase tracking-wider">
+                  Total Masuk {dashboardYear}
+                </p>
+                <p className="text-xl font-bold">{formatNumber(totalIn)}</p>
+                <p className="text-emerald-100 text-[10px]">Ton</p>
+              </div>
+              <div className="bg-white/20 rounded-xl px-4 py-3 backdrop-blur-sm">
+                <p className="text-emerald-100 text-[10px] uppercase tracking-wider">
+                  Total Keluar {dashboardYear}
+                </p>
+                <p className="text-xl font-bold">{formatNumber(totalOut)}</p>
+                <p className="text-emerald-100 text-[10px]">Ton</p>
+              </div>
+              <div className="bg-white/20 rounded-xl px-4 py-3 backdrop-blur-sm">
+                <p className="text-emerald-100 text-[10px] uppercase tracking-wider">
+                  Total Record
+                </p>
+                <p className="text-xl font-bold">{totalRecords}</p>
+                <p className="text-emerald-100 text-[10px]">Pencatatan</p>
+              </div>
+            </div>
+          );
+        })()}
+      </motion.div>
 
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1613,43 +1744,57 @@ const DashboardPage = () => {
                 <p className="text-2xl font-bold text-secondary-600">
                   {filteredData.produksiBlending.length}
                 </p>
-                <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">Record Blending</p>
+                <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">
+                  Record Blending
+                </p>
               </div>
               <div className="p-4 bg-dark-50 rounded-xl text-center">
                 <p className="text-2xl font-bold text-amber-600">
                   {filteredData.downtime.length}
                 </p>
-                <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">Record Downtime</p>
+                <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">
+                  Record Downtime
+                </p>
               </div>
               <div className="p-4 bg-dark-50 rounded-xl text-center">
                 <p className="text-2xl font-bold text-red-600">
                   {filteredData.workRequest.length}
                 </p>
-                <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">Work Request</p>
+                <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">
+                  Work Request
+                </p>
               </div>
               <div className="p-4 bg-dark-50 rounded-xl text-center">
                 <p className="text-2xl font-bold text-cyan-600">
                   {filteredData.bahanBaku.length}
                 </p>
-                <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">Bahan Baku</p>
+                <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">
+                  Bahan Baku
+                </p>
               </div>
               <div className="p-4 bg-dark-50 rounded-xl text-center">
                 <p className="text-2xl font-bold text-purple-600">
                   {filteredData.vibrasi.length}
                 </p>
-                <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">Data Vibrasi</p>
+                <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">
+                  Data Vibrasi
+                </p>
               </div>
               <div className="p-4 bg-dark-50 rounded-xl text-center">
                 <p className="text-2xl font-bold text-indigo-600">
                   {filteredData.gatePass.length}
                 </p>
-                <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">Gate Pass</p>
+                <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">
+                  Gate Pass
+                </p>
               </div>
               <div className="p-4 bg-dark-50 rounded-xl text-center">
                 <p className="text-2xl font-bold text-pink-600">
                   {filteredData.troubleRecord.length}
                 </p>
-                <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">Trouble Record</p>
+                <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">
+                  Trouble Record
+                </p>
               </div>
             </div>
           </CardContent>

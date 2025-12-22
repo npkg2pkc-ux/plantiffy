@@ -79,6 +79,8 @@ const navItems: NavItemProps[] = [
       { name: "Timesheet Loader NPK2", path: "/laporan/timesheet-loader-npk2" },
       { name: "Downtime NPK1", path: "/laporan/downtime-npk1" },
       { name: "Downtime NPK2", path: "/laporan/downtime-npk2" },
+      { name: "Pemantauan BB NPK1", path: "/laporan/pemantauan-bb-npk1" },
+      { name: "Pemantauan BB NPK2", path: "/laporan/pemantauan-bb-npk2" },
     ],
   },
   {

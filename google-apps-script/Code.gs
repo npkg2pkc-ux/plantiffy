@@ -44,6 +44,7 @@
  * - dokumentasi_foto, dokumentasi_foto_NPK1
  * - kop, kop_NPK1
  * - rekap_bbm, rekap_bbm_NPK1
+ * - pemantauan_bahan_baku, pemantauan_bahan_baku_NPK1
  * - akun
  * - rkap
  * - approval_requests
@@ -318,6 +319,15 @@ const SHEET_HEADERS = {
     "pengajuanSolar",
     "realisasiPengisian",
     "keterangan",
+  ],
+  pemantauan_bahan_baku: [
+    "id",
+    "tanggal",
+    "bahanBaku",
+    "stockAwal",
+    "bahanBakuIn",
+    "bahanBakuOut",
+    "stockAkhir",
   ],
   kop: [
     "id",
@@ -1229,6 +1239,8 @@ function initializeAllSheets() {
     "kop_NPK1",
     "rekap_bbm",
     "rekap_bbm_NPK1",
+    "pemantauan_bahan_baku",
+    "pemantauan_bahan_baku_NPK1",
     "akun",
     "rkap",
     "approval_requests",
@@ -1461,6 +1473,8 @@ function fillEmptyIdsAllSheets() {
   const allDataSheets = [
     "rekap_bbm",
     "rekap_bbm_NPK1",
+    "pemantauan_bahan_baku",
+    "pemantauan_bahan_baku_NPK1",
     "produksi_npk",
     "produksi_npk_NPK1",
     "produksi_blending",
@@ -1522,7 +1536,55 @@ function onOpen() {
     .addSeparator()
     .addItem("🔑 Fill Empty IDs - Rekap BBM", "fillEmptyIdsRekapBBM")
     .addItem("🔑 Fill Empty IDs - All Sheets", "fillEmptyIdsAllSheets")
+    .addItem("🔑 Fill Empty IDs - Pemantauan BB", "fillEmptyIdsPemantauanBB")
     .addSeparator()
     .addItem("Test Read Users", "testRead")
     .addToUi();
+}
+
+/**
+ * Fill empty IDs in pemantauan_bahan_baku sheets
+ */
+function fillEmptyIdsPemantauanBB() {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetNames = ["pemantauan_bahan_baku", "pemantauan_bahan_baku_NPK1"];
+  let totalFilled = 0;
+
+  sheetNames.forEach((sheetName) => {
+    const sheet = spreadsheet.getSheetByName(sheetName);
+    if (!sheet) {
+      Logger.log("Sheet " + sheetName + " not found");
+      return;
+    }
+
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 1) {
+      Logger.log("No data in " + sheetName);
+      return;
+    }
+
+    // Get all data starting from row 2 (skip header)
+    const dataRange = sheet.getRange(2, 1, lastRow - 1, 1); // Column A (id)
+    const ids = dataRange.getValues();
+
+    let filledCount = 0;
+    for (let i = 0; i < ids.length; i++) {
+      if (!ids[i][0] || ids[i][0] === "") {
+        // Generate new ID and set it
+        const newId = generateId();
+        sheet.getRange(i + 2, 1).setValue(newId);
+        filledCount++;
+      }
+    }
+
+    Logger.log("Filled " + filledCount + " empty IDs in " + sheetName);
+    totalFilled += filledCount;
+  });
+
+  Logger.log("=== Total IDs filled: " + totalFilled + " ===");
+  SpreadsheetApp.getActiveSpreadsheet().toast(
+    "Berhasil mengisi " + totalFilled + " ID kosong di pemantauan_bahan_baku!",
+    "✅ Selesai",
+    5
+  );
 }

@@ -26,6 +26,7 @@ import {
   TimesheetForkliftPage,
   TimesheetLoaderPage,
   KOPPage,
+  PemantauanBahanBakuPage,
 } from "@/pages/Laporan";
 import {
   WorkRequestPage,
@@ -169,6 +170,14 @@ function App() {
             <Route
               path="timesheet-loader-npk2"
               element={<TimesheetLoaderPage plant="NPK2" />}
+            />
+            <Route
+              path="pemantauan-bb-npk1"
+              element={<PemantauanBahanBakuPage plant="NPK1" />}
+            />
+            <Route
+              path="pemantauan-bb-npk2"
+              element={<PemantauanBahanBakuPage plant="NPK2" />}
             />
           </Route>
 
