@@ -751,6 +751,30 @@ const ChatPanel = () => {
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const [isUserScrolling, setIsUserScrolling] = useState(false);
+  const prevMessagesLengthRef = useRef(0);
+
+  // Check if user is near the bottom of chat
+  const isNearBottom = () => {
+    const container = messagesContainerRef.current;
+    if (!container) return true;
+    const threshold = 100; // pixels from bottom
+    return (
+      container.scrollHeight - container.scrollTop - container.clientHeight <
+      threshold
+    );
+  };
+
+  // Handle scroll event to detect if user is reading old messages
+  const handleScroll = () => {
+    setIsUserScrolling(!isNearBottom());
+  };
+
+  // Scroll to bottom helper
+  const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
+    messagesEndRef.current?.scrollIntoView({ behavior });
+  };
 
   // Mark chat as read ONLY for current user when panel opens
   // This updates only the current user's lastReadTimestamp in localStorage
@@ -767,6 +791,9 @@ const ChatPanel = () => {
 
       // Only reset THIS user's unread count in the UI
       setUnreadChatCount(0);
+
+      // Scroll to bottom when chat first opens
+      setTimeout(() => scrollToBottom("auto"), 100);
     }
   }, [isOpen, user, setUnreadChatCount]);
 
@@ -779,10 +806,18 @@ const ChatPanel = () => {
     }
   }, [isOpen, user, messages.length]);
 
-  // Scroll to bottom when messages change
+  // Smart scroll: only scroll to bottom if user is not reading old messages
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    const hasNewMessages = messages.length > prevMessagesLengthRef.current;
+    prevMessagesLengthRef.current = messages.length;
+
+    // Only auto-scroll if:
+    // 1. There are new messages AND
+    // 2. User is NOT scrolling up to read old messages (is near bottom)
+    if (hasNewMessages && !isUserScrolling) {
+      scrollToBottom();
+    }
+  }, [messages, isUserScrolling]);
 
   // Messages are pre-loaded by background polling in Header component
   // Just refresh periodically when chat is open for real-time updates
@@ -896,7 +931,11 @@ const ChatPanel = () => {
       </div>
 
       {/* Messages */}
-      <div className="h-80 overflow-y-auto p-4 space-y-3 bg-dark-50">
+      <div
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+        className="h-80 overflow-y-auto p-4 space-y-3 bg-dark-50"
+      >
         {messages.length === 0 ? (
           <div className="text-center text-dark-400 py-8">
             <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
