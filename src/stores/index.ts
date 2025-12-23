@@ -121,32 +121,64 @@ export const useNotificationStore = create<NotificationState>((set) => ({
     }),
 }));
 
-// Chat Store
+// Chat Store with persistence for instant loading
 interface ChatState {
   messages: ChatMessage[];
   isOpen: boolean;
   unreadChatCount: number;
   lastReadTimestamp: string | null;
+  lastFetchTimestamp: string | null;
   toggleChat: () => void;
   addMessage: (message: ChatMessage) => void;
+  addOptimisticMessage: (message: ChatMessage) => void;
+  removeOptimisticMessage: (tempId: string) => void;
   setMessages: (messages: ChatMessage[]) => void;
   setUnreadChatCount: (count: number) => void;
   markChatAsRead: () => void;
+  setLastFetchTimestamp: (timestamp: string) => void;
 }
 
-export const useChatStore = create<ChatState>((set) => ({
-  messages: [],
-  isOpen: false,
-  unreadChatCount: 0,
-  lastReadTimestamp: null,
-  toggleChat: () => set((state) => ({ isOpen: !state.isOpen })),
-  addMessage: (message) =>
-    set((state) => ({ messages: [...state.messages, message] })),
-  setMessages: (messages) => set({ messages }),
-  setUnreadChatCount: (count) => set({ unreadChatCount: count }),
-  markChatAsRead: () =>
-    set({ unreadChatCount: 0, lastReadTimestamp: new Date().toISOString() }),
-}));
+export const useChatStore = create<ChatState>()(
+  persist(
+    (set) => ({
+      messages: [],
+      isOpen: false,
+      unreadChatCount: 0,
+      lastReadTimestamp: null,
+      lastFetchTimestamp: null,
+      toggleChat: () => set((state) => ({ isOpen: !state.isOpen })),
+      addMessage: (message) =>
+        set((state) => {
+          // Avoid duplicate messages
+          const exists = state.messages.some((m) => m.id === message.id);
+          if (exists) return state;
+          return { messages: [...state.messages, message] };
+        }),
+      addOptimisticMessage: (message) =>
+        set((state) => ({ messages: [...state.messages, message] })),
+      removeOptimisticMessage: (tempId) =>
+        set((state) => ({
+          messages: state.messages.filter((m) => m.id !== tempId),
+        })),
+      setMessages: (messages) => set({ messages }),
+      setUnreadChatCount: (count) => set({ unreadChatCount: count }),
+      markChatAsRead: () =>
+        set({
+          unreadChatCount: 0,
+          lastReadTimestamp: new Date().toISOString(),
+        }),
+      setLastFetchTimestamp: (timestamp) =>
+        set({ lastFetchTimestamp: timestamp }),
+    }),
+    {
+      name: "chat-storage",
+      partialize: (state) => ({
+        messages: state.messages.slice(-100), // Keep last 100 messages in cache
+        lastFetchTimestamp: state.lastFetchTimestamp,
+      }),
+    }
+  )
+);
 
 // Data Store (for caching)
 interface DataState {

@@ -462,8 +462,9 @@ const Header = () => {
   // Background polling for chat messages (to update badge count)
   // Each user has their own lastReadTimestamp stored in localStorage
   // This ensures User A reading chat doesn't affect User B, C, D's badge
+  // Also pre-fetches messages for instant display when chat opens
   useEffect(() => {
-    const loadChatCount = async () => {
+    const loadChatMessages = async () => {
       if (!user) return;
 
       try {
@@ -472,29 +473,29 @@ const Header = () => {
         if (result.success && result.data) {
           const messages = result.data as any[];
 
-          // Each user has their own lastReadTimestamp in localStorage
-          // Key is unique per user: chat_last_read_<username>
+          // Sort messages by timestamp (oldest first)
+          const sortedMessages = [...messages].sort(
+            (a, b) =>
+              new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+          );
+
+          // Pre-cache messages in store for instant display
+          // This makes chat open instantly without loading
+          const { setMessages, setLastFetchTimestamp } =
+            useChatStore.getState();
+          setMessages(sortedMessages);
+          setLastFetchTimestamp(new Date().toISOString());
+
+          // Calculate unread count for badge
           const lastReadKey = `chat_last_read_${user.username}`;
           const lastRead = localStorage.getItem(lastReadKey);
-
-          // If user never opened chat, all messages from others are unread
-          // Otherwise, only messages newer than lastReadTimestamp are unread
           const lastReadTime = lastRead ? new Date(lastRead).getTime() : 0;
 
-          // Get current user's display name for comparison
-          // This should match exactly how messages are saved (sender field)
           const currentUserDisplayName =
             user.namaLengkap || user.nama || user.username;
 
-          // Count unread messages:
-          // 1. Message must be from OTHER users (not self)
-          // 2. Message timestamp must be AFTER user's lastReadTimestamp
           const unreadCount = messages.filter((msg) => {
-            // Skip messages from current user
-            if (msg.sender === currentUserDisplayName) {
-              return false;
-            }
-            // Check if message is newer than last read time
+            if (msg.sender === currentUserDisplayName) return false;
             const msgTime = new Date(msg.timestamp).getTime();
             return msgTime > lastReadTime;
           }).length;
@@ -502,22 +503,18 @@ const Header = () => {
           setUnreadChatCount(unreadCount);
         }
       } catch (error) {
-        console.error("Error loading chat count:", error);
+        console.error("Error loading chat messages:", error);
       }
     };
 
-    // Only poll when chat is closed and user is logged in
-    if (user && !chatOpen) {
-      // Initial load
-      loadChatCount();
-      // Poll every 5 seconds when chat is closed
-      const interval = setInterval(loadChatCount, 5000);
+    if (user) {
+      // Always load messages in background for instant access
+      loadChatMessages();
+      // Poll every 3 seconds for real-time updates
+      const interval = setInterval(loadChatMessages, 3000);
       return () => clearInterval(interval);
-    } else if (user && chatOpen) {
-      // When chat opens, immediately set count to 0 for this user
-      setUnreadChatCount(0);
     }
-  }, [user, chatOpen, setUnreadChatCount]);
+  }, [user, setUnreadChatCount]);
 
   // Close notification panel on outside click
   useEffect(() => {
@@ -739,13 +736,15 @@ const Header = () => {
 // Chat Panel Component
 // Each user has independent read tracking via localStorage
 // User A reading chat does NOT affect User B, C, D's unread badge
+// Uses optimistic UI for instant message display
 const ChatPanel = () => {
   const { user } = useAuthStore();
   const {
     messages,
     isOpen,
     toggleChat,
-    addMessage,
+    addOptimisticMessage,
+    removeOptimisticMessage,
     setMessages,
     setUnreadChatCount,
   } = useChatStore();
@@ -785,10 +784,10 @@ const ChatPanel = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Fetch messages when chat opens and auto-refresh every 3 seconds
+  // Messages are pre-loaded by background polling in Header component
+  // Just refresh periodically when chat is open for real-time updates
   useEffect(() => {
     if (isOpen) {
-      fetchMessages();
       // Auto-refresh every 3 seconds for real-time feel
       const interval = setInterval(fetchMessages, 3000);
       return () => clearInterval(interval);
@@ -815,30 +814,57 @@ const ChatPanel = () => {
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !user) return;
 
+    // Use consistent sender name (namaLengkap > nama > username)
+    const senderName = user.namaLengkap || user.nama || user.username;
+    const tempId = `temp_${Date.now()}_${Math.random()
+      .toString(36)
+      .substr(2, 9)}`;
+    const timestamp = new Date().toISOString();
+    const messageText = newMessage.trim();
+
+    // Create optimistic message for instant display
+    const optimisticMessage = {
+      id: tempId,
+      sender: senderName,
+      role: user.role,
+      message: messageText,
+      timestamp: timestamp,
+    };
+
+    // INSTANT: Add message to UI immediately (optimistic update)
+    addOptimisticMessage(optimisticMessage as any);
+    setNewMessage(""); // Clear input immediately for better UX
+
+    // Update last read timestamp
+    const lastReadKey = `chat_last_read_${user.username}`;
+    localStorage.setItem(lastReadKey, timestamp);
+
+    // BACKGROUND: Send to database
     setLoading(true);
     try {
       const { createData, SHEETS } = await import("@/services/api");
 
-      // Use consistent sender name (namaLengkap > nama > username)
-      const senderName = user.namaLengkap || user.nama || user.username;
-
       const messageData = {
         sender: senderName,
         role: user.role,
-        message: newMessage.trim(),
-        timestamp: new Date().toISOString(),
+        message: messageText,
+        timestamp: timestamp,
       };
 
       const result = await createData(SHEETS.CHAT_MESSAGES, messageData);
       if (result.success && result.data) {
-        setNewMessage("");
-        // Refresh messages to get proper order from server
+        // Replace optimistic message with real one from server
+        removeOptimisticMessage(tempId);
+        // Fetch all messages to ensure correct order and real IDs
         await fetchMessages();
-        // Update last read timestamp
-        const lastReadKey = `chat_last_read_${user.username}`;
-        localStorage.setItem(lastReadKey, new Date().toISOString());
+      } else {
+        // If failed, remove optimistic message
+        removeOptimisticMessage(tempId);
+        console.error("Failed to send message");
       }
     } catch (error) {
+      // On error, remove optimistic message
+      removeOptimisticMessage(tempId);
       console.error("Error sending message:", error);
     } finally {
       setLoading(false);
