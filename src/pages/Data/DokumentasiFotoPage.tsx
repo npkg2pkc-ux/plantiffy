@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Camera,
@@ -124,54 +123,57 @@ export default function DokumentasiFotoPage({
   }, []);
 
   // Start camera - simplified version
-  const startCamera = useCallback(async (facing: "environment" | "user" = "environment") => {
-    setCameraError(null);
-    setCameraReady(false);
+  const startCamera = useCallback(
+    async (facing: "environment" | "user" = "environment") => {
+      setCameraError(null);
+      setCameraReady(false);
 
-    // Stop existing stream first
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-
-    try {
-      // Simple constraints that work on most devices
-      const constraints: MediaStreamConstraints = {
-        video: {
-          facingMode: facing,
-        },
-        audio: false,
-      };
-
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      streamRef.current = stream;
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        // Let autoPlay handle playing
-        setCameraReady(true);
+      // Stop existing stream first
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
       }
-    } catch (error) {
-      console.error("Camera error:", error);
-      if (error instanceof Error) {
-        if (error.name === "NotAllowedError") {
-          setCameraError(
-            "Akses kamera ditolak. Mohon izinkan akses kamera di pengaturan browser."
-          );
-        } else if (error.name === "NotFoundError") {
-          setCameraError(
-            "Kamera tidak ditemukan. Pastikan perangkat memiliki kamera."
-          );
-        } else if (error.name === "NotReadableError") {
-          setCameraError(
-            "Kamera sedang digunakan aplikasi lain. Tutup aplikasi lain dan coba lagi."
-          );
-        } else {
-          setCameraError(`Error: ${error.message}`);
+
+      try {
+        // Simple constraints that work on most devices
+        const constraints: MediaStreamConstraints = {
+          video: {
+            facingMode: facing,
+          },
+          audio: false,
+        };
+
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        streamRef.current = stream;
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          // Let autoPlay handle playing
+          setCameraReady(true);
+        }
+      } catch (error) {
+        console.error("Camera error:", error);
+        if (error instanceof Error) {
+          if (error.name === "NotAllowedError") {
+            setCameraError(
+              "Akses kamera ditolak. Mohon izinkan akses kamera di pengaturan browser."
+            );
+          } else if (error.name === "NotFoundError") {
+            setCameraError(
+              "Kamera tidak ditemukan. Pastikan perangkat memiliki kamera."
+            );
+          } else if (error.name === "NotReadableError") {
+            setCameraError(
+              "Kamera sedang digunakan aplikasi lain. Tutup aplikasi lain dan coba lagi."
+            );
+          } else {
+            setCameraError(`Error: ${error.message}`);
+          }
         }
       }
-    }
-  }, []);
+    },
+    []
+  );
 
   // Switch camera (front/back)
   const switchCamera = useCallback(() => {
@@ -224,30 +226,33 @@ export default function DokumentasiFotoPage({
   }, []);
 
   // Handle file input (for gallery selection)
-  const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleFileInput = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
 
-    // Check file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Ukuran file maksimal 5MB");
-      return;
-    }
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Ukuran file maksimal 5MB");
+        return;
+      }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const result = event.target?.result as string;
-      setCapturedImage(result);
-      stopCamera();
-      // Show form modal after selecting from gallery
-      setShowCameraModal(false);
-      setShowFormModal(true);
-    };
-    reader.readAsDataURL(file);
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        setCapturedImage(result);
+        stopCamera();
+        // Show form modal after selecting from gallery
+        setShowCameraModal(false);
+        setShowFormModal(true);
+      };
+      reader.readAsDataURL(file);
 
-    // Reset input value so same file can be selected again
-    e.target.value = "";
-  }, [stopCamera]);
+      // Reset input value so same file can be selected again
+      e.target.value = "";
+    },
+    [stopCamera]
+  );
 
   // Open camera modal
   const openCameraModal = () => {
@@ -261,7 +266,7 @@ export default function DokumentasiFotoPage({
   // Effect to start camera when modal opens
   useEffect(() => {
     let mounted = true;
-    
+
     if (showCameraModal && !capturedImage) {
       // Small delay to ensure DOM is ready
       const timer = setTimeout(() => {
@@ -274,7 +279,7 @@ export default function DokumentasiFotoPage({
         clearTimeout(timer);
       };
     }
-    
+
     return () => {
       mounted = false;
     };
@@ -543,196 +548,403 @@ export default function DokumentasiFotoPage({
         </div>
       )}
 
-      {/* Fullscreen Camera Overlay */}
-      <AnimatePresence>
-        {showCameraModal &&
-          createPortal(
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[100] bg-black"
-            >
-              {/* Hidden canvas for capture */}
-              <canvas ref={canvasRef} className="hidden" />
+      {/* Fullscreen Camera Overlay - Direct render without portal for iOS compatibility */}
+      {showCameraModal && (
+        <div
+          className="fixed inset-0 bg-black"
+          style={{
+            zIndex: 99999,
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: "100vw",
+            height: "100vh",
+          }}
+        >
+          {/* Hidden canvas for capture */}
+          <canvas ref={canvasRef} style={{ display: "none" }} />
 
-              {/* Hidden file input - NO capture attribute to avoid triggering native camera */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileInput}
-                className="hidden"
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileInput}
+            style={{ display: "none" }}
+          />
+
+          {!capturedImage ? (
+            <>
+              {/* Video Stream - Full Screen */}
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                onCanPlay={() => setCameraReady(true)}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  transform: facingMode === "user" ? "scaleX(-1)" : "none",
+                }}
               />
 
-              {!capturedImage ? (
-                <>
-                  {/* Video Stream - Full Screen */}
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    onCanPlay={() => setCameraReady(true)}
-                    className="absolute inset-0 w-full h-full object-cover"
-                    style={{
-                      transform: facingMode === "user" ? "scaleX(-1)" : "none",
-                      WebkitTransform:
-                        facingMode === "user" ? "scaleX(-1)" : "none",
-                    }}
-                  />
+              {/* Top Bar */}
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  zIndex: 10,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "16px",
+                  paddingTop: "48px",
+                  background:
+                    "linear-gradient(to bottom, rgba(0,0,0,0.6), transparent)",
+                }}
+              >
+                <button
+                  onClick={closeCameraModal}
+                  style={{
+                    padding: "12px",
+                    borderRadius: "50%",
+                    backgroundColor: "rgba(0,0,0,0.3)",
+                    color: "white",
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  <X size={24} />
+                </button>
 
-                  {/* Top Bar */}
-                  <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-gradient-to-b from-black/60 to-transparent">
-                    <button
-                      onClick={closeCameraModal}
-                      className="p-3 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors"
-                    >
-                      <X className="h-6 w-6" />
-                    </button>
+                <span
+                  style={{ color: "white", fontWeight: 500, fontSize: "18px" }}
+                >
+                  Ambil Foto
+                </span>
 
-                    <span className="text-white font-medium text-lg drop-shadow-lg">
-                      Ambil Foto
-                    </span>
+                <button
+                  onClick={switchCamera}
+                  style={{
+                    padding: "12px",
+                    borderRadius: "50%",
+                    backgroundColor: "rgba(0,0,0,0.3)",
+                    color: "white",
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  <RotateCcw size={24} />
+                </button>
+              </div>
 
-                    <button
-                      onClick={switchCamera}
-                      className="p-3 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors"
-                    >
-                      <RotateCcw className="h-6 w-6" />
-                    </button>
+              {/* Camera Loading */}
+              {!cameraReady && !cameraError && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: "rgba(0,0,0,0.7)",
+                    zIndex: 20,
+                  }}
+                >
+                  <div style={{ textAlign: "center", color: "white" }}>
+                    <Spinner />
+                    <p style={{ marginTop: "8px" }}>Memuat kamera...</p>
                   </div>
-
-                  {/* Camera Loading */}
-                  {!cameraReady && !cameraError && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-20">
-                      <div className="text-center text-white">
-                        <Spinner />
-                        <p className="mt-2">Memuat kamera...</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Camera Error */}
-                  {cameraError && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black z-20">
-                      <div className="text-center text-white p-6 max-w-sm">
-                        <AlertCircle className="h-16 w-16 mx-auto mb-4 text-red-400" />
-                        <p className="mb-6 text-lg">{cameraError}</p>
-                        <div className="flex flex-col gap-3">
-                          <Button
-                            onClick={() => startCamera()}
-                            className="bg-white text-black hover:bg-gray-200"
-                          >
-                            <RefreshCw className="h-4 w-4 mr-2" />
-                            Coba Lagi
-                          </Button>
-                          <Button
-                            variant="outline"
-                            onClick={() => fileInputRef.current?.click()}
-                            className="text-white border-white hover:bg-white/10"
-                          >
-                            <Upload className="h-4 w-4 mr-2" />
-                            Pilih dari Galeri
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Bottom Controls */}
-                  {cameraReady && (
-                    <div className="absolute bottom-0 left-0 right-0 z-10 pb-8 pt-16 bg-gradient-to-t from-black/60 to-transparent">
-                      <div className="flex items-center justify-center gap-8">
-                        {/* Gallery Button */}
-                        <button
-                          onClick={() => fileInputRef.current?.click()}
-                          className="p-4 rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors"
-                        >
-                          <Image className="h-7 w-7" />
-                        </button>
-
-                        {/* Capture Button */}
-                        <button
-                          onClick={capturePhoto}
-                          className="relative p-1 rounded-full bg-white"
-                        >
-                          <div className="w-20 h-20 rounded-full border-4 border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors">
-                            <div className="w-16 h-16 rounded-full bg-white" />
-                          </div>
-                        </button>
-
-                        {/* Placeholder for symmetry */}
-                        <div className="p-4 w-14" />
-                      </div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <>
-                  {/* Captured Image Preview - Full Screen */}
-                  <img
-                    src={capturedImage}
-                    alt="Captured"
-                    className="absolute inset-0 w-full h-full object-contain bg-black"
-                  />
-
-                  {/* Top Bar */}
-                  <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-gradient-to-b from-black/60 to-transparent">
-                    <button
-                      onClick={closeCameraModal}
-                      className="p-3 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors"
-                    >
-                      <X className="h-6 w-6" />
-                    </button>
-
-                    <span className="text-white font-medium text-lg drop-shadow-lg">
-                      Preview Foto
-                    </span>
-
-                    <div className="w-12" />
-                  </div>
-
-                  {/* Bottom Controls for Preview */}
-                  <div className="absolute bottom-0 left-0 right-0 z-10 pb-8 pt-16 bg-gradient-to-t from-black/60 to-transparent">
-                    <div className="flex items-center justify-center gap-8">
-                      {/* Retake Button */}
-                      <button
-                        onClick={retakePhoto}
-                        className="flex flex-col items-center gap-2 text-white"
-                      >
-                        <div className="p-4 rounded-full bg-white/20 hover:bg-white/30 transition-colors">
-                          <RotateCcw className="h-7 w-7" />
-                        </div>
-                        <span className="text-sm font-medium">Ulangi</span>
-                      </button>
-
-                      {/* Confirm Button */}
-                      <button
-                        onClick={confirmPhoto}
-                        className="flex flex-col items-center gap-2 text-white"
-                      >
-                        <div className="p-5 rounded-full bg-green-500 hover:bg-green-600 transition-colors">
-                          <Check className="h-10 w-10" />
-                        </div>
-                        <span className="text-sm font-medium">
-                          Gunakan Foto
-                        </span>
-                      </button>
-
-                      {/* Placeholder for symmetry */}
-                      <div className="p-4 w-14 flex flex-col items-center gap-2">
-                        <div className="p-4 w-14" />
-                        <span className="text-sm">&nbsp;</span>
-                      </div>
-                    </div>
-                  </div>
-                </>
+                </div>
               )}
-            </motion.div>,
-            document.body
+
+              {/* Camera Error */}
+              {cameraError && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: "black",
+                    zIndex: 20,
+                  }}
+                >
+                  <div
+                    style={{
+                      textAlign: "center",
+                      color: "white",
+                      padding: "24px",
+                      maxWidth: "320px",
+                    }}
+                  >
+                    <AlertCircle
+                      size={64}
+                      style={{ margin: "0 auto 16px", color: "#f87171" }}
+                    />
+                    <p style={{ marginBottom: "24px", fontSize: "18px" }}>
+                      {cameraError}
+                    </p>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "12px",
+                      }}
+                    >
+                      <Button
+                        onClick={() => startCamera()}
+                        className="bg-white text-black hover:bg-gray-200"
+                      >
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Coba Lagi
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="text-white border-white hover:bg-white/10"
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        Pilih dari Galeri
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Bottom Controls */}
+              {cameraReady && (
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    zIndex: 10,
+                    paddingBottom: "32px",
+                    paddingTop: "64px",
+                    background:
+                      "linear-gradient(to top, rgba(0,0,0,0.6), transparent)",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "32px",
+                    }}
+                  >
+                    {/* Gallery Button */}
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      style={{
+                        padding: "16px",
+                        borderRadius: "50%",
+                        backgroundColor: "rgba(255,255,255,0.2)",
+                        color: "white",
+                        border: "none",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <Image size={28} />
+                    </button>
+
+                    {/* Capture Button */}
+                    <button
+                      onClick={capturePhoto}
+                      style={{
+                        padding: "4px",
+                        borderRadius: "50%",
+                        backgroundColor: "white",
+                        border: "none",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "72px",
+                          height: "72px",
+                          borderRadius: "50%",
+                          border: "4px solid #d1d5db",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: "60px",
+                            height: "60px",
+                            borderRadius: "50%",
+                            backgroundColor: "white",
+                          }}
+                        />
+                      </div>
+                    </button>
+
+                    {/* Placeholder for symmetry */}
+                    <div style={{ width: "60px" }} />
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              {/* Captured Image Preview - Full Screen */}
+              <img
+                src={capturedImage}
+                alt="Captured"
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "contain",
+                  backgroundColor: "black",
+                }}
+              />
+
+              {/* Top Bar */}
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  zIndex: 10,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "16px",
+                  paddingTop: "48px",
+                  background:
+                    "linear-gradient(to bottom, rgba(0,0,0,0.6), transparent)",
+                }}
+              >
+                <button
+                  onClick={closeCameraModal}
+                  style={{
+                    padding: "12px",
+                    borderRadius: "50%",
+                    backgroundColor: "rgba(0,0,0,0.3)",
+                    color: "white",
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  <X size={24} />
+                </button>
+
+                <span
+                  style={{ color: "white", fontWeight: 500, fontSize: "18px" }}
+                >
+                  Preview Foto
+                </span>
+
+                <div style={{ width: "48px" }} />
+              </div>
+
+              {/* Bottom Controls for Preview */}
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  zIndex: 10,
+                  paddingBottom: "32px",
+                  paddingTop: "64px",
+                  background:
+                    "linear-gradient(to top, rgba(0,0,0,0.6), transparent)",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "48px",
+                  }}
+                >
+                  {/* Retake Button */}
+                  <button
+                    onClick={retakePhoto}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: "8px",
+                      color: "white",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <div
+                      style={{
+                        padding: "16px",
+                        borderRadius: "50%",
+                        backgroundColor: "rgba(255,255,255,0.2)",
+                      }}
+                    >
+                      <RotateCcw size={28} />
+                    </div>
+                    <span style={{ fontSize: "14px", fontWeight: 500 }}>
+                      Ulangi
+                    </span>
+                  </button>
+
+                  {/* Confirm Button */}
+                  <button
+                    onClick={confirmPhoto}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: "8px",
+                      color: "white",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <div
+                      style={{
+                        padding: "20px",
+                        borderRadius: "50%",
+                        backgroundColor: "#22c55e",
+                      }}
+                    >
+                      <Check size={40} />
+                    </div>
+                    <span style={{ fontSize: "14px", fontWeight: 500 }}>
+                      Gunakan Foto
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </>
           )}
-      </AnimatePresence>
+        </div>
+      )}
 
       {/* Form Modal - After Photo Captured */}
       <AnimatePresence>
