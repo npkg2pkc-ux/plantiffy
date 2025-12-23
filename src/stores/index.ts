@@ -125,18 +125,27 @@ export const useNotificationStore = create<NotificationState>((set) => ({
 interface ChatState {
   messages: ChatMessage[];
   isOpen: boolean;
+  unreadChatCount: number;
+  lastReadTimestamp: string | null;
   toggleChat: () => void;
   addMessage: (message: ChatMessage) => void;
   setMessages: (messages: ChatMessage[]) => void;
+  setUnreadChatCount: (count: number) => void;
+  markChatAsRead: () => void;
 }
 
 export const useChatStore = create<ChatState>((set) => ({
   messages: [],
   isOpen: false,
+  unreadChatCount: 0,
+  lastReadTimestamp: null,
   toggleChat: () => set((state) => ({ isOpen: !state.isOpen })),
   addMessage: (message) =>
     set((state) => ({ messages: [...state.messages, message] })),
   setMessages: (messages) => set({ messages }),
+  setUnreadChatCount: (count) => set({ unreadChatCount: count }),
+  markChatAsRead: () =>
+    set({ unreadChatCount: 0, lastReadTimestamp: new Date().toISOString() }),
 }));
 
 // Data Store (for caching)

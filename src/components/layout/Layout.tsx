@@ -373,7 +373,13 @@ const Header = () => {
     markAllAsRead,
     setNotifications,
   } = useNotificationStore();
-  const { isOpen: chatOpen, toggleChat } = useChatStore();
+  const {
+    isOpen: chatOpen,
+    toggleChat,
+    unreadChatCount,
+    setUnreadChatCount,
+    markChatAsRead,
+  } = useChatStore();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
@@ -447,11 +453,71 @@ const Header = () => {
 
     if (user) {
       loadNotifications();
-      // Refresh every 30 seconds
-      const interval = setInterval(loadNotifications, 30000);
+      // Refresh every 10 seconds for better real-time feel
+      const interval = setInterval(loadNotifications, 10000);
       return () => clearInterval(interval);
     }
   }, [user, setNotifications]);
+
+  // Background polling for chat messages (to update badge count)
+  // Each user has their own lastReadTimestamp stored in localStorage
+  // This ensures User A reading chat doesn't affect User B, C, D's badge
+  useEffect(() => {
+    const loadChatCount = async () => {
+      if (!user) return;
+
+      try {
+        const { readData, SHEETS } = await import("@/services/api");
+        const result = await readData(SHEETS.CHAT_MESSAGES);
+        if (result.success && result.data) {
+          const messages = result.data as any[];
+
+          // Each user has their own lastReadTimestamp in localStorage
+          // Key is unique per user: chat_last_read_<username>
+          const lastReadKey = `chat_last_read_${user.username}`;
+          const lastRead = localStorage.getItem(lastReadKey);
+
+          // If user never opened chat, all messages from others are unread
+          // Otherwise, only messages newer than lastReadTimestamp are unread
+          const lastReadTime = lastRead ? new Date(lastRead).getTime() : 0;
+
+          // Get current user's display name for comparison
+          // This should match exactly how messages are saved (sender field)
+          const currentUserDisplayName =
+            user.namaLengkap || user.nama || user.username;
+
+          // Count unread messages:
+          // 1. Message must be from OTHER users (not self)
+          // 2. Message timestamp must be AFTER user's lastReadTimestamp
+          const unreadCount = messages.filter((msg) => {
+            // Skip messages from current user
+            if (msg.sender === currentUserDisplayName) {
+              return false;
+            }
+            // Check if message is newer than last read time
+            const msgTime = new Date(msg.timestamp).getTime();
+            return msgTime > lastReadTime;
+          }).length;
+
+          setUnreadChatCount(unreadCount);
+        }
+      } catch (error) {
+        console.error("Error loading chat count:", error);
+      }
+    };
+
+    // Only poll when chat is closed and user is logged in
+    if (user && !chatOpen) {
+      // Initial load
+      loadChatCount();
+      // Poll every 5 seconds when chat is closed
+      const interval = setInterval(loadChatCount, 5000);
+      return () => clearInterval(interval);
+    } else if (user && chatOpen) {
+      // When chat opens, immediately set count to 0 for this user
+      setUnreadChatCount(0);
+    }
+  }, [user, chatOpen, setUnreadChatCount]);
 
   // Close notification panel on outside click
   useEffect(() => {
@@ -513,13 +579,18 @@ const Header = () => {
           <button
             onClick={toggleChat}
             className={cn(
-              "p-2 rounded-lg transition-colors",
+              "relative p-2 rounded-lg transition-colors",
               chatOpen
                 ? "bg-primary-100 text-primary-600 dark:bg-primary-900/50 dark:text-primary-400"
                 : "text-dark-500 hover:bg-dark-100 dark:text-dark-300 dark:hover:bg-dark-700"
             )}
           >
             <MessageCircle className="h-5 w-5" />
+            {unreadChatCount > 0 && !chatOpen && (
+              <span className="absolute top-1 right-1 h-4 w-4 bg-red-500 text-white text-[10px] font-medium rounded-full flex items-center justify-center">
+                {unreadChatCount > 9 ? "9+" : unreadChatCount}
+              </span>
+            )}
           </button>
 
           {/* Notifications */}
@@ -666,13 +737,48 @@ const Header = () => {
 };
 
 // Chat Panel Component
+// Each user has independent read tracking via localStorage
+// User A reading chat does NOT affect User B, C, D's unread badge
 const ChatPanel = () => {
   const { user } = useAuthStore();
-  const { messages, isOpen, toggleChat, addMessage, setMessages } =
-    useChatStore();
+  const {
+    messages,
+    isOpen,
+    toggleChat,
+    addMessage,
+    setMessages,
+    setUnreadChatCount,
+  } = useChatStore();
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Mark chat as read ONLY for current user when panel opens
+  // This updates only the current user's lastReadTimestamp in localStorage
+  // Other users' badges remain unaffected
+  useEffect(() => {
+    if (isOpen && user) {
+      // Save last read timestamp to localStorage for THIS user only
+      // Key format: chat_last_read_<username>
+      // Each user has their own key, so marking as read for User A
+      // does NOT affect User B, C, D, etc.
+      const lastReadKey = `chat_last_read_${user.username}`;
+      const now = new Date().toISOString();
+      localStorage.setItem(lastReadKey, now);
+
+      // Only reset THIS user's unread count in the UI
+      setUnreadChatCount(0);
+    }
+  }, [isOpen, user, setUnreadChatCount]);
+
+  // Also update lastReadTimestamp when new messages arrive while chat is open
+  // This ensures badge stays at 0 when user is actively viewing chat
+  useEffect(() => {
+    if (isOpen && user && messages.length > 0) {
+      const lastReadKey = `chat_last_read_${user.username}`;
+      localStorage.setItem(lastReadKey, new Date().toISOString());
+    }
+  }, [isOpen, user, messages.length]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -712,8 +818,12 @@ const ChatPanel = () => {
     setLoading(true);
     try {
       const { createData, SHEETS } = await import("@/services/api");
+
+      // Use consistent sender name (namaLengkap > nama > username)
+      const senderName = user.namaLengkap || user.nama || user.username;
+
       const messageData = {
-        sender: user.namaLengkap || user.nama || user.username,
+        sender: senderName,
         role: user.role,
         message: newMessage.trim(),
         timestamp: new Date().toISOString(),
@@ -721,8 +831,12 @@ const ChatPanel = () => {
 
       const result = await createData(SHEETS.CHAT_MESSAGES, messageData);
       if (result.success && result.data) {
-        addMessage(result.data as any);
         setNewMessage("");
+        // Refresh messages to get proper order from server
+        await fetchMessages();
+        // Update last read timestamp
+        const lastReadKey = `chat_last_read_${user.username}`;
+        localStorage.setItem(lastReadKey, new Date().toISOString());
       }
     } catch (error) {
       console.error("Error sending message:", error);
