@@ -198,8 +198,33 @@ const ActiveUsersMarquee = () => {
     }
   };
 
-  // Duplicate content for seamless loop (3x for smoother transition)
-  const marqueeContent = [...activeUsers, ...activeUsers, ...activeUsers];
+  // Single UserBadge component for cleaner code
+  const UserBadge = ({ activeUser }: { activeUser: ActiveUser }) => (
+    <div className="flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full backdrop-blur-sm flex-shrink-0">
+      {/* Online indicator */}
+      <Circle className="h-2 w-2 fill-green-400 text-green-400 animate-pulse" />
+      {/* User info */}
+      <span className="text-xs font-medium">{activeUser.namaLengkap}</span>
+      {/* Role badge */}
+      <span
+        className={cn(
+          "text-[10px] px-1.5 py-0.5 rounded-full text-white font-medium uppercase",
+          getRoleBadgeColor(activeUser.role)
+        )}
+      >
+        {activeUser.role}
+      </span>
+      {/* Plant badge */}
+      <span
+        className={cn(
+          "text-[10px] px-1.5 py-0.5 rounded-full text-white font-medium",
+          getPlantBadgeColor(activeUser.plant)
+        )}
+      >
+        {activeUser.plant}
+      </span>
+    </div>
+  );
 
   return (
     <div
@@ -216,51 +241,35 @@ const ActiveUsersMarquee = () => {
           </span>
         </div>
 
-        {/* Scrolling Content - Using CSS animation for smooth infinite scroll */}
+        {/* Scrolling Content - Double track for seamless infinite scroll */}
         <div className="flex-1 overflow-hidden relative">
           <div
             className={cn(
-              "flex items-center gap-6 whitespace-nowrap animate-marquee",
+              "flex whitespace-nowrap marquee-track",
               isPaused && "animation-paused"
             )}
             style={{
-              animationDuration: `${Math.max(activeUsers.length * 8, 15)}s`,
+              ["--marquee-duration" as string]: `${Math.max(
+                activeUsers.length * 5,
+                12
+              )}s`,
             }}
           >
-            {marqueeContent.map((activeUser, index) => (
-              <div
-                key={`${activeUser.username}-${index}`}
-                className="flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full backdrop-blur-sm flex-shrink-0"
-              >
-                {/* Online indicator */}
-                <Circle className="h-2 w-2 fill-green-400 text-green-400 animate-pulse" />
-
-                {/* User info */}
-                <span className="text-xs font-medium">
-                  {activeUser.namaLengkap}
-                </span>
-
-                {/* Role badge */}
-                <span
-                  className={cn(
-                    "text-[10px] px-1.5 py-0.5 rounded-full text-white font-medium uppercase",
-                    getRoleBadgeColor(activeUser.role)
-                  )}
-                >
-                  {activeUser.role}
-                </span>
-
-                {/* Plant badge */}
-                <span
-                  className={cn(
-                    "text-[10px] px-1.5 py-0.5 rounded-full text-white font-medium",
-                    getPlantBadgeColor(activeUser.plant)
-                  )}
-                >
-                  {activeUser.plant}
-                </span>
-              </div>
-            ))}
+            {/* First set */}
+            <div className="flex items-center gap-6 px-4 marquee-content">
+              {activeUsers.map((activeUser) => (
+                <UserBadge key={activeUser.username} activeUser={activeUser} />
+              ))}
+            </div>
+            {/* Second set (duplicate for seamless loop) */}
+            <div className="flex items-center gap-6 px-4 marquee-content">
+              {activeUsers.map((activeUser) => (
+                <UserBadge
+                  key={`dup-${activeUser.username}`}
+                  activeUser={activeUser}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>

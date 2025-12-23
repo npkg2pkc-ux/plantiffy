@@ -174,23 +174,26 @@
     animation: fadeIn 0.5s ease-out forwards;
   }
 
-  /* Marquee animation for active users */
-  .animate-marquee {
-    animation: marquee linear infinite;
-  }
-
   .animation-paused {
-    animation-play-state: paused;
+    animation-play-state: paused !important;
   }
 }
 
-/* Marquee Keyframes */
-@keyframes marquee {
+/* Marquee Animation - Smooth seamless scrolling */
+.marquee-track {
+  animation: marquee-scroll var(--marquee-duration, 15s) linear infinite;
+}
+
+.marquee-content {
+  flex-shrink: 0;
+}
+
+@keyframes marquee-scroll {
   0% {
-    transform: translateX(0%);
+    transform: translateX(0);
   }
   100% {
-    transform: translateX(-33.33%);
+    transform: translateX(-50%);
   }
 }
 
