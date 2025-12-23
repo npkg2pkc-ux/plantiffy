@@ -50,6 +50,25 @@ interface ActiveUser {
   status: string;
 }
 
+// Global function to set user offline - can be called from logout
+export const setUserOffline = async (username: string) => {
+  try {
+    const { readData, updateData, SHEETS } = await import("@/services/api");
+    const result = await readData(SHEETS.ACTIVE_USERS);
+    const existingUsers = (result.data as ActiveUser[]) || [];
+    const existingUser = existingUsers.find((u) => u.username === username);
+    if (existingUser) {
+      await updateData(SHEETS.ACTIVE_USERS, {
+        id: existingUser.id,
+        status: "offline",
+        lastActive: new Date(0).toISOString(), // Set to old date to ensure removal
+      });
+    }
+  } catch (error) {
+    console.error("Error setting offline status:", error);
+  }
+};
+
 const ActiveUsersMarquee = () => {
   const { user } = useAuthStore();
   const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([]);
@@ -105,12 +124,12 @@ const ActiveUsersMarquee = () => {
       if (result.success && result.data) {
         const users = result.data as ActiveUser[];
         const now = new Date().getTime();
-        const TIMEOUT = 2 * 60 * 1000; // 2 minutes timeout
+        const TIMEOUT = 45 * 1000; // 45 seconds timeout for real-time
 
-        // Filter only users active within last 2 minutes
+        // Filter only users active within last 45 seconds AND status is online
         const onlineUsers = users.filter((u) => {
           const lastActive = new Date(u.lastActive).getTime();
-          return now - lastActive < TIMEOUT;
+          return now - lastActive < TIMEOUT && u.status === "online";
         });
 
         setActiveUsers(onlineUsers);
@@ -127,10 +146,10 @@ const ActiveUsersMarquee = () => {
       updateMyStatus();
       fetchActiveUsers();
 
-      // Update every 30 seconds
-      const statusInterval = setInterval(updateMyStatus, 30000);
-      // Fetch active users every 15 seconds
-      const fetchInterval = setInterval(fetchActiveUsers, 15000);
+      // Update my status every 15 seconds
+      const statusInterval = setInterval(updateMyStatus, 15000);
+      // Fetch active users every 5 seconds for real-time updates
+      const fetchInterval = setInterval(fetchActiveUsers, 5000);
 
       return () => {
         clearInterval(statusInterval);
@@ -141,32 +160,52 @@ const ActiveUsersMarquee = () => {
 
   // Set status to offline on unmount/close
   useEffect(() => {
-    const handleBeforeUnload = async () => {
-      if (user) {
-        try {
-          const { readData, updateData, SHEETS } = await import(
-            "@/services/api"
-          );
-          const result = await readData(SHEETS.ACTIVE_USERS);
-          const existingUsers = (result.data as ActiveUser[]) || [];
-          const existingUser = existingUsers.find(
-            (u) => u.username === user.username
-          );
-          if (existingUser) {
-            await updateData(SHEETS.ACTIVE_USERS, {
-              id: existingUser.id,
-              status: "offline",
-            });
-          }
-        } catch (error) {
-          console.error("Error setting offline status:", error);
+    const setOffline = () => {
+      if (user && user.username) {
+        // Use fetch with keepalive for reliable offline status on page close
+        const apiUrl = import.meta.env.VITE_API_URL;
+        if (apiUrl) {
+          fetch(apiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify({
+              action: "update",
+              sheet: "active_users",
+              data: {
+                username: user.username,
+                status: "offline",
+              },
+            }),
+            keepalive: true,
+          }).catch(() => {});
         }
+        // Also call the async function
+        setUserOffline(user.username);
+      }
+    };
+
+    const handleBeforeUnload = () => {
+      setOffline();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        // User might be closing tab - update status
+        setOffline();
+      } else if (document.visibilityState === "visible" && user) {
+        // User came back - update to online
+        updateMyStatus();
       }
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [user]);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [user, updateMyStatus]);
 
   if (activeUsers.length === 0) return null;
 
@@ -755,7 +794,11 @@ const Header = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // Set user offline before logout
+    if (user && user.username) {
+      await setUserOffline(user.username);
+    }
     logout();
     navigate("/login");
   };
