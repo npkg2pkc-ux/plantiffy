@@ -14,6 +14,9 @@ import {
   Calendar,
   RefreshCw,
   DollarSign,
+  Eye,
+  Thermometer,
+  Droplets,
 } from "lucide-react";
 import { useSaveShortcut } from "@/hooks";
 import {
@@ -377,6 +380,10 @@ const KOPPage = ({ plant }: KOPPageProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterMonth, setFilterMonth] = useState("");
 
+  // View states
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewItem, setViewItem] = useState<KOPEntry | null>(null);
+
   // Print report states
   const [showPrintReportModal, setShowPrintReportModal] = useState(false);
   const [printReportDate, setPrintReportDate] = useState("");
@@ -664,6 +671,11 @@ const KOPPage = ({ plant }: KOPPageProps) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleView = (item: KOPEntry) => {
+    setViewItem(item);
+    setShowViewModal(true);
   };
 
   const handleEdit = (item: KOPEntry) => {
@@ -1728,6 +1740,13 @@ const KOPPage = ({ plant }: KOPPageProps) => {
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-center gap-1">
                           <button
+                            onClick={() => handleView(item)}
+                            className="p-2 text-dark-400 hover:text-dark-600 hover:bg-dark-100 rounded-lg transition-colors"
+                            title="Lihat Detail"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <button
                             onClick={() => handlePrint(item)}
                             className="p-2 text-dark-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
                             title="Print"
@@ -2612,6 +2631,575 @@ const KOPPage = ({ plant }: KOPPageProps) => {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      {/* View Modal */}
+      <Modal
+        isOpen={showViewModal}
+        onClose={() => {
+          setShowViewModal(false);
+          setViewItem(null);
+        }}
+        title="Detail Key Operating Parameter"
+        size="full"
+      >
+        {viewItem &&
+          (() => {
+            // Calculate values for view
+            const viewKursDollar = parseNumber(viewItem.kursDollar || "16000");
+            const viewSteamMalamCalc = calculateSteamFlow(
+              viewItem.steamMalam || emptyShiftEnergy
+            );
+            const viewSteamPagiCalc = calculateSteamFlow(
+              viewItem.steamPagi || emptyShiftEnergy
+            );
+            const viewSteamSoreCalc = calculateSteamFlow(
+              viewItem.steamSore || emptyShiftEnergy
+            );
+            viewSteamMalamCalc.costRp = calculateSteamCost(
+              viewSteamMalamCalc.selisih
+            );
+            viewSteamPagiCalc.costRp = calculateSteamCost(
+              viewSteamPagiCalc.selisih
+            );
+            viewSteamSoreCalc.costRp = calculateSteamCost(
+              viewSteamSoreCalc.selisih
+            );
+
+            const viewGasMalamCalc = calculateGasFlow(
+              viewItem.gasMalam || emptyShiftEnergy
+            );
+            const viewGasPagiCalc = calculateGasFlow(
+              viewItem.gasPagi || emptyShiftEnergy
+            );
+            const viewGasSoreCalc = calculateGasFlow(
+              viewItem.gasSore || emptyShiftEnergy
+            );
+            viewGasMalamCalc.costRp = calculateGasCost(
+              viewGasMalamCalc.selisih,
+              viewKursDollar
+            );
+            viewGasPagiCalc.costRp = calculateGasCost(
+              viewGasPagiCalc.selisih,
+              viewKursDollar
+            );
+            viewGasSoreCalc.costRp = calculateGasCost(
+              viewGasSoreCalc.selisih,
+              viewKursDollar
+            );
+
+            const viewTotalSteamRp =
+              viewSteamMalamCalc.costRp +
+              viewSteamPagiCalc.costRp +
+              viewSteamSoreCalc.costRp;
+            const viewTotalGasRp =
+              viewGasMalamCalc.costRp +
+              viewGasPagiCalc.costRp +
+              viewGasSoreCalc.costRp;
+            const viewTotalTonase =
+              parseNumber(viewItem.produkTonase?.malam || "0") +
+              parseNumber(viewItem.produkTonase?.pagi || "0") +
+              parseNumber(viewItem.produkTonase?.sore || "0");
+
+            return (
+              <div className="space-y-6">
+                {/* Header */}
+                <div className="bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl p-6 text-white">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-primary-100 text-sm font-medium">
+                        Key Operating Parameter
+                      </p>
+                      <h2 className="text-2xl font-bold mt-1">
+                        NPK GRANULAR {plant === "NPK1" ? "1" : "2"}
+                      </h2>
+                      <p className="text-primary-100 text-sm mt-1">
+                        {formatDate(viewItem.tanggal)}
+                      </p>
+                    </div>
+                    <Badge
+                      variant={
+                        viewItem.jenisOperasi === "NORMAL OPERASI"
+                          ? "success"
+                          : "warning"
+                      }
+                      className="bg-white/20 text-white border-0 text-base px-4 py-2"
+                    >
+                      {viewItem.jenisOperasi}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Summary Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 rounded-xl p-4 border border-green-200 dark:border-green-800">
+                    <div className="flex items-center gap-3">
+                      <div className="p-3 bg-green-200 dark:bg-green-800 rounded-lg">
+                        <Gauge className="h-6 w-6 text-green-700 dark:text-green-300" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-green-700 dark:text-green-400 font-medium">
+                          Total Tonase
+                        </p>
+                        <p className="text-2xl font-bold text-green-800 dark:text-green-200">
+                          {formatNumber(viewTotalTonase)} TON
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
+                    <div className="flex items-center gap-3">
+                      <div className="p-3 bg-blue-200 dark:bg-blue-800 rounded-lg">
+                        <Droplets className="h-6 w-6 text-blue-700 dark:text-blue-300" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-blue-700 dark:text-blue-400 font-medium">
+                          Biaya Steam
+                        </p>
+                        <p className="text-2xl font-bold text-blue-800 dark:text-blue-200">
+                          Rp {formatNumber(viewTotalSteamRp)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 rounded-xl p-4 border border-orange-200 dark:border-orange-800">
+                    <div className="flex items-center gap-3">
+                      <div className="p-3 bg-orange-200 dark:bg-orange-800 rounded-lg">
+                        <Flame className="h-6 w-6 text-orange-700 dark:text-orange-300" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-orange-700 dark:text-orange-400 font-medium">
+                          Biaya Gas
+                        </p>
+                        <p className="text-2xl font-bold text-orange-800 dark:text-orange-200">
+                          Rp {formatNumber(viewTotalGasRp)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Personel */}
+                <div className="bg-dark-50 dark:bg-dark-800 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Users className="h-5 w-5 text-primary-600" />
+                    <h3 className="font-semibold text-dark-900 dark:text-white">
+                      Personel Shift
+                    </h3>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-dark-100 dark:bg-dark-700">
+                          <th className="px-4 py-2 text-left font-medium text-dark-600 dark:text-dark-300">
+                            Posisi
+                          </th>
+                          <th className="px-4 py-2 text-center font-medium text-dark-600 dark:text-dark-300">
+                            Malam (23:00-07:00)
+                          </th>
+                          <th className="px-4 py-2 text-center font-medium text-dark-600 dark:text-dark-300">
+                            Pagi (07:00-15:00)
+                          </th>
+                          <th className="px-4 py-2 text-center font-medium text-dark-600 dark:text-dark-300">
+                            Sore (15:00-23:00)
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="border-b border-dark-200 dark:border-dark-600">
+                          <td className="px-4 py-3 font-medium text-dark-900 dark:text-white">
+                            Section Head
+                          </td>
+                          <td className="px-4 py-3 text-center text-dark-700 dark:text-dark-300">
+                            {viewItem.shiftMalam?.sectionHead || "-"}
+                          </td>
+                          <td className="px-4 py-3 text-center text-dark-700 dark:text-dark-300">
+                            {viewItem.shiftPagi?.sectionHead || "-"}
+                          </td>
+                          <td className="px-4 py-3 text-center text-dark-700 dark:text-dark-300">
+                            {viewItem.shiftSore?.sectionHead || "-"}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="px-4 py-3 font-medium text-dark-900 dark:text-white">
+                            Operator Panel
+                          </td>
+                          <td className="px-4 py-3 text-center text-dark-700 dark:text-dark-300">
+                            {viewItem.shiftMalam?.operatorPanel || "-"}
+                          </td>
+                          <td className="px-4 py-3 text-center text-dark-700 dark:text-dark-300">
+                            {viewItem.shiftPagi?.operatorPanel || "-"}
+                          </td>
+                          <td className="px-4 py-3 text-center text-dark-700 dark:text-dark-300">
+                            {viewItem.shiftSore?.operatorPanel || "-"}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Energy Consumption */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* Steam */}
+                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Droplets className="h-5 w-5 text-blue-600" />
+                      <h3 className="font-semibold text-blue-800 dark:text-blue-300">
+                        Konsumsi Steam (M3)
+                      </h3>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="bg-blue-100 dark:bg-blue-800/50">
+                            <th className="px-3 py-2 text-left font-medium text-blue-700 dark:text-blue-300">
+                              Shift
+                            </th>
+                            <th className="px-3 py-2 text-right font-medium text-blue-700 dark:text-blue-300">
+                              Selisih
+                            </th>
+                            <th className="px-3 py-2 text-right font-medium text-blue-700 dark:text-blue-300">
+                              Flow (M3/H)
+                            </th>
+                            <th className="px-3 py-2 text-right font-medium text-blue-700 dark:text-blue-300">
+                              Biaya (Rp)
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-dark-700 dark:text-dark-300">
+                          <tr className="border-b border-blue-200 dark:border-blue-700">
+                            <td className="px-3 py-2">Malam</td>
+                            <td className="px-3 py-2 text-right">
+                              {formatNumber(viewSteamMalamCalc.selisih)}
+                            </td>
+                            <td className="px-3 py-2 text-right">
+                              {viewSteamMalamCalc.flowPerHour.toFixed(2)}
+                            </td>
+                            <td className="px-3 py-2 text-right">
+                              {formatNumber(viewSteamMalamCalc.costRp)}
+                            </td>
+                          </tr>
+                          <tr className="border-b border-blue-200 dark:border-blue-700">
+                            <td className="px-3 py-2">Pagi</td>
+                            <td className="px-3 py-2 text-right">
+                              {formatNumber(viewSteamPagiCalc.selisih)}
+                            </td>
+                            <td className="px-3 py-2 text-right">
+                              {viewSteamPagiCalc.flowPerHour.toFixed(2)}
+                            </td>
+                            <td className="px-3 py-2 text-right">
+                              {formatNumber(viewSteamPagiCalc.costRp)}
+                            </td>
+                          </tr>
+                          <tr className="border-b border-blue-200 dark:border-blue-700">
+                            <td className="px-3 py-2">Sore</td>
+                            <td className="px-3 py-2 text-right">
+                              {formatNumber(viewSteamSoreCalc.selisih)}
+                            </td>
+                            <td className="px-3 py-2 text-right">
+                              {viewSteamSoreCalc.flowPerHour.toFixed(2)}
+                            </td>
+                            <td className="px-3 py-2 text-right">
+                              {formatNumber(viewSteamSoreCalc.costRp)}
+                            </td>
+                          </tr>
+                          <tr className="bg-blue-100 dark:bg-blue-800/50 font-semibold text-blue-800 dark:text-blue-200">
+                            <td className="px-3 py-2" colSpan={3}>
+                              Total
+                            </td>
+                            <td className="px-3 py-2 text-right">
+                              Rp {formatNumber(viewTotalSteamRp)}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Gas */}
+                  <div className="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-4 border border-orange-200 dark:border-orange-800">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Flame className="h-5 w-5 text-orange-600" />
+                      <h3 className="font-semibold text-orange-800 dark:text-orange-300">
+                        Konsumsi Gas (Nm3)
+                      </h3>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="bg-orange-100 dark:bg-orange-800/50">
+                            <th className="px-3 py-2 text-left font-medium text-orange-700 dark:text-orange-300">
+                              Shift
+                            </th>
+                            <th className="px-3 py-2 text-right font-medium text-orange-700 dark:text-orange-300">
+                              Selisih
+                            </th>
+                            <th className="px-3 py-2 text-right font-medium text-orange-700 dark:text-orange-300">
+                              Flow (Nm3/H)
+                            </th>
+                            <th className="px-3 py-2 text-right font-medium text-orange-700 dark:text-orange-300">
+                              Biaya (Rp)
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-dark-700 dark:text-dark-300">
+                          <tr className="border-b border-orange-200 dark:border-orange-700">
+                            <td className="px-3 py-2">Malam</td>
+                            <td className="px-3 py-2 text-right">
+                              {formatNumber(viewGasMalamCalc.selisih)}
+                            </td>
+                            <td className="px-3 py-2 text-right">
+                              {viewGasMalamCalc.flowPerHour.toFixed(2)}
+                            </td>
+                            <td className="px-3 py-2 text-right">
+                              {formatNumber(viewGasMalamCalc.costRp)}
+                            </td>
+                          </tr>
+                          <tr className="border-b border-orange-200 dark:border-orange-700">
+                            <td className="px-3 py-2">Pagi</td>
+                            <td className="px-3 py-2 text-right">
+                              {formatNumber(viewGasPagiCalc.selisih)}
+                            </td>
+                            <td className="px-3 py-2 text-right">
+                              {viewGasPagiCalc.flowPerHour.toFixed(2)}
+                            </td>
+                            <td className="px-3 py-2 text-right">
+                              {formatNumber(viewGasPagiCalc.costRp)}
+                            </td>
+                          </tr>
+                          <tr className="border-b border-orange-200 dark:border-orange-700">
+                            <td className="px-3 py-2">Sore</td>
+                            <td className="px-3 py-2 text-right">
+                              {formatNumber(viewGasSoreCalc.selisih)}
+                            </td>
+                            <td className="px-3 py-2 text-right">
+                              {viewGasSoreCalc.flowPerHour.toFixed(2)}
+                            </td>
+                            <td className="px-3 py-2 text-right">
+                              {formatNumber(viewGasSoreCalc.costRp)}
+                            </td>
+                          </tr>
+                          <tr className="bg-orange-100 dark:bg-orange-800/50 font-semibold text-orange-800 dark:text-orange-200">
+                            <td className="px-3 py-2" colSpan={3}>
+                              Total
+                            </td>
+                            <td className="px-3 py-2 text-right">
+                              Rp {formatNumber(viewTotalGasRp)}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Product Parameters */}
+                <div className="bg-dark-50 dark:bg-dark-800 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <FileText className="h-5 w-5 text-primary-600" />
+                    <h3 className="font-semibold text-dark-900 dark:text-white">
+                      Parameter Produk NPK (15-10-12)
+                    </h3>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-dark-100 dark:bg-dark-700">
+                          <th className="px-4 py-2 text-left font-medium text-dark-600 dark:text-dark-300">
+                            Parameter
+                          </th>
+                          <th className="px-4 py-2 text-center font-medium text-dark-600 dark:text-dark-300">
+                            Target
+                          </th>
+                          <th className="px-4 py-2 text-center font-medium text-dark-600 dark:text-dark-300">
+                            Malam
+                          </th>
+                          <th className="px-4 py-2 text-center font-medium text-dark-600 dark:text-dark-300">
+                            Pagi
+                          </th>
+                          <th className="px-4 py-2 text-center font-medium text-dark-600 dark:text-dark-300">
+                            Sore
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-dark-700 dark:text-dark-300">
+                        <tr className="border-b border-dark-200 dark:border-dark-600">
+                          <td className="px-4 py-3 font-medium">
+                            <div className="flex items-center gap-2">
+                              <Thermometer className="h-4 w-4 text-red-500" />
+                              Temp Produk Out (°C)
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-center text-dark-500">
+                            {TARGETS.tempProdukOut.label}
+                          </td>
+                          <td className="px-4 py-3 text-center font-medium">
+                            {viewItem.dryerTempProdukOut?.malam || "-"}
+                          </td>
+                          <td className="px-4 py-3 text-center font-medium">
+                            {viewItem.dryerTempProdukOut?.pagi || "-"}
+                          </td>
+                          <td className="px-4 py-3 text-center font-medium">
+                            {viewItem.dryerTempProdukOut?.sore || "-"}
+                          </td>
+                        </tr>
+                        <tr className="border-b border-dark-200 dark:border-dark-600">
+                          <td className="px-4 py-3 font-medium">N (%)</td>
+                          <td className="px-4 py-3 text-center text-dark-500">
+                            {TARGETS.produkN.label}
+                          </td>
+                          <td className="px-4 py-3 text-center font-medium">
+                            {viewItem.produkN?.malam || "-"}
+                          </td>
+                          <td className="px-4 py-3 text-center font-medium">
+                            {viewItem.produkN?.pagi || "-"}
+                          </td>
+                          <td className="px-4 py-3 text-center font-medium">
+                            {viewItem.produkN?.sore || "-"}
+                          </td>
+                        </tr>
+                        <tr className="border-b border-dark-200 dark:border-dark-600">
+                          <td className="px-4 py-3 font-medium">P (%)</td>
+                          <td className="px-4 py-3 text-center text-dark-500">
+                            {TARGETS.produkP.label}
+                          </td>
+                          <td className="px-4 py-3 text-center font-medium">
+                            {viewItem.produkP?.malam || "-"}
+                          </td>
+                          <td className="px-4 py-3 text-center font-medium">
+                            {viewItem.produkP?.pagi || "-"}
+                          </td>
+                          <td className="px-4 py-3 text-center font-medium">
+                            {viewItem.produkP?.sore || "-"}
+                          </td>
+                        </tr>
+                        <tr className="border-b border-dark-200 dark:border-dark-600">
+                          <td className="px-4 py-3 font-medium">K (%)</td>
+                          <td className="px-4 py-3 text-center text-dark-500">
+                            {TARGETS.produkK.label}
+                          </td>
+                          <td className="px-4 py-3 text-center font-medium">
+                            {viewItem.produkK?.malam || "-"}
+                          </td>
+                          <td className="px-4 py-3 text-center font-medium">
+                            {viewItem.produkK?.pagi || "-"}
+                          </td>
+                          <td className="px-4 py-3 text-center font-medium">
+                            {viewItem.produkK?.sore || "-"}
+                          </td>
+                        </tr>
+                        <tr className="border-b border-dark-200 dark:border-dark-600">
+                          <td className="px-4 py-3 font-medium">
+                            Moisture (%)
+                          </td>
+                          <td className="px-4 py-3 text-center text-dark-500">
+                            {TARGETS.moisture.label}
+                          </td>
+                          <td className="px-4 py-3 text-center font-medium">
+                            {viewItem.produkMoisture?.malam || "-"}
+                          </td>
+                          <td className="px-4 py-3 text-center font-medium">
+                            {viewItem.produkMoisture?.pagi || "-"}
+                          </td>
+                          <td className="px-4 py-3 text-center font-medium">
+                            {viewItem.produkMoisture?.sore || "-"}
+                          </td>
+                        </tr>
+                        <tr className="border-b border-dark-200 dark:border-dark-600">
+                          <td className="px-4 py-3 font-medium">
+                            Kekerasan (Kgf)
+                          </td>
+                          <td className="px-4 py-3 text-center text-dark-500">
+                            {TARGETS.kekerasan.label}
+                          </td>
+                          <td className="px-4 py-3 text-center font-medium">
+                            {viewItem.produkKekerasan?.malam || "-"}
+                          </td>
+                          <td className="px-4 py-3 text-center font-medium">
+                            {viewItem.produkKekerasan?.pagi || "-"}
+                          </td>
+                          <td className="px-4 py-3 text-center font-medium">
+                            {viewItem.produkKekerasan?.sore || "-"}
+                          </td>
+                        </tr>
+                        <tr className="border-b border-dark-200 dark:border-dark-600">
+                          <td className="px-4 py-3 font-medium">
+                            Timbangan (Kg/Karung)
+                          </td>
+                          <td className="px-4 py-3 text-center text-dark-500">
+                            {TARGETS.timbangan.label}
+                          </td>
+                          <td className="px-4 py-3 text-center font-medium">
+                            {viewItem.produkTimbangan?.malam || "-"}
+                          </td>
+                          <td className="px-4 py-3 text-center font-medium">
+                            {viewItem.produkTimbangan?.pagi || "-"}
+                          </td>
+                          <td className="px-4 py-3 text-center font-medium">
+                            {viewItem.produkTimbangan?.sore || "-"}
+                          </td>
+                        </tr>
+                        <tr className="bg-green-50 dark:bg-green-900/30">
+                          <td className="px-4 py-3 font-semibold text-green-700 dark:text-green-300">
+                            Tonase (Ton/Shift)
+                          </td>
+                          <td className="px-4 py-3 text-center text-dark-500">
+                            {TARGETS.tonase.label}
+                          </td>
+                          <td className="px-4 py-3 text-center font-bold text-green-700 dark:text-green-300">
+                            {viewItem.produkTonase?.malam || "-"}
+                          </td>
+                          <td className="px-4 py-3 text-center font-bold text-green-700 dark:text-green-300">
+                            {viewItem.produkTonase?.pagi || "-"}
+                          </td>
+                          <td className="px-4 py-3 text-center font-bold text-green-700 dark:text-green-300">
+                            {viewItem.produkTonase?.sore || "-"}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Kurs Dollar Info */}
+                <div className="bg-dark-100 dark:bg-dark-700 rounded-xl p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5 text-dark-500" />
+                    <span className="text-dark-600 dark:text-dark-300">
+                      Kurs Dollar yang digunakan:
+                    </span>
+                  </div>
+                  <span className="font-semibold text-dark-900 dark:text-white">
+                    Rp {formatNumber(viewKursDollar)}
+                  </span>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end gap-3 pt-2 border-t border-dark-200 dark:border-dark-700">
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      setShowViewModal(false);
+                      setViewItem(null);
+                    }}
+                  >
+                    Tutup
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setShowViewModal(false);
+                      handlePrint(viewItem);
+                    }}
+                    className="gap-2"
+                  >
+                    <Printer className="h-4 w-4" />
+                    Cetak
+                  </Button>
+                </div>
+              </div>
+            );
+          })()}
       </Modal>
 
       {/* Delete Confirmation */}

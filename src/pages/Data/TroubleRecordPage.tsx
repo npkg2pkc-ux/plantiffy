@@ -1,5 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Edit2, Trash2, Search, AlertCircle, Clock } from "lucide-react";
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  Search,
+  AlertCircle,
+  Clock,
+  Eye,
+  Calendar,
+  User,
+  Target,
+  FileText,
+  CheckCircle,
+} from "lucide-react";
 import { useSaveShortcut } from "@/hooks";
 import {
   Button,
@@ -63,6 +76,10 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   // Plant is now set from prop
   const currentPlant = plant;
+
+  // View states
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewItem, setViewItem] = useState<TroubleRecord | null>(null);
 
   // Approval states
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
@@ -198,6 +215,11 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleView = (item: TroubleRecord) => {
+    setViewItem(item);
+    setShowViewModal(true);
   };
 
   const handleEdit = (item: TroubleRecord) => {
@@ -439,7 +461,9 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
               <Clock className="h-5 w-5 text-amber-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500 dark:text-dark-400">In Progress</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">
+                In Progress
+              </p>
               <p className="text-2xl font-bold text-amber-600">
                 {statusCounts.progress}
               </p>
@@ -465,7 +489,9 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
               <AlertCircle className="h-5 w-5 text-gray-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500 dark:text-dark-400">Pending</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">
+                Pending
+              </p>
               <p className="text-2xl font-bold text-gray-600">
                 {statusCounts.pending}
               </p>
@@ -496,34 +522,47 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
           columns={columns}
           loading={loading}
           searchable={false}
-          actions={
-            !userIsViewOnly
-              ? (row) => (
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEdit(row);
-                      }}
-                    >
-                      <Edit2 className="h-4 w-4 text-primary-600" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(row.id!);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4 text-red-600" />
-                    </Button>
-                  </div>
-                )
-              : undefined
-          }
+          actions={(row) => (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleView(row);
+                }}
+                title="Lihat Detail"
+              >
+                <Eye className="h-4 w-4 text-dark-500" />
+              </Button>
+              {!userIsViewOnly && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit(row);
+                    }}
+                    title="Edit"
+                  >
+                    <Edit2 className="h-4 w-4 text-primary-600" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(row.id!);
+                    }}
+                    title="Hapus"
+                  >
+                    <Trash2 className="h-4 w-4 text-red-600" />
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
         />
       </Card>
 
@@ -690,6 +729,169 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
             </Button>
           </div>
         </form>
+      </Modal>
+
+      {/* View Modal */}
+      <Modal
+        isOpen={showViewModal}
+        onClose={() => {
+          setShowViewModal(false);
+          setViewItem(null);
+        }}
+        title="Detail Trouble Record"
+        size="lg"
+      >
+        {viewItem && (
+          <div className="space-y-6">
+            {/* Header with Status */}
+            <div
+              className={`rounded-2xl p-6 text-white ${
+                viewItem.status === "Open"
+                  ? "bg-gradient-to-r from-red-500 to-red-600"
+                  : viewItem.status === "In Progress"
+                  ? "bg-gradient-to-r from-amber-500 to-amber-600"
+                  : viewItem.status === "Closed"
+                  ? "bg-gradient-to-r from-green-500 to-green-600"
+                  : "bg-gradient-to-r from-gray-500 to-gray-600"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white/80 text-sm font-medium">
+                    Trouble Record
+                  </p>
+                  <h2 className="text-2xl font-bold mt-1">{viewItem.area}</h2>
+                  <p className="text-white/80 text-sm mt-1">
+                    {currentPlant === "NPK1" ? "NPK 1" : "NPK 2"}
+                  </p>
+                </div>
+                <Badge
+                  variant="primary"
+                  className="bg-white/20 text-white border-0 text-lg px-4 py-2"
+                >
+                  {viewItem.status}
+                </Badge>
+              </div>
+            </div>
+
+            {/* Info Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-dark-50 dark:bg-dark-800 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Calendar className="h-4 w-4 text-primary-500" />
+                  <p className="text-xs text-dark-500 dark:text-dark-400 uppercase tracking-wide">
+                    Tanggal
+                  </p>
+                </div>
+                <p className="font-semibold text-dark-900 dark:text-white">
+                  {formatDate(viewItem.tanggal)}
+                </p>
+              </div>
+              <div className="bg-dark-50 dark:bg-dark-800 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Clock className="h-4 w-4 text-amber-500" />
+                  <p className="text-xs text-dark-500 dark:text-dark-400 uppercase tracking-wide">
+                    Waktu
+                  </p>
+                </div>
+                <p className="font-semibold text-dark-900 dark:text-white">
+                  Shift {viewItem.shift} - {formatTime(viewItem.waktuKejadian)}
+                </p>
+              </div>
+              <div className="bg-dark-50 dark:bg-dark-800 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <User className="h-4 w-4 text-blue-500" />
+                  <p className="text-xs text-dark-500 dark:text-dark-400 uppercase tracking-wide">
+                    PIC
+                  </p>
+                </div>
+                <p className="font-semibold text-dark-900 dark:text-white">
+                  {viewItem.pic || "-"}
+                </p>
+              </div>
+              <div className="bg-dark-50 dark:bg-dark-800 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Target className="h-4 w-4 text-green-500" />
+                  <p className="text-xs text-dark-500 dark:text-dark-400 uppercase tracking-wide">
+                    Target Selesai
+                  </p>
+                </div>
+                <p className="font-semibold text-dark-900 dark:text-white">
+                  {viewItem.targetSelesai
+                    ? formatDate(viewItem.targetSelesai)
+                    : "-"}
+                </p>
+              </div>
+            </div>
+
+            {/* Deskripsi Masalah */}
+            <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 border border-red-200 dark:border-red-800">
+              <div className="flex items-center gap-2 mb-3">
+                <AlertCircle className="h-5 w-5 text-red-600" />
+                <h3 className="font-semibold text-red-800 dark:text-red-300">
+                  Deskripsi Masalah
+                </h3>
+              </div>
+              <p className="text-dark-700 dark:text-dark-300 leading-relaxed">
+                {viewItem.deskripsiMasalah || "-"}
+              </p>
+            </div>
+
+            {/* Penyebab */}
+            <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 border border-amber-200 dark:border-amber-800">
+              <div className="flex items-center gap-2 mb-3">
+                <FileText className="h-5 w-5 text-amber-600" />
+                <h3 className="font-semibold text-amber-800 dark:text-amber-300">
+                  Analisa Penyebab
+                </h3>
+              </div>
+              <p className="text-dark-700 dark:text-dark-300 leading-relaxed">
+                {viewItem.penyebab || "-"}
+              </p>
+            </div>
+
+            {/* Tindakan */}
+            <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 border border-green-200 dark:border-green-800">
+              <div className="flex items-center gap-2 mb-3">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                <h3 className="font-semibold text-green-800 dark:text-green-300">
+                  Tindakan
+                </h3>
+              </div>
+              <p className="text-dark-700 dark:text-dark-300 leading-relaxed">
+                {viewItem.tindakan || "-"}
+              </p>
+            </div>
+
+            {/* Keterangan */}
+            {viewItem.keterangan && (
+              <div className="bg-dark-50 dark:bg-dark-800 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <FileText className="h-5 w-5 text-dark-500" />
+                  <h3 className="font-semibold text-dark-700 dark:text-dark-300">
+                    Keterangan Tambahan
+                  </h3>
+                </div>
+                <p className="text-dark-600 dark:text-dark-400 leading-relaxed">
+                  {viewItem.keterangan}
+                </p>
+              </div>
+            )}
+
+            {/* Action Button */}
+            <div className="flex justify-end pt-2 border-t border-dark-200 dark:border-dark-700">
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setShowViewModal(false);
+                  setViewItem(null);
+                }}
+              >
+                Tutup
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
 
       {/* Delete Confirmation */}

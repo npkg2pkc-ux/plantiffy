@@ -8,6 +8,10 @@ import {
   Wrench,
   PlusCircle,
   Minus,
+  Eye,
+  FileText,
+  Clock,
+  CheckCircle,
 } from "lucide-react";
 import { useSaveShortcut } from "@/hooks";
 import {
@@ -65,6 +69,10 @@ const PerbaikanTahunanPage = ({ plant }: PerbaikanTahunanPageProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   // Plant is now set from prop
   const currentPlant = plant;
+
+  // View states
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewItem, setViewItem] = useState<PerbaikanTahunan | null>(null);
 
   // Approval states
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
@@ -219,6 +227,11 @@ const PerbaikanTahunanPage = ({ plant }: PerbaikanTahunanPageProps) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleView = (item: PerbaikanTahunan) => {
+    setViewItem(item);
+    setShowViewModal(true);
   };
 
   const handleEdit = (item: PerbaikanTahunan) => {
@@ -448,7 +461,9 @@ const PerbaikanTahunanPage = ({ plant }: PerbaikanTahunanPageProps) => {
               <Wrench className="h-5 w-5 text-primary-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500 dark:text-dark-400">Total Perbaikan</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">
+                Total Perbaikan
+              </p>
               <p className="text-2xl font-bold text-primary-600">
                 {filteredData.length}
               </p>
@@ -461,7 +476,9 @@ const PerbaikanTahunanPage = ({ plant }: PerbaikanTahunanPageProps) => {
               <Calendar className="h-5 w-5 text-amber-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500 dark:text-dark-400">Total Hari Perta</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">
+                Total Hari Perta
+              </p>
               <p className="text-2xl font-bold text-amber-600">
                 {totalHariPerta} Hari
               </p>
@@ -492,34 +509,47 @@ const PerbaikanTahunanPage = ({ plant }: PerbaikanTahunanPageProps) => {
           columns={columns}
           loading={loading}
           searchable={false}
-          actions={
-            !userIsViewOnly
-              ? (row) => (
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEdit(row);
-                      }}
-                    >
-                      <Edit2 className="h-4 w-4 text-primary-600" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(row.id!);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4 text-red-600" />
-                    </Button>
-                  </div>
-                )
-              : undefined
-          }
+          actions={(row) => (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleView(row);
+                }}
+                title="Lihat Detail"
+              >
+                <Eye className="h-4 w-4 text-dark-500" />
+              </Button>
+              {!userIsViewOnly && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit(row);
+                    }}
+                    title="Edit"
+                  >
+                    <Edit2 className="h-4 w-4 text-primary-600" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(row.id!);
+                    }}
+                    title="Hapus"
+                  >
+                    <Trash2 className="h-4 w-4 text-red-600" />
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
         />
       </Card>
 
@@ -642,6 +672,150 @@ const PerbaikanTahunanPage = ({ plant }: PerbaikanTahunanPageProps) => {
             </Button>
           </div>
         </form>
+      </Modal>
+
+      {/* View Modal */}
+      <Modal
+        isOpen={showViewModal}
+        onClose={() => {
+          setShowViewModal(false);
+          setViewItem(null);
+        }}
+        title="Detail Perbaikan Tahunan"
+        size="lg"
+      >
+        {viewItem && (
+          <div className="space-y-6">
+            {/* Header Info */}
+            <div className="bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-primary-100 text-sm font-medium">
+                    Perbaikan Tahunan (PERTA)
+                  </p>
+                  <h2 className="text-2xl font-bold mt-1">
+                    {currentPlant === "NPK1" ? "NPK 1" : "NPK 2"}
+                  </h2>
+                </div>
+                <div className="text-right">
+                  <Badge
+                    variant="primary"
+                    className="bg-white/20 text-white border-0 text-lg px-4 py-2"
+                  >
+                    {viewItem.jumlahHari} Hari
+                  </Badge>
+                </div>
+              </div>
+            </div>
+
+            {/* Timeline Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-dark-50 dark:bg-dark-800 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                    <Calendar className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-dark-500 dark:text-dark-400 uppercase tracking-wide">
+                      Tanggal Mulai
+                    </p>
+                    <p className="text-lg font-semibold text-dark-900 dark:text-white">
+                      {formatDate(viewItem.tanggalMulai)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-dark-50 dark:bg-dark-800 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                    <CheckCircle className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-dark-500 dark:text-dark-400 uppercase tracking-wide">
+                      Tanggal Selesai
+                    </p>
+                    <p className="text-lg font-semibold text-dark-900 dark:text-white">
+                      {viewItem.tanggalSelesai
+                        ? formatDate(viewItem.tanggalSelesai)
+                        : "-"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Items Detail */}
+            <div className="bg-dark-50 dark:bg-dark-800 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-4">
+                <FileText className="h-5 w-5 text-primary-600" />
+                <h3 className="font-semibold text-dark-900 dark:text-white">
+                  Item Perbaikan
+                </h3>
+                <Badge variant="primary" className="ml-auto">
+                  {viewItem.items?.length || 0} Item
+                </Badge>
+              </div>
+              <div className="space-y-3">
+                {viewItem.items &&
+                  viewItem.items.map((item: ItemDeskripsi, index: number) => (
+                    <div
+                      key={index}
+                      className="bg-white dark:bg-dark-700 rounded-xl p-4 border border-dark-200 dark:border-dark-600 hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 w-8 h-8 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center">
+                          <span className="text-primary-600 font-bold text-sm">
+                            {index + 1}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-dark-900 dark:text-white mb-1">
+                            {item.item}
+                          </h4>
+                          <p className="text-dark-600 dark:text-dark-300 text-sm leading-relaxed">
+                            {item.deskripsi}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            {/* Summary */}
+            <div className="bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 rounded-xl p-4 border border-amber-200 dark:border-amber-800">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-amber-200 dark:bg-amber-800 rounded-lg">
+                    <Clock className="h-5 w-5 text-amber-700 dark:text-amber-300" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-amber-700 dark:text-amber-300 font-medium">
+                      Total Durasi Perbaikan
+                    </p>
+                    <p className="text-2xl font-bold text-amber-800 dark:text-amber-200">
+                      {viewItem.jumlahHari} Hari
+                    </p>
+                  </div>
+                </div>
+                <Wrench className="h-12 w-12 text-amber-300 dark:text-amber-700" />
+              </div>
+            </div>
+
+            {/* Action Button */}
+            <div className="flex justify-end pt-2 border-t border-dark-200 dark:border-dark-700">
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setShowViewModal(false);
+                  setViewItem(null);
+                }}
+              >
+                Tutup
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
 
       {/* Delete Confirmation */}
