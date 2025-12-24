@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 // Loading Spinner
@@ -86,13 +87,26 @@ interface SuccessOverlayProps {
   isVisible: boolean;
   message?: string;
   onClose?: () => void;
+  autoCloseDelay?: number; // in milliseconds, default 1500ms
 }
 
 const SuccessOverlay = ({
   isVisible,
   message = "Berhasil!",
   onClose,
+  autoCloseDelay = 1500,
 }: SuccessOverlayProps) => {
+  // Auto close after delay
+  useEffect(() => {
+    if (isVisible && onClose && autoCloseDelay > 0) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, autoCloseDelay);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isVisible, onClose, autoCloseDelay]);
+
   if (!isVisible) return null;
 
   return (
