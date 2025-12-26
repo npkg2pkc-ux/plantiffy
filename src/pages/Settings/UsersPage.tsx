@@ -364,7 +364,9 @@ const UsersPage = () => {
           <h1 className="text-2xl font-display font-bold text-dark-900 dark:text-white">
             Manajemen User
           </h1>
-          <p className="text-dark-500 dark:text-dark-400 mt-1">Kelola pengguna sistem</p>
+          <p className="text-dark-500 dark:text-dark-400 mt-1">
+            Kelola pengguna sistem
+          </p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -391,7 +393,9 @@ const UsersPage = () => {
               <Users className="h-6 w-6 text-primary-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500 dark:text-dark-400">Total Users</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">
+                Total Users
+              </p>
               <p className="text-2xl font-bold text-dark-900 dark:text-white">
                 {filteredData.length}
               </p>
@@ -404,7 +408,9 @@ const UsersPage = () => {
               <UserCheck className="h-6 w-6 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500 dark:text-dark-400">Active Users</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">
+                Active Users
+              </p>
               <p className="text-2xl font-bold text-green-600">{activeUsers}</p>
             </div>
           </div>
@@ -415,7 +421,9 @@ const UsersPage = () => {
               <UserX className="h-6 w-6 text-red-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500 dark:text-dark-400">Inactive Users</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">
+                Inactive Users
+              </p>
               <p className="text-2xl font-bold text-red-600">{inactiveUsers}</p>
             </div>
           </div>
@@ -486,7 +494,7 @@ const UsersPage = () => {
         title={editingId ? "Edit User" : "Tambah User Baru"}
         size="md"
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
           <Input
             label="Username"
             type="text"
@@ -497,6 +505,8 @@ const UsersPage = () => {
             placeholder="Username untuk login"
             required
             disabled={!!editingId}
+            autoComplete="off"
+            name="new-username"
           />
 
           <Input
@@ -512,6 +522,7 @@ const UsersPage = () => {
             }
             placeholder="Nama lengkap"
             required
+            autoComplete="off"
           />
 
           <Input
@@ -523,6 +534,7 @@ const UsersPage = () => {
             }
             placeholder="email@example.com"
             required
+            autoComplete="off"
           />
 
           <Input
@@ -538,6 +550,8 @@ const UsersPage = () => {
             }
             placeholder="••••••••"
             required={!editingId}
+            autoComplete="new-password"
+            name="new-password"
           />
 
           <div className="grid grid-cols-2 gap-4">
