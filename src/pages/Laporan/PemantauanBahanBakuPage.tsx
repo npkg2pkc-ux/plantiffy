@@ -29,7 +29,6 @@ import { useAuthStore } from "@/stores";
 import {
   formatDate,
   formatNumber,
-  parseNumber,
   canAdd,
   needsApprovalForEdit,
   needsApprovalForDelete,
@@ -38,13 +37,18 @@ import {
 } from "@/lib/utils";
 import type { PemantauanBahanBaku } from "@/types";
 
-// Format angka dengan 2 desimal
+// Format angka dengan 2 desimal (menggunakan titik sebagai pemisah desimal)
 const formatDecimal = (num: number | undefined | null): string => {
-  if (num === undefined || num === null) return "0,00";
-  return num.toLocaleString("id-ID", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  if (num === undefined || num === null) return "0.00";
+  return num.toFixed(2);
+};
+
+// Parse number dengan titik sebagai desimal (khusus untuk halaman ini)
+const parseDecimal = (value: string): number => {
+  if (!value || value === "") return 0;
+  // Langsung parse sebagai float dengan titik sebagai desimal
+  const parsed = parseFloat(value);
+  return isNaN(parsed) ? 0 : parsed;
 };
 
 // Opsi bahan baku
@@ -153,9 +157,9 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
 
   // Auto calculate stock akhir
   useEffect(() => {
-    const stockAwal = parseNumber(inputValues.stockAwal);
-    const bahanBakuIn = parseNumber(inputValues.bahanBakuIn);
-    const bahanBakuOut = parseNumber(inputValues.bahanBakuOut);
+    const stockAwal = parseDecimal(inputValues.stockAwal);
+    const bahanBakuIn = parseDecimal(inputValues.bahanBakuIn);
+    const bahanBakuOut = parseDecimal(inputValues.bahanBakuOut);
     const stockAkhir = stockAwal + bahanBakuIn - bahanBakuOut;
     setForm((prev) => ({
       ...prev,
@@ -763,8 +767,8 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
             value={inputValues.stockAwal}
             onChange={(e) => {
               const val = e.target.value;
-              // Hanya izinkan angka, titik, dan koma
-              if (/^[0-9]*[.,]?[0-9]*$/.test(val) || val === "") {
+              // Hanya izinkan angka dan titik (sebagai desimal)
+              if (/^[0-9]*\.?[0-9]*$/.test(val) || val === "") {
                 setInputValues((prev) => ({ ...prev, stockAwal: val }));
               }
             }}
@@ -783,8 +787,8 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
             value={inputValues.bahanBakuIn}
             onChange={(e) => {
               const val = e.target.value;
-              // Hanya izinkan angka, titik, dan koma
-              if (/^[0-9]*[.,]?[0-9]*$/.test(val) || val === "") {
+              // Hanya izinkan angka dan titik (sebagai desimal)
+              if (/^[0-9]*\.?[0-9]*$/.test(val) || val === "") {
                 setInputValues((prev) => ({ ...prev, bahanBakuIn: val }));
               }
             }}
@@ -799,8 +803,8 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
             value={inputValues.bahanBakuOut}
             onChange={(e) => {
               const val = e.target.value;
-              // Hanya izinkan angka, titik, dan koma
-              if (/^[0-9]*[.,]?[0-9]*$/.test(val) || val === "") {
+              // Hanya izinkan angka dan titik (sebagai desimal)
+              if (/^[0-9]*\.?[0-9]*$/.test(val) || val === "") {
                 setInputValues((prev) => ({ ...prev, bahanBakuOut: val }));
               }
             }}
