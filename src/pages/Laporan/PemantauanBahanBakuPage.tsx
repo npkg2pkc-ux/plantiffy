@@ -38,6 +38,15 @@ import {
 } from "@/lib/utils";
 import type { PemantauanBahanBaku } from "@/types";
 
+// Format angka dengan 2 desimal
+const formatDecimal = (num: number | undefined | null): string => {
+  if (num === undefined || num === null) return "0,00";
+  return num.toLocaleString("id-ID", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+
 // Opsi bahan baku
 const BAHAN_BAKU_OPTIONS = [
   { value: "Urea", label: "Urea" },
@@ -412,7 +421,9 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
       key: "stockAwal",
       header: "Stock Awal",
       render: (value: unknown) => (
-        <span className="font-medium">{formatNumber(value as number)} Ton</span>
+        <span className="font-medium">
+          {formatDecimal(value as number)} Ton
+        </span>
       ),
     },
     {
@@ -420,7 +431,7 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
       header: "Bahan Baku In",
       render: (value: unknown) => (
         <span className="text-green-600 dark:text-green-400 font-medium">
-          +{formatNumber(value as number)} Ton
+          +{formatDecimal(value as number)} Ton
         </span>
       ),
     },
@@ -429,7 +440,7 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
       header: "Bahan Baku Out",
       render: (value: unknown) => (
         <span className="text-red-600 dark:text-red-400 font-medium">
-          -{formatNumber(value as number)} Ton
+          -{formatDecimal(value as number)} Ton
         </span>
       ),
     },
@@ -438,7 +449,7 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
       header: "Stock Akhir",
       render: (value: unknown) => (
         <span className="font-bold text-blue-600 dark:text-blue-400">
-          {formatNumber(value as number)} Ton
+          {formatDecimal(value as number)} Ton
         </span>
       ),
     },
@@ -480,7 +491,7 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
                   Stock Akhir {filterBahanBaku}
                 </p>
                 <p className="text-2xl font-bold text-blue-700 dark:text-blue-300 mt-1">
-                  {formatNumber(stats.totalStockAkhir)}{" "}
+                  {formatDecimal(stats.totalStockAkhir)}{" "}
                   <span className="text-sm font-normal">Ton</span>
                 </p>
               </div>
@@ -502,7 +513,7 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
                   {filterBahanBaku} Masuk Hari Ini
                 </p>
                 <p className="text-2xl font-bold text-green-700 dark:text-green-300 mt-1">
-                  +{formatNumber(stats.totalBahanBakuIn)}{" "}
+                  +{formatDecimal(stats.totalBahanBakuIn)}{" "}
                   <span className="text-sm font-normal">Ton</span>
                 </p>
               </div>
@@ -524,7 +535,7 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
                   {filterBahanBaku} Keluar Hari Ini
                 </p>
                 <p className="text-2xl font-bold text-red-700 dark:text-red-300 mt-1">
-                  -{formatNumber(stats.totalBahanBakuOut)}{" "}
+                  -{formatDecimal(stats.totalBahanBakuOut)}{" "}
                   <span className="text-sm font-normal">Ton</span>
                 </p>
               </div>
@@ -637,7 +648,7 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
                   <span className="text-sm text-gray-600 dark:text-gray-400">
                     Stock Terkini:{" "}
                     <span className="font-bold text-primary-600 dark:text-primary-400">
-                      {formatNumber(filteredStats.currentStock)} Ton
+                      {formatDecimal(filteredStats.currentStock)} Ton
                     </span>
                   </span>
                 </div>
