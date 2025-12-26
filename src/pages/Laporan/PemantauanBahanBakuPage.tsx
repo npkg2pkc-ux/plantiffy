@@ -86,6 +86,13 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterBahanBaku, setFilterBahanBaku] = useState("Urea"); // Default ke Urea
 
+  // State untuk input string (agar bisa mengetik desimal dengan benar)
+  const [inputValues, setInputValues] = useState({
+    stockAwal: "",
+    bahanBakuIn: "",
+    bahanBakuOut: "",
+  });
+
   // Approval states
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [approvalAction, setApprovalAction] = useState<"edit" | "delete">(
@@ -146,12 +153,22 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
 
   // Auto calculate stock akhir
   useEffect(() => {
-    const stockAkhir = form.stockAwal + form.bahanBakuIn - form.bahanBakuOut;
+    const stockAwal = parseNumber(inputValues.stockAwal);
+    const bahanBakuIn = parseNumber(inputValues.bahanBakuIn);
+    const bahanBakuOut = parseNumber(inputValues.bahanBakuOut);
+    const stockAkhir = stockAwal + bahanBakuIn - bahanBakuOut;
     setForm((prev) => ({
       ...prev,
+      stockAwal,
+      bahanBakuIn,
+      bahanBakuOut,
       stockAkhir: stockAkhir >= 0 ? stockAkhir : 0,
     }));
-  }, [form.stockAwal, form.bahanBakuIn, form.bahanBakuOut]);
+  }, [
+    inputValues.stockAwal,
+    inputValues.bahanBakuIn,
+    inputValues.bahanBakuOut,
+  ]);
 
   // Auto-fill stock awal from latest stock akhir for selected bahan baku
   useEffect(() => {
@@ -168,6 +185,10 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
         setForm((prev) => ({
           ...prev,
           stockAwal: latestData.stockAkhir,
+        }));
+        setInputValues((prev) => ({
+          ...prev,
+          stockAwal: String(latestData.stockAkhir),
         }));
       }
     }
@@ -227,6 +248,7 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
       setShowForm(false);
       setEditingId(null);
       setForm(initialFormState);
+      setInputValues({ stockAwal: "", bahanBakuIn: "", bahanBakuOut: "" });
       setShowSuccess(true);
     } catch (error) {
       console.error("Error saving data:", error);
@@ -245,6 +267,11 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
       setShowApprovalDialog(true);
     } else {
       setForm(item);
+      setInputValues({
+        stockAwal: String(item.stockAwal || ""),
+        bahanBakuIn: String(item.bahanBakuIn || ""),
+        bahanBakuOut: String(item.bahanBakuOut || ""),
+      });
       setEditingId(item.id || null);
       setShowForm(true);
     }
@@ -471,6 +498,11 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
           <Button
             onClick={() => {
               setForm(initialFormState);
+              setInputValues({
+                stockAwal: "",
+                bahanBakuIn: "",
+                bahanBakuOut: "",
+              });
               setEditingId(null);
               setShowForm(true);
             }}
@@ -702,6 +734,7 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
           setShowForm(false);
           setEditingId(null);
           setForm(initialFormState);
+          setInputValues({ stockAwal: "", bahanBakuIn: "", bahanBakuOut: "" });
         }}
         title={editingId ? "Edit Data Pemantauan" : "Tambah Data Pemantauan"}
       >
@@ -725,13 +758,17 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
 
           <Input
             label="Stock Awal (Ton)"
-            type="number"
-            step="0.01"
-            min="0"
-            value={form.stockAwal || ""}
-            onChange={(e) =>
-              setForm({ ...form, stockAwal: parseNumber(e.target.value) })
-            }
+            type="text"
+            inputMode="decimal"
+            value={inputValues.stockAwal}
+            onChange={(e) => {
+              const val = e.target.value;
+              // Hanya izinkan angka, titik, dan koma
+              if (/^[0-9]*[.,]?[0-9]*$/.test(val) || val === "") {
+                setInputValues((prev) => ({ ...prev, stockAwal: val }));
+              }
+            }}
+            placeholder="0.00"
             required
           />
           <p className="text-xs text-gray-500 dark:text-gray-400 -mt-2">
@@ -741,25 +778,33 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
 
           <Input
             label="Bahan Baku In (Ton)"
-            type="number"
-            step="0.01"
-            min="0"
-            value={form.bahanBakuIn || ""}
-            onChange={(e) =>
-              setForm({ ...form, bahanBakuIn: parseNumber(e.target.value) })
-            }
+            type="text"
+            inputMode="decimal"
+            value={inputValues.bahanBakuIn}
+            onChange={(e) => {
+              const val = e.target.value;
+              // Hanya izinkan angka, titik, dan koma
+              if (/^[0-9]*[.,]?[0-9]*$/.test(val) || val === "") {
+                setInputValues((prev) => ({ ...prev, bahanBakuIn: val }));
+              }
+            }}
+            placeholder="0.00"
             required
           />
 
           <Input
             label="Bahan Baku Out (Ton)"
-            type="number"
-            step="0.01"
-            min="0"
-            value={form.bahanBakuOut || ""}
-            onChange={(e) =>
-              setForm({ ...form, bahanBakuOut: parseNumber(e.target.value) })
-            }
+            type="text"
+            inputMode="decimal"
+            value={inputValues.bahanBakuOut}
+            onChange={(e) => {
+              const val = e.target.value;
+              // Hanya izinkan angka, titik, dan koma
+              if (/^[0-9]*[.,]?[0-9]*$/.test(val) || val === "") {
+                setInputValues((prev) => ({ ...prev, bahanBakuOut: val }));
+              }
+            }}
+            placeholder="0.00"
             required
           />
 
@@ -779,6 +824,11 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
                 setShowForm(false);
                 setEditingId(null);
                 setForm(initialFormState);
+                setInputValues({
+                  stockAwal: "",
+                  bahanBakuIn: "",
+                  bahanBakuOut: "",
+                });
               }}
             >
               Batal
