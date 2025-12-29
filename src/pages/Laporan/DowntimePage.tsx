@@ -13,6 +13,7 @@ import {
   DataTable,
   SuccessOverlay,
   ApprovalDialog,
+  PrintModal,
 } from "@/components/ui";
 import { useAuthStore } from "@/stores";
 import {
@@ -60,6 +61,7 @@ const DowntimePage = ({ plant }: DowntimePageProps) => {
     "edit"
   );
   const [pendingEditItem, setPendingEditItem] = useState<Downtime | null>(null);
+  const [showPrintModal, setShowPrintModal] = useState(false);
 
   // Permission checks
   const userRole = user?.role || "";
@@ -352,7 +354,11 @@ const DowntimePage = ({ plant }: DowntimePageProps) => {
         </div>
 
         <div className="flex items-center gap-3">
-          <Button variant="secondary" size="sm">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setShowPrintModal(true)}
+          >
             <Printer className="h-4 w-4 mr-2" />
             Cetak
           </Button>
@@ -368,19 +374,25 @@ const DowntimePage = ({ plant }: DowntimePageProps) => {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">Total Downtime</p>
+          <p className="text-sm text-dark-500 dark:text-dark-400">
+            Total Downtime
+          </p>
           <p className="text-2xl font-bold text-amber-600">
             {formatNumber(totalDowntime)} Jam
           </p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">Jumlah Kejadian</p>
+          <p className="text-sm text-dark-500 dark:text-dark-400">
+            Jumlah Kejadian
+          </p>
           <p className="text-2xl font-bold text-dark-900 dark:text-white">
             {filteredData.length}
           </p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">Rata-rata Downtime</p>
+          <p className="text-sm text-dark-500 dark:text-dark-400">
+            Rata-rata Downtime
+          </p>
           <p className="text-2xl font-bold text-dark-900 dark:text-white">
             {formatNumber(
               filteredData.length > 0 ? totalDowntime / filteredData.length : 0
@@ -389,7 +401,9 @@ const DowntimePage = ({ plant }: DowntimePageProps) => {
           </p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">Equipment Terdampak</p>
+          <p className="text-sm text-dark-500 dark:text-dark-400">
+            Equipment Terdampak
+          </p>
           <p className="text-2xl font-bold text-dark-900 dark:text-white">
             {new Set(filteredData.map((item) => item.item)).size}
           </p>
@@ -571,6 +585,58 @@ const DowntimePage = ({ plant }: DowntimePageProps) => {
         isVisible={showSuccess}
         message="Data berhasil disimpan!"
         onClose={() => setShowSuccess(false)}
+      />
+
+      {/* Print Modal */}
+      <PrintModal
+        isOpen={showPrintModal}
+        onClose={() => setShowPrintModal(false)}
+        title={`Downtime ${plant}`}
+        data={data as unknown as Record<string, unknown>[]}
+        columns={[
+          {
+            key: "tanggal",
+            header: "Tanggal",
+            render: (value) => formatDate(value as string),
+            align: "center",
+          },
+          { key: "item", header: "Equipment", align: "left" },
+          { key: "deskripsi", header: "Deskripsi", align: "left" },
+          {
+            key: "jamOff",
+            header: "Jam Off",
+            render: (value) => formatTime(value),
+            align: "center",
+          },
+          {
+            key: "jamStart",
+            header: "Jam Start",
+            render: (value) => formatTime(value),
+            align: "center",
+          },
+          {
+            key: "downtime",
+            header: "Downtime (Jam)",
+            render: (value) =>
+              formatNumber(parseNumber(value as string | number)),
+            align: "right",
+          },
+        ]}
+        signatures={[{ role: "mengetahui", label: "Mengetahui" }]}
+        summaryRows={[
+          {
+            label: "Total Downtime",
+            getValue: (filteredData) =>
+              formatNumber(
+                filteredData.reduce(
+                  (sum, item) =>
+                    sum + parseNumber(item.downtime as string | number),
+                  0
+                )
+              ) + " Jam",
+          },
+        ]}
+        plant={plant}
       />
     </div>
   );

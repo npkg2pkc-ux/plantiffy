@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Edit2, Trash2, FileText, Search } from "lucide-react";
+import { Plus, Edit2, Trash2, FileText, Search, Eye } from "lucide-react";
 import { useSaveShortcut } from "@/hooks";
 import {
   Button,
@@ -13,6 +13,7 @@ import {
   DataTable,
   SuccessOverlay,
   ApprovalDialog,
+  Badge,
 } from "@/components/ui";
 import { useAuthStore } from "@/stores";
 import {
@@ -73,6 +74,8 @@ const WorkRequestPage = ({ plant }: WorkRequestPageProps) => {
   const [pendingEditItem, setPendingEditItem] = useState<WorkRequest | null>(
     null
   );
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewItem, setViewItem] = useState<WorkRequest | null>(null);
 
   // Check if user is view only (manager/eksternal)
   const userIsViewOnly = isViewOnly(user?.role || "");
@@ -281,6 +284,11 @@ const WorkRequestPage = ({ plant }: WorkRequestPageProps) => {
     setShowForm(true);
   };
 
+  const handleView = (item: WorkRequest) => {
+    setViewItem(item);
+    setShowViewModal(true);
+  };
+
   const filteredData = data.filter((item) => {
     const matchesSearch =
       item.tanggal?.includes(searchTerm) ||
@@ -351,7 +359,9 @@ const WorkRequestPage = ({ plant }: WorkRequestPageProps) => {
               <FileText className="h-5 w-5 text-primary-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500 dark:text-dark-400">Total Work Request</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">
+                Total Work Request
+              </p>
               <p className="text-2xl font-bold text-primary-600">{totalData}</p>
             </div>
           </div>
@@ -380,44 +390,56 @@ const WorkRequestPage = ({ plant }: WorkRequestPageProps) => {
           columns={columns}
           loading={loading}
           searchable={false}
-          actions={
-            !userIsViewOnly
-              ? (row) => (
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEdit(row);
-                      }}
-                      title={
-                        userNeedsApprovalEdit
-                          ? "Ajukan Edit (perlu approval)"
-                          : "Edit"
-                      }
-                    >
-                      <Edit2 className="h-4 w-4 text-primary-600" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(row.id!);
-                      }}
-                      title={
-                        userNeedsApprovalDelete
-                          ? "Ajukan Hapus (perlu approval)"
-                          : "Hapus"
-                      }
-                    >
-                      <Trash2 className="h-4 w-4 text-red-600" />
-                    </Button>
-                  </div>
-                )
-              : undefined
-          }
+          actions={(row) => (
+            <div className="flex items-center gap-1">
+              {/* View Button - visible to all users */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleView(row);
+                }}
+                title="Lihat Detail"
+              >
+                <Eye className="h-4 w-4 text-blue-600" />
+              </Button>
+              {!userIsViewOnly && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit(row);
+                    }}
+                    title={
+                      userNeedsApprovalEdit
+                        ? "Ajukan Edit (perlu approval)"
+                        : "Edit"
+                    }
+                  >
+                    <Edit2 className="h-4 w-4 text-primary-600" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(row.id!);
+                    }}
+                    title={
+                      userNeedsApprovalDelete
+                        ? "Ajukan Hapus (perlu approval)"
+                        : "Hapus"
+                    }
+                  >
+                    <Trash2 className="h-4 w-4 text-red-600" />
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
         />
       </Card>
 
@@ -570,6 +592,114 @@ const WorkRequestPage = ({ plant }: WorkRequestPageProps) => {
         message="Data berhasil disimpan!"
         onClose={() => setShowSuccess(false)}
       />
+
+      {/* View Modal */}
+      <Modal
+        isOpen={showViewModal}
+        onClose={() => {
+          setShowViewModal(false);
+          setViewItem(null);
+        }}
+        title="Detail Work Request"
+        size="lg"
+      >
+        {viewItem && (
+          <div className="space-y-6">
+            {/* Header Info */}
+            <div className="flex items-center justify-between pb-4 border-b border-dark-200">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-primary-100 dark:bg-primary-900/30 rounded-xl">
+                  <FileText className="h-6 w-6 text-primary-600" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg text-dark-900 dark:text-white">
+                    {viewItem.nomorWR}
+                  </h3>
+                  <p className="text-sm text-dark-500 dark:text-dark-400">
+                    {formatDate(viewItem.tanggal)}
+                  </p>
+                </div>
+              </div>
+              <Badge variant={currentPlant === "NPK1" ? "primary" : "success"}>
+                {currentPlant}
+              </Badge>
+            </div>
+
+            {/* Detail Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 bg-dark-50 dark:bg-dark-800 rounded-xl">
+                <p className="text-xs font-medium text-dark-500 dark:text-dark-400 uppercase tracking-wider mb-1">
+                  Item
+                </p>
+                <p className="font-semibold text-dark-900 dark:text-white">
+                  {viewItem.item}
+                </p>
+              </div>
+              <div className="p-4 bg-dark-50 dark:bg-dark-800 rounded-xl">
+                <p className="text-xs font-medium text-dark-500 dark:text-dark-400 uppercase tracking-wider mb-1">
+                  Area
+                </p>
+                <p className="font-semibold text-dark-900 dark:text-white">
+                  {viewItem.area}
+                </p>
+              </div>
+              <div className="p-4 bg-dark-50 dark:bg-dark-800 rounded-xl">
+                <p className="text-xs font-medium text-dark-500 dark:text-dark-400 uppercase tracking-wider mb-1">
+                  Eksekutor
+                </p>
+                <p className="font-semibold text-dark-900 dark:text-white">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                    {viewItem.eksekutor}
+                  </span>
+                </p>
+              </div>
+              <div className="p-4 bg-dark-50 dark:bg-dark-800 rounded-xl">
+                <p className="text-xs font-medium text-dark-500 dark:text-dark-400 uppercase tracking-wider mb-1">
+                  Include
+                </p>
+                <p className="font-semibold text-dark-900 dark:text-white">
+                  {viewItem.include || "-"}
+                </p>
+              </div>
+            </div>
+
+            {/* Keterangan */}
+            <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800">
+              <p className="text-xs font-medium text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-2">
+                Keterangan
+              </p>
+              <p className="text-dark-900 dark:text-white whitespace-pre-wrap leading-relaxed">
+                {viewItem.keterangan || "-"}
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-3 pt-4 border-t border-dark-200">
+              {!userIsViewOnly && (
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setShowViewModal(false);
+                    setViewItem(null);
+                    handleEdit(viewItem);
+                  }}
+                >
+                  <Edit2 className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              )}
+              <Button
+                onClick={() => {
+                  setShowViewModal(false);
+                  setViewItem(null);
+                }}
+              >
+                Tutup
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };
