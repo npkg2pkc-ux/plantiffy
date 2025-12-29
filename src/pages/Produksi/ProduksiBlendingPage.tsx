@@ -6,6 +6,19 @@ import {
   Printer,
   Search,
   CalendarDays,
+  TrendingUp,
+  TrendingDown,
+  Package,
+  BarChart3,
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+  Beaker,
+  Activity,
+  Target,
+  PieChart,
+  ArrowUpRight,
+  ArrowDownRight,
 } from "lucide-react";
 import { useSaveShortcut } from "@/hooks";
 import {
@@ -63,6 +76,15 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
   const [customFormulaValue, setCustomFormulaValue] = useState("");
   const [form, setForm] = useState<ProduksiBlending>(initialFormState);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Filter states
+  const [selectedFormula, setSelectedFormula] = useState<string>("all");
+  const [selectedMonth, setSelectedMonth] = useState<number>(
+    new Date().getMonth()
+  );
+  const [selectedYear, setSelectedYear] = useState<number>(
+    new Date().getFullYear()
+  );
 
   const plant = type === "blending" ? "NPK2" : "NPK1";
   const pageTitle =
@@ -157,6 +179,169 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
     "November",
     "Desember",
   ];
+
+  // Get unique formulas from data
+  const uniqueFormulas = useMemo(() => {
+    const formulas = [...new Set(data.map((item) => item.formula))].sort();
+    return formulas;
+  }, [data]);
+
+  // Get available years from data
+  const availableYears = useMemo(() => {
+    const years = [
+      ...new Set(data.map((item) => new Date(item.tanggal).getFullYear())),
+    ].sort((a, b) => b - a);
+    if (years.length === 0) years.push(new Date().getFullYear());
+    return years;
+  }, [data]);
+
+  // Filter data by selected month and year
+  const filteredByMonth = useMemo(() => {
+    return data.filter((item) => {
+      const itemDate = new Date(item.tanggal);
+      return (
+        itemDate.getMonth() === selectedMonth &&
+        itemDate.getFullYear() === selectedYear
+      );
+    });
+  }, [data, selectedMonth, selectedYear]);
+
+  // Filter data by formula (if selected)
+  const filteredData = useMemo(() => {
+    if (selectedFormula === "all") return filteredByMonth;
+    return filteredByMonth.filter((item) => item.formula === selectedFormula);
+  }, [filteredByMonth, selectedFormula]);
+
+  // Calculate statistics for selected month
+  const monthStats = useMemo(() => {
+    const totalTonase = filteredByMonth.reduce(
+      (sum, item) => sum + parseNumber(item.tonase),
+      0
+    );
+    const totalFresh = filteredByMonth
+      .filter((i) => i.kategori === "Fresh")
+      .reduce((sum, item) => sum + parseNumber(item.tonase), 0);
+    const totalOversack = filteredByMonth
+      .filter((i) => i.kategori === "Oversack")
+      .reduce((sum, item) => sum + parseNumber(item.tonase), 0);
+    const totalRetail = filteredByMonth
+      .filter((i) => i.kategori === "Retail")
+      .reduce((sum, item) => sum + parseNumber(item.tonase), 0);
+
+    // Get previous month data for comparison
+    const prevMonth = selectedMonth === 0 ? 11 : selectedMonth - 1;
+    const prevYear = selectedMonth === 0 ? selectedYear - 1 : selectedYear;
+    const prevMonthData = data.filter((item) => {
+      const itemDate = new Date(item.tanggal);
+      return (
+        itemDate.getMonth() === prevMonth && itemDate.getFullYear() === prevYear
+      );
+    });
+    const prevTotalTonase = prevMonthData.reduce(
+      (sum, item) => sum + parseNumber(item.tonase),
+      0
+    );
+
+    const growthPercent =
+      prevTotalTonase > 0
+        ? ((totalTonase - prevTotalTonase) / prevTotalTonase) * 100
+        : 0;
+
+    return {
+      totalTonase,
+      totalFresh,
+      totalOversack,
+      totalRetail,
+      entryCount: filteredByMonth.length,
+      uniqueFormulas: new Set(filteredByMonth.map((i) => i.formula)).size,
+      growthPercent,
+      prevTotalTonase,
+      avgPerEntry:
+        filteredByMonth.length > 0 ? totalTonase / filteredByMonth.length : 0,
+    };
+  }, [filteredByMonth, selectedMonth, selectedYear, data]);
+
+  // Calculate statistics per formula
+  const formulaStats = useMemo(() => {
+    const stats: Record<
+      string,
+      {
+        total: number;
+        fresh: number;
+        oversack: number;
+        retail: number;
+        count: number;
+        percentage: number;
+      }
+    > = {};
+
+    filteredByMonth.forEach((item) => {
+      if (!stats[item.formula]) {
+        stats[item.formula] = {
+          total: 0,
+          fresh: 0,
+          oversack: 0,
+          retail: 0,
+          count: 0,
+          percentage: 0,
+        };
+      }
+      const tonase = parseNumber(item.tonase);
+      stats[item.formula].total += tonase;
+      stats[item.formula].count += 1;
+      if (item.kategori === "Fresh") stats[item.formula].fresh += tonase;
+      else if (item.kategori === "Oversack")
+        stats[item.formula].oversack += tonase;
+      else if (item.kategori === "Retail") stats[item.formula].retail += tonase;
+    });
+
+    // Calculate percentages
+    Object.keys(stats).forEach((formula) => {
+      stats[formula].percentage =
+        monthStats.totalTonase > 0
+          ? (stats[formula].total / monthStats.totalTonase) * 100
+          : 0;
+    });
+
+    return stats;
+  }, [filteredByMonth, monthStats.totalTonase]);
+
+  // Sort formulas by total tonase (descending)
+  const sortedFormulaStats = useMemo(() => {
+    return Object.entries(formulaStats)
+      .sort(([, a], [, b]) => b.total - a.total)
+      .slice(0, 10); // Top 10
+  }, [formulaStats]);
+
+  // Daily production for selected month
+  const dailyProduction = useMemo(() => {
+    const days: Record<number, number> = {};
+    filteredByMonth.forEach((item) => {
+      const day = new Date(item.tanggal).getDate();
+      days[day] = (days[day] || 0) + parseNumber(item.tonase);
+    });
+    return days;
+  }, [filteredByMonth]);
+
+  // Navigation functions for month
+  const goToPrevMonth = () => {
+    if (selectedMonth === 0) {
+      setSelectedMonth(11);
+      setSelectedYear((y) => y - 1);
+    } else {
+      setSelectedMonth((m) => m - 1);
+    }
+  };
+
+  const goToNextMonth = () => {
+    if (selectedMonth === 11) {
+      setSelectedMonth(0);
+      setSelectedYear((y) => y + 1);
+    } else {
+      setSelectedMonth((m) => m + 1);
+    }
+  };
+
   const currentMonthProduksi = useMemo(() => {
     const now = new Date();
     const currentMonth = now.getMonth();
@@ -404,6 +589,23 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
     },
   ];
 
+  // Formula color palette for cards
+  const getFormulaColor = (index: number) => {
+    const colors = [
+      "from-blue-500 to-blue-600",
+      "from-emerald-500 to-emerald-600",
+      "from-violet-500 to-violet-600",
+      "from-amber-500 to-amber-600",
+      "from-rose-500 to-rose-600",
+      "from-cyan-500 to-cyan-600",
+      "from-indigo-500 to-indigo-600",
+      "from-teal-500 to-teal-600",
+      "from-orange-500 to-orange-600",
+      "from-pink-500 to-pink-600",
+    ];
+    return colors[index % colors.length];
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -440,86 +642,407 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
         </div>
       </div>
 
-      {/* Produksi Bulan Ini */}
-      <div
-        className={`rounded-xl p-5 text-white shadow-md ${
-          type === "blending"
-            ? "bg-gradient-to-r from-green-500 to-green-600"
-            : "bg-gradient-to-r from-primary-500 to-primary-600"
-        }`}
-      >
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <CalendarDays className="h-8 w-8" />
-            <div>
-              <h3 className="text-lg font-bold">
-                Produksi Bulan {currentMonthProduksi.monthName}{" "}
-                {currentMonthProduksi.year}
-              </h3>
-              <p className="text-white/80 text-sm">
-                {currentMonthProduksi.entryCount} entry data
-              </p>
+      {/* Month Selector - Management View */}
+      <Card className="overflow-hidden">
+        <div className="bg-gradient-to-r from-dark-800 to-dark-900 dark:from-dark-700 dark:to-dark-800 p-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="bg-white/10 rounded-xl p-3">
+                <CalendarDays className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <p className="text-white/70 text-sm font-medium">
+                  Laporan Produksi
+                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <button
+                    onClick={goToPrevMonth}
+                    className="p-1 hover:bg-white/10 rounded-lg transition-colors"
+                  >
+                    <ChevronLeft className="h-5 w-5 text-white" />
+                  </button>
+                  <h2 className="text-2xl font-bold text-white min-w-[200px] text-center">
+                    {MONTH_NAMES[selectedMonth]} {selectedYear}
+                  </h2>
+                  <button
+                    onClick={goToNextMonth}
+                    className="p-1 hover:bg-white/10 rounded-lg transition-colors"
+                  >
+                    <ChevronRight className="h-5 w-5 text-white" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Select
+                value={selectedYear.toString()}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                options={availableYears.map((y) => ({
+                  value: y.toString(),
+                  label: y.toString(),
+                }))}
+                className="bg-white/10 border-white/20 text-white min-w-[100px] [&>option]:text-dark-900"
+              />
             </div>
           </div>
 
-          <div className="flex gap-4 md:gap-6">
-            {type === "blending" && (
+          {/* Stats Overview */}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-6">
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Package className="h-4 w-4 text-white/70" />
+                <p className="text-white/70 text-xs uppercase tracking-wide">
+                  Total Produksi
+                </p>
+              </div>
+              <p className="text-2xl font-bold text-white">
+                {formatNumber(monthStats.totalTonase)}
+                <span className="text-sm font-normal text-white/70 ml-1">
+                  Ton
+                </span>
+              </p>
+              {monthStats.growthPercent !== 0 && (
+                <div
+                  className={`flex items-center gap-1 mt-1 text-xs ${
+                    monthStats.growthPercent > 0
+                      ? "text-green-300"
+                      : "text-red-300"
+                  }`}
+                >
+                  {monthStats.growthPercent > 0 ? (
+                    <ArrowUpRight className="h-3 w-3" />
+                  ) : (
+                    <ArrowDownRight className="h-3 w-3" />
+                  )}
+                  <span>
+                    {Math.abs(monthStats.growthPercent).toFixed(1)}% dari bulan
+                    lalu
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {type === "blending" ? (
               <>
-                <div className="bg-white/20 rounded-lg px-4 py-2 backdrop-blur-sm">
-                  <p className="text-white/80 text-xs uppercase">Fresh</p>
-                  <p className="text-xl font-bold">
-                    {formatNumber(currentMonthProduksi.totalFresh)}{" "}
-                    <span className="text-sm font-normal">Ton</span>
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Beaker className="h-4 w-4 text-green-300" />
+                    <p className="text-white/70 text-xs uppercase tracking-wide">
+                      Fresh
+                    </p>
+                  </div>
+                  <p className="text-2xl font-bold text-white">
+                    {formatNumber(monthStats.totalFresh)}
+                    <span className="text-sm font-normal text-white/70 ml-1">
+                      Ton
+                    </span>
+                  </p>
+                  <p className="text-xs text-white/50 mt-1">
+                    {monthStats.totalTonase > 0
+                      ? (
+                          (monthStats.totalFresh / monthStats.totalTonase) *
+                          100
+                        ).toFixed(1)
+                      : 0}
+                    % dari total
                   </p>
                 </div>
-                <div className="bg-white/20 rounded-lg px-4 py-2 backdrop-blur-sm">
-                  <p className="text-white/80 text-xs uppercase">Oversack</p>
-                  <p className="text-xl font-bold">
-                    {formatNumber(currentMonthProduksi.totalOversack)}{" "}
-                    <span className="text-sm font-normal">Ton</span>
+
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Activity className="h-4 w-4 text-amber-300" />
+                    <p className="text-white/70 text-xs uppercase tracking-wide">
+                      Oversack
+                    </p>
+                  </div>
+                  <p className="text-2xl font-bold text-white">
+                    {formatNumber(monthStats.totalOversack)}
+                    <span className="text-sm font-normal text-white/70 ml-1">
+                      Ton
+                    </span>
+                  </p>
+                  <p className="text-xs text-white/50 mt-1">
+                    {monthStats.totalTonase > 0
+                      ? (
+                          (monthStats.totalOversack / monthStats.totalTonase) *
+                          100
+                        ).toFixed(1)
+                      : 0}
+                    % dari total
                   </p>
                 </div>
               </>
+            ) : (
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Beaker className="h-4 w-4 text-blue-300" />
+                  <p className="text-white/70 text-xs uppercase tracking-wide">
+                    Retail
+                  </p>
+                </div>
+                <p className="text-2xl font-bold text-white">
+                  {formatNumber(monthStats.totalRetail)}
+                  <span className="text-sm font-normal text-white/70 ml-1">
+                    Ton
+                  </span>
+                </p>
+              </div>
             )}
-            <div className="bg-white/20 rounded-lg px-4 py-2 backdrop-blur-sm">
-              <p className="text-white/80 text-xs uppercase">Total</p>
-              <p className="text-xl font-bold">
-                {formatNumber(currentMonthProduksi.total)}{" "}
-                <span className="text-sm font-normal">Ton</span>
+
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <PieChart className="h-4 w-4 text-violet-300" />
+                <p className="text-white/70 text-xs uppercase tracking-wide">
+                  Jenis Formula
+                </p>
+              </div>
+              <p className="text-2xl font-bold text-white">
+                {monthStats.uniqueFormulas}
+              </p>
+              <p className="text-xs text-white/50 mt-1">Formula berbeda</p>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Target className="h-4 w-4 text-cyan-300" />
+                <p className="text-white/70 text-xs uppercase tracking-wide">
+                  Rata-rata
+                </p>
+              </div>
+              <p className="text-2xl font-bold text-white">
+                {formatNumber(monthStats.avgPerEntry)}
+                <span className="text-sm font-normal text-white/70 ml-1">
+                  Ton
+                </span>
+              </p>
+              <p className="text-xs text-white/50 mt-1">
+                Per entry ({monthStats.entryCount} data)
               </p>
             </div>
           </div>
         </div>
+      </Card>
+
+      {/* Formula Filter & Stats Cards */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Filter className="h-5 w-5 text-dark-500" />
+            <h3 className="text-lg font-semibold text-dark-900 dark:text-white">
+              Statistik per Formula
+            </h3>
+          </div>
+          <Select
+            value={selectedFormula}
+            onChange={(e) => setSelectedFormula(e.target.value)}
+            options={[
+              { value: "all", label: "Semua Formula" },
+              ...uniqueFormulas.map((f) => ({ value: f, label: f })),
+            ]}
+            className="min-w-[200px]"
+          />
+        </div>
+
+        {/* Formula Cards Grid */}
+        {sortedFormulaStats.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {sortedFormulaStats.map(([formula, stats], index) => (
+              <Card
+                key={formula}
+                className={`overflow-hidden cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-lg ${
+                  selectedFormula === formula
+                    ? "ring-2 ring-primary-500 ring-offset-2 dark:ring-offset-dark-900"
+                    : ""
+                }`}
+                onClick={() =>
+                  setSelectedFormula(
+                    selectedFormula === formula ? "all" : formula
+                  )
+                }
+              >
+                <div
+                  className={`bg-gradient-to-br ${getFormulaColor(index)} p-4`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="bg-white/20 rounded-lg px-2 py-1">
+                      <span className="text-white text-xs font-medium">
+                        #{index + 1}
+                      </span>
+                    </div>
+                    <BarChart3 className="h-5 w-5 text-white/70" />
+                  </div>
+                  <h4
+                    className="text-white font-bold text-lg mt-3 truncate"
+                    title={formula}
+                  >
+                    {formula}
+                  </h4>
+                  <p className="text-white/70 text-sm">
+                    {stats.count} entry data
+                  </p>
+                </div>
+                <div className="p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-dark-500 dark:text-dark-400 text-sm">
+                      Total Tonase
+                    </span>
+                    <span className="font-bold text-dark-900 dark:text-white">
+                      {formatNumber(stats.total)} Ton
+                    </span>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-dark-500 dark:text-dark-400">
+                        Kontribusi
+                      </span>
+                      <span className="font-medium text-dark-700 dark:text-dark-300">
+                        {stats.percentage.toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="h-2 bg-dark-100 dark:bg-dark-700 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full bg-gradient-to-r ${getFormulaColor(
+                          index
+                        )} rounded-full transition-all duration-500`}
+                        style={{ width: `${Math.min(stats.percentage, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {type === "blending" && (
+                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-dark-100 dark:border-dark-700">
+                      <div className="text-center">
+                        <p className="text-xs text-dark-500 dark:text-dark-400">
+                          Fresh
+                        </p>
+                        <p className="font-semibold text-green-600 dark:text-green-400 text-sm">
+                          {formatNumber(stats.fresh)} T
+                        </p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-dark-500 dark:text-dark-400">
+                          Oversack
+                        </p>
+                        <p className="font-semibold text-amber-600 dark:text-amber-400 text-sm">
+                          {formatNumber(stats.oversack)} T
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card className="p-8 text-center">
+            <Package className="h-12 w-12 text-dark-300 mx-auto mb-3" />
+            <p className="text-dark-500 dark:text-dark-400">
+              Tidak ada data produksi untuk bulan {MONTH_NAMES[selectedMonth]}{" "}
+              {selectedYear}
+            </p>
+          </Card>
+        )}
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">Total Tonase</p>
-          <p className="text-2xl font-bold text-primary-600">
-            {formatNumber(
-              data.reduce((sum, item) => sum + parseNumber(item.tonase), 0)
-            )}{" "}
-            Ton
-          </p>
+      {/* Selected Formula Details */}
+      {selectedFormula !== "all" && formulaStats[selectedFormula] && (
+        <Card className="overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-primary-500 to-primary-600">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 rounded-lg p-2">
+                  <Beaker className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-white">
+                    Detail Formula: {selectedFormula}
+                  </CardTitle>
+                  <p className="text-white/70 text-sm mt-1">
+                    Data untuk bulan {MONTH_NAMES[selectedMonth]} {selectedYear}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setSelectedFormula("all")}
+                className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+              >
+                Lihat Semua
+              </Button>
+            </div>
+          </CardHeader>
+          <div className="p-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-dark-50 dark:bg-dark-700/50 rounded-xl p-4 text-center">
+                <p className="text-sm text-dark-500 dark:text-dark-400 mb-1">
+                  Total Tonase
+                </p>
+                <p className="text-2xl font-bold text-primary-600 dark:text-primary-400">
+                  {formatNumber(formulaStats[selectedFormula].total)}
+                  <span className="text-sm font-normal text-dark-500 ml-1">
+                    Ton
+                  </span>
+                </p>
+              </div>
+              <div className="bg-dark-50 dark:bg-dark-700/50 rounded-xl p-4 text-center">
+                <p className="text-sm text-dark-500 dark:text-dark-400 mb-1">
+                  Jumlah Entry
+                </p>
+                <p className="text-2xl font-bold text-dark-900 dark:text-white">
+                  {formulaStats[selectedFormula].count}
+                </p>
+              </div>
+              <div className="bg-dark-50 dark:bg-dark-700/50 rounded-xl p-4 text-center">
+                <p className="text-sm text-dark-500 dark:text-dark-400 mb-1">
+                  Rata-rata/Entry
+                </p>
+                <p className="text-2xl font-bold text-dark-900 dark:text-white">
+                  {formatNumber(
+                    formulaStats[selectedFormula].total /
+                      formulaStats[selectedFormula].count
+                  )}
+                  <span className="text-sm font-normal text-dark-500 ml-1">
+                    Ton
+                  </span>
+                </p>
+              </div>
+              <div className="bg-dark-50 dark:bg-dark-700/50 rounded-xl p-4 text-center">
+                <p className="text-sm text-dark-500 dark:text-dark-400 mb-1">
+                  Kontribusi
+                </p>
+                <p className="text-2xl font-bold text-dark-900 dark:text-white">
+                  {formulaStats[selectedFormula].percentage.toFixed(1)}
+                  <span className="text-sm font-normal text-dark-500 ml-1">
+                    %
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
         </Card>
-        <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">Jumlah Formula</p>
-          <p className="text-2xl font-bold text-dark-900 dark:text-white">
-            {new Set(data.map((item) => item.formula)).size}
-          </p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">Jumlah Entry</p>
-          <p className="text-2xl font-bold text-dark-900 dark:text-white">{data.length}</p>
-        </Card>
-      </div>
+      )}
 
       {/* Data Table */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Data {pageTitle}</CardTitle>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <CardTitle>
+                Data {pageTitle} - {MONTH_NAMES[selectedMonth]} {selectedYear}
+                {selectedFormula !== "all" && (
+                  <Badge variant="primary" className="ml-2">
+                    {selectedFormula}
+                  </Badge>
+                )}
+              </CardTitle>
+              <p className="text-sm text-dark-500 dark:text-dark-400 mt-1">
+                {filteredData.length} data ditemukan
+              </p>
+            </div>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-400" />
               <Input
@@ -533,7 +1056,7 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
           </div>
         </CardHeader>
         <DataTable
-          data={data.filter(
+          data={filteredData.filter(
             (item) =>
               item.tanggal?.includes(searchTerm) ||
               item.formula?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -708,9 +1231,11 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
       <PrintModal
         isOpen={showPrintModal}
         onClose={() => setShowPrintModal(false)}
-        title={pageTitle}
+        title={`${pageTitle} - ${MONTH_NAMES[selectedMonth]} ${selectedYear}${
+          selectedFormula !== "all" ? ` (${selectedFormula})` : ""
+        }`}
         plant={plant === "NPK1" ? "NPK Plant 1" : "NPK Plant 2"}
-        data={data as unknown as Record<string, unknown>[]}
+        data={filteredData as unknown as Record<string, unknown>[]}
         columns={[
           {
             key: "tanggal",
