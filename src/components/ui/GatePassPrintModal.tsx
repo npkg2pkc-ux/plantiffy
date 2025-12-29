@@ -72,7 +72,7 @@ const GatePassPrintModal = ({
         <style>
           @page {
             size: A4;
-            margin: 10mm;
+            margin: 5mm;
           }
           * {
             margin: 0;
@@ -81,46 +81,72 @@ const GatePassPrintModal = ({
           }
           body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            font-size: 10pt;
-            line-height: 1.3;
+            font-size: 8pt;
+            line-height: 1.2;
             color: #1a1a2e;
             background: #fff;
           }
+          .page-wrapper {
+            width: 100%;
+            height: 287mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+          }
           .print-container {
             width: 100%;
-            max-width: 180mm;
+            max-width: 190mm;
             margin: 0 auto;
-            padding: 10px;
+            padding: 5px 8px;
+            height: 140mm;
+            overflow: hidden;
+          }
+          .divider-line {
+            width: 100%;
+            border-top: 1px dashed #94a3b8;
+            margin: 2mm 0;
+            position: relative;
+          }
+          .divider-line::before {
+            content: '✂ potong di sini';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 0 10px;
+            font-size: 7pt;
+            color: #94a3b8;
           }
           
           /* Header Styles */
           .header {
             text-align: center;
-            margin-bottom: 12px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #1e40af;
+            margin-bottom: 6px;
+            padding-bottom: 5px;
+            border-bottom: 1.5px solid #1e40af;
             position: relative;
           }
           .header::after {
             content: '';
             position: absolute;
-            bottom: -2px;
+            bottom: -1.5px;
             left: 50%;
             transform: translateX(-50%);
-            width: 80px;
-            height: 2px;
+            width: 60px;
+            height: 1.5px;
             background: linear-gradient(90deg, #3b82f6, #8b5cf6);
           }
           .header h1 {
-            font-size: 18pt;
+            font-size: 13pt;
             font-weight: 800;
             color: #1e40af;
             text-transform: uppercase;
-            letter-spacing: 3px;
-            margin-bottom: 4px;
+            letter-spacing: 2px;
+            margin-bottom: 2px;
           }
           .header .subtitle {
-            font-size: 9pt;
+            font-size: 7pt;
             color: #64748b;
             font-weight: 500;
           }
@@ -128,33 +154,33 @@ const GatePassPrintModal = ({
             display: inline-block;
             background: linear-gradient(135deg, #3b82f6, #1d4ed8);
             color: white;
-            padding: 4px 14px;
-            border-radius: 20px;
-            font-size: 9pt;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 7pt;
             font-weight: 600;
-            margin-top: 6px;
-            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+            margin-top: 3px;
+            box-shadow: 0 1px 3px rgba(59, 130, 246, 0.3);
           }
           
           /* Gate Pass Number */
           .gatepass-number {
             text-align: center;
-            margin: 12px 0;
-            padding: 10px;
+            margin: 6px 0;
+            padding: 5px;
             background: linear-gradient(135deg, #fef3c7, #fde68a);
-            border: 2px solid #f59e0b;
-            border-radius: 8px;
+            border: 1.5px solid #f59e0b;
+            border-radius: 6px;
           }
           .gatepass-number label {
-            font-size: 8pt;
+            font-size: 6pt;
             color: #92400e;
             text-transform: uppercase;
             letter-spacing: 1px;
             display: block;
-            margin-bottom: 3px;
+            margin-bottom: 1px;
           }
           .gatepass-number .number {
-            font-size: 14pt;
+            font-size: 11pt;
             font-weight: 800;
             color: #92400e;
             font-family: 'Consolas', monospace;
@@ -165,163 +191,181 @@ const GatePassPrintModal = ({
           .info-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-bottom: 12px;
+            gap: 4px;
+            margin-bottom: 6px;
           }
           .info-item {
-            padding: 8px 10px;
+            padding: 4px 6px;
             background: #f8fafc;
-            border-radius: 6px;
-            border-left: 3px solid #3b82f6;
+            border-radius: 4px;
+            border-left: 2px solid #3b82f6;
           }
           .info-item.full-width {
             grid-column: span 2;
           }
           .info-item label {
-            font-size: 7pt;
+            font-size: 6pt;
             color: #64748b;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             display: block;
-            margin-bottom: 2px;
+            margin-bottom: 1px;
             font-weight: 600;
           }
           .info-item .value {
-            font-size: 10pt;
+            font-size: 8pt;
             color: #1e293b;
             font-weight: 500;
           }
           
           /* Description Section */
           .description-section {
-            margin: 12px 0;
-            padding: 12px;
+            margin: 6px 0;
+            padding: 6px 8px;
             background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
-            border-radius: 8px;
+            border-radius: 5px;
             border: 1px solid #7dd3fc;
           }
           .description-section h3 {
-            font-size: 9pt;
+            font-size: 7pt;
             color: #0369a1;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 6px;
-            padding-bottom: 4px;
+            margin-bottom: 3px;
+            padding-bottom: 2px;
             border-bottom: 1px solid #7dd3fc;
           }
           .description-section p {
-            font-size: 10pt;
+            font-size: 8pt;
             color: #1e293b;
             white-space: pre-wrap;
-            line-height: 1.4;
+            line-height: 1.3;
           }
           
           /* Reason Section */
           .reason-section {
-            margin: 12px 0;
-            padding: 12px;
+            margin: 6px 0;
+            padding: 6px 8px;
             background: linear-gradient(135deg, #fef3c7, #fef9c3);
-            border-radius: 8px;
+            border-radius: 5px;
             border: 1px solid #fcd34d;
           }
           .reason-section h3 {
-            font-size: 9pt;
+            font-size: 7pt;
             color: #a16207;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 6px;
-            padding-bottom: 4px;
+            margin-bottom: 3px;
+            padding-bottom: 2px;
             border-bottom: 1px solid #fcd34d;
           }
           .reason-section p {
-            font-size: 10pt;
+            font-size: 8pt;
             color: #1e293b;
             white-space: pre-wrap;
-            line-height: 1.4;
+            line-height: 1.3;
           }
           
           /* Footer & Signatures */
           .footer {
-            margin-top: 20px;
+            margin-top: 8px;
           }
           .print-date {
             text-align: right;
-            font-size: 9pt;
+            font-size: 7pt;
             color: #64748b;
             font-style: italic;
-            margin-bottom: 15px;
+            margin-bottom: 6px;
           }
           
           .signatures-container {
             display: flex;
             justify-content: space-between;
-            margin-top: 15px;
-            padding: 0 15px;
+            margin-top: 6px;
+            padding: 0 10px;
           }
           
           .signature-box {
             text-align: center;
-            min-width: 150px;
-            padding: 10px;
+            min-width: 120px;
+            padding: 5px;
             background: #fafafa;
-            border-radius: 8px;
+            border-radius: 5px;
             border: 1px dashed #cbd5e1;
           }
           
           .signature-label {
-            font-size: 9pt;
+            font-size: 7pt;
             color: #64748b;
-            margin-bottom: 3px;
+            margin-bottom: 2px;
             font-weight: 500;
           }
           
           .signature-jabatan {
-            font-size: 9pt;
+            font-size: 7pt;
             font-weight: 600;
             color: #1e40af;
-            margin-bottom: 35px;
-            min-height: 14px;
+            margin-bottom: 20px;
+            min-height: 10px;
           }
           
           .signature-space {
-            height: 40px;
-            margin-bottom: 6px;
+            height: 25px;
+            margin-bottom: 3px;
           }
           
           .signature-line {
-            width: 120px;
+            width: 100px;
             height: 1px;
             background: #1e293b;
-            margin: 0 auto 5px auto;
+            margin: 0 auto 3px auto;
           }
           
           .signature-name {
-            font-size: 10pt;
+            font-size: 8pt;
             font-weight: 700;
             color: #1a1a2e;
-            margin-bottom: 2px;
-            min-height: 14px;
+            margin-bottom: 1px;
+            min-height: 10px;
           }
           
           .signature-badge {
-            font-size: 8pt;
+            font-size: 6pt;
             color: #475569;
             font-weight: 500;
-            min-height: 12px;
+            min-height: 8px;
           }
           
           /* Stamp/Seal Style (Optional visual) */
           .official-stamp {
             text-align: center;
-            margin-top: 15px;
-            padding-top: 10px;
+            margin-top: 5px;
+            padding-top: 4px;
             border-top: 1px dashed #e2e8f0;
           }
           .official-stamp p {
-            font-size: 7pt;
+            font-size: 6pt;
             color: #94a3b8;
             text-transform: uppercase;
             letter-spacing: 1px;
+          }
+
+          /* Copy Label */
+          .copy-label {
+            position: absolute;
+            top: 3px;
+            right: 5px;
+            font-size: 6pt;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: #e2e8f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+          }
+          .print-container {
+            position: relative;
           }
           
           @media print {
@@ -330,7 +374,21 @@ const GatePassPrintModal = ({
         </style>
       </head>
       <body>
-        ${printContent.innerHTML}
+        <div class="page-wrapper">
+          <div class="print-container">
+            <div class="copy-label">Lembar 1 - Arsip</div>
+            ${printContent.innerHTML
+              .replace('<div class="print-container">', "")
+              .replace(/<\/div>\s*$/, "")}
+          </div>
+          <div class="divider-line"></div>
+          <div class="print-container">
+            <div class="copy-label">Lembar 2 - Pembawa</div>
+            ${printContent.innerHTML
+              .replace('<div class="print-container">', "")
+              .replace(/<\/div>\s*$/, "")}
+          </div>
+        </div>
       </body>
       </html>
     `);
