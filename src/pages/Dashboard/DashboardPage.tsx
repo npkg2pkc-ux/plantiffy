@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   BarChart,
   Bar,
@@ -15,6 +15,8 @@ import {
   PieChart,
   Pie,
   Cell,
+  ReferenceLine,
+  LabelList,
 } from "recharts";
 import {
   Factory,
@@ -30,6 +32,11 @@ import {
   Loader2,
   CalendarDays,
   Fuel,
+  X,
+  ChevronUp,
+  Award,
+  Target,
+  BarChart3,
 } from "lucide-react";
 import {
   Card,
@@ -38,9 +45,10 @@ import {
   CardContent,
   Badge,
   Select,
+  Modal,
 } from "@/components/ui";
 import { useAuthStore, useUIStore } from "@/stores";
-import { formatNumber, parseNumber } from "@/lib/utils";
+import { formatNumber, parseNumber, cn } from "@/lib/utils";
 import type {
   ProduksiNPK,
   ProduksiBlending,
@@ -192,6 +200,791 @@ const MetricCard = ({
         </div>
       </div>
     </motion.div>
+  );
+};
+
+// ============================================
+// MONTHLY DOWNTIME DETAIL MODAL
+// ============================================
+interface MonthlyDowntimeDetail {
+  item: string;
+  deskripsi: string;
+  tanggal: string;
+  jamOff: string;
+  jamStart: string;
+  downtime: number;
+}
+
+interface MonthlyDowntimeModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  monthName: string;
+  monthIndex: number;
+  year: number;
+  totalHours: number;
+  details: MonthlyDowntimeDetail[];
+  isHighest: boolean;
+  rank: number;
+  averageHours: number;
+}
+
+const MonthlyDowntimeModal = ({
+  isOpen,
+  onClose,
+  monthName,
+  year,
+  totalHours,
+  details,
+  isHighest,
+  rank,
+  averageHours,
+}: MonthlyDowntimeModalProps) => {
+  // Group details by item (equipment)
+  const groupedByItem = useMemo(() => {
+    const grouped: {
+      [key: string]: {
+        total: number;
+        count: number;
+        details: MonthlyDowntimeDetail[];
+      };
+    } = {};
+    details.forEach((d) => {
+      const key = d.item || "Unknown";
+      if (!grouped[key]) {
+        grouped[key] = { total: 0, count: 0, details: [] };
+      }
+      grouped[key].total += parseNumber(d.downtime);
+      grouped[key].count += 1;
+      grouped[key].details.push(d);
+    });
+    return Object.entries(grouped)
+      .map(([item, data]) => ({ item, ...data }))
+      .sort((a, b) => b.total - a.total);
+  }, [details]);
+
+  const percentageFromAverage =
+    averageHours > 0
+      ? (((totalHours - averageHours) / averageHours) * 100).toFixed(1)
+      : "0";
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} size="full" title="">
+      <div className="p-6">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <h2 className="text-2xl font-bold text-dark-900 dark:text-white">
+                Detail Downtime {monthName} {year}
+              </h2>
+              {isHighest && (
+                <Badge variant="danger" className="animate-pulse">
+                  <AlertTriangle className="h-3 w-3 mr-1" />
+                  Tertinggi
+                </Badge>
+              )}
+              {rank <= 3 && !isHighest && (
+                <Badge variant="warning">Top {rank}</Badge>
+              )}
+            </div>
+            <p className="text-dark-500 dark:text-dark-400">
+              Analisis detail downtime per equipment untuk bulan {monthName}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-dark-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
+          >
+            <X className="h-5 w-5 text-dark-500" />
+          </button>
+        </div>
+
+        {/* Summary Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div
+            className={cn(
+              "p-4 rounded-xl",
+              isHighest
+                ? "bg-gradient-to-br from-red-500 to-rose-600 text-white"
+                : "bg-gradient-to-br from-amber-500 to-orange-500 text-white"
+            )}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <Clock className="h-4 w-4 opacity-80" />
+              <span className="text-xs uppercase tracking-wider opacity-80">
+                Total Downtime
+              </span>
+            </div>
+            <p className="text-3xl font-bold">{formatNumber(totalHours)}</p>
+            <p className="text-sm opacity-80">Jam</p>
+          </div>
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 rounded-xl">
+            <div className="flex items-center gap-2 mb-1">
+              <BarChart3 className="h-4 w-4 opacity-80" />
+              <span className="text-xs uppercase tracking-wider opacity-80">
+                Jumlah Kejadian
+              </span>
+            </div>
+            <p className="text-3xl font-bold">{details.length}</p>
+            <p className="text-sm opacity-80">Kejadian</p>
+          </div>
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-4 rounded-xl">
+            <div className="flex items-center gap-2 mb-1">
+              <Target className="h-4 w-4 opacity-80" />
+              <span className="text-xs uppercase tracking-wider opacity-80">
+                Rata-rata/Kejadian
+              </span>
+            </div>
+            <p className="text-3xl font-bold">
+              {details.length > 0
+                ? (totalHours / details.length).toFixed(1)
+                : "0"}
+            </p>
+            <p className="text-sm opacity-80">Jam</p>
+          </div>
+          <div
+            className={cn(
+              "p-4 rounded-xl",
+              Number(percentageFromAverage) > 0
+                ? "bg-gradient-to-br from-red-400 to-red-500 text-white"
+                : "bg-gradient-to-br from-green-500 to-emerald-500 text-white"
+            )}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              {Number(percentageFromAverage) > 0 ? (
+                <TrendingUp className="h-4 w-4 opacity-80" />
+              ) : (
+                <TrendingDown className="h-4 w-4 opacity-80" />
+              )}
+              <span className="text-xs uppercase tracking-wider opacity-80">
+                vs Rata-rata Bulanan
+              </span>
+            </div>
+            <p className="text-3xl font-bold">
+              {Number(percentageFromAverage) > 0 ? "+" : ""}
+              {percentageFromAverage}%
+            </p>
+            <p className="text-sm opacity-80">
+              {Number(percentageFromAverage) > 0
+                ? "Di atas rata-rata"
+                : "Di bawah rata-rata"}
+            </p>
+          </div>
+        </div>
+
+        {/* Breakdown by Equipment */}
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-dark-900 dark:text-white mb-4 flex items-center gap-2">
+            <Award className="h-5 w-5 text-amber-500" />
+            Breakdown per Equipment
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {groupedByItem.slice(0, 6).map((item, index) => {
+              const percentage =
+                totalHours > 0
+                  ? ((item.total / totalHours) * 100).toFixed(1)
+                  : "0";
+              return (
+                <motion.div
+                  key={item.item}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className={cn(
+                    "p-4 rounded-xl border transition-all duration-300 hover:shadow-lg",
+                    index === 0
+                      ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
+                      : "bg-white dark:bg-dark-800 border-dark-100 dark:border-dark-700"
+                  )}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={cn(
+                          "flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold",
+                          index === 0
+                            ? "bg-red-500 text-white"
+                            : "bg-dark-200 dark:bg-dark-600 text-dark-700 dark:text-dark-200"
+                        )}
+                      >
+                        {index + 1}
+                      </span>
+                      <h4
+                        className={cn(
+                          "font-semibold",
+                          index === 0
+                            ? "text-red-700 dark:text-red-400"
+                            : "text-dark-900 dark:text-white"
+                        )}
+                      >
+                        {item.item}
+                      </h4>
+                    </div>
+                    <Badge
+                      variant={index === 0 ? "danger" : "warning"}
+                      size="sm"
+                    >
+                      {percentage}%
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-4 text-sm">
+                    <div>
+                      <span className="text-dark-500 dark:text-dark-400">
+                        Total:
+                      </span>
+                      <span
+                        className={cn(
+                          "ml-1 font-bold",
+                          index === 0
+                            ? "text-red-600 dark:text-red-400"
+                            : "text-dark-900 dark:text-white"
+                        )}
+                      >
+                        {formatNumber(item.total)} Jam
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-dark-500 dark:text-dark-400">
+                        Kejadian:
+                      </span>
+                      <span className="ml-1 font-medium text-dark-700 dark:text-dark-200">
+                        {item.count}x
+                      </span>
+                    </div>
+                  </div>
+                  {/* Progress bar */}
+                  <div className="mt-3 h-2 bg-dark-100 dark:bg-dark-700 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${percentage}%` }}
+                      transition={{ delay: index * 0.1 + 0.3, duration: 0.5 }}
+                      className={cn(
+                        "h-full rounded-full",
+                        index === 0
+                          ? "bg-gradient-to-r from-red-500 to-rose-500"
+                          : "bg-gradient-to-r from-amber-400 to-orange-500"
+                      )}
+                    />
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Detail Table */}
+        <div>
+          <h3 className="text-lg font-semibold text-dark-900 dark:text-white mb-4">
+            Detail Kejadian ({details.length} record)
+          </h3>
+          <div className="overflow-x-auto rounded-xl border border-dark-100 dark:border-dark-700">
+            <table className="w-full text-sm">
+              <thead className="bg-dark-50 dark:bg-dark-800">
+                <tr>
+                  <th className="px-4 py-3 text-left font-semibold text-dark-700 dark:text-dark-200">
+                    No
+                  </th>
+                  <th className="px-4 py-3 text-left font-semibold text-dark-700 dark:text-dark-200">
+                    Tanggal
+                  </th>
+                  <th className="px-4 py-3 text-left font-semibold text-dark-700 dark:text-dark-200">
+                    Equipment
+                  </th>
+                  <th className="px-4 py-3 text-left font-semibold text-dark-700 dark:text-dark-200">
+                    Deskripsi
+                  </th>
+                  <th className="px-4 py-3 text-center font-semibold text-dark-700 dark:text-dark-200">
+                    Jam Off
+                  </th>
+                  <th className="px-4 py-3 text-center font-semibold text-dark-700 dark:text-dark-200">
+                    Jam Start
+                  </th>
+                  <th className="px-4 py-3 text-right font-semibold text-dark-700 dark:text-dark-200">
+                    Downtime (Jam)
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-dark-100 dark:divide-dark-700">
+                {details
+                  .sort(
+                    (a, b) => parseNumber(b.downtime) - parseNumber(a.downtime)
+                  )
+                  .slice(0, 20)
+                  .map((detail, index) => (
+                    <tr
+                      key={index}
+                      className={cn(
+                        "hover:bg-dark-50 dark:hover:bg-dark-700/50 transition-colors",
+                        index === 0 && "bg-red-50 dark:bg-red-900/10"
+                      )}
+                    >
+                      <td className="px-4 py-3 text-dark-600 dark:text-dark-300">
+                        {index + 1}
+                      </td>
+                      <td className="px-4 py-3 text-dark-900 dark:text-white font-medium">
+                        {new Date(detail.tanggal).toLocaleDateString("id-ID", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge
+                          variant={index === 0 ? "danger" : "secondary"}
+                          size="sm"
+                        >
+                          {detail.item}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-dark-600 dark:text-dark-300 max-w-xs truncate">
+                        {detail.deskripsi || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-center text-dark-600 dark:text-dark-300">
+                        {detail.jamOff || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-center text-dark-600 dark:text-dark-300">
+                        {detail.jamStart || "-"}
+                      </td>
+                      <td
+                        className={cn(
+                          "px-4 py-3 text-right font-bold",
+                          index === 0
+                            ? "text-red-600 dark:text-red-400"
+                            : "text-amber-600 dark:text-amber-400"
+                        )}
+                      >
+                        {formatNumber(parseNumber(detail.downtime))}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+              {details.length > 20 && (
+                <tfoot className="bg-dark-50 dark:bg-dark-800">
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="px-4 py-3 text-center text-dark-500"
+                    >
+                      ... dan {details.length - 20} record lainnya
+                    </td>
+                  </tr>
+                </tfoot>
+              )}
+            </table>
+          </div>
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
+// ============================================
+// MONTHLY DOWNTIME ANALYSIS CHART
+// ============================================
+interface MonthlyDowntimeData {
+  month: string;
+  monthIndex: number;
+  hours: number;
+  count: number;
+  isHighest: boolean;
+  rank: number;
+  details: MonthlyDowntimeDetail[];
+}
+
+interface MonthlyDowntimeChartProps {
+  downtimeData: Downtime[];
+  year: number;
+  plantLabel: string;
+}
+
+const MonthlyDowntimeChart = ({
+  downtimeData,
+  year,
+  plantLabel,
+}: MonthlyDowntimeChartProps) => {
+  const [selectedMonth, setSelectedMonth] =
+    useState<MonthlyDowntimeData | null>(null);
+
+  // Process downtime data by month
+  const monthlyData = useMemo(() => {
+    const dataByMonth: MonthlyDowntimeData[] = MONTH_SHORT.map(
+      (month, index) => {
+        const monthDowntimes = downtimeData.filter((item) => {
+          if (!item.tanggal) return false;
+          const itemMonth = new Date(item.tanggal).getMonth();
+          return itemMonth === index;
+        });
+
+        const totalHours = monthDowntimes.reduce(
+          (sum, item) => sum + parseNumber(item.downtime),
+          0
+        );
+
+        return {
+          month,
+          monthIndex: index,
+          hours: totalHours,
+          count: monthDowntimes.length,
+          isHighest: false,
+          rank: 0,
+          details: monthDowntimes.map((d) => ({
+            item: d.item,
+            deskripsi: d.deskripsi,
+            tanggal: d.tanggal,
+            jamOff: d.jamOff,
+            jamStart: d.jamStart,
+            downtime: parseNumber(d.downtime),
+          })),
+        };
+      }
+    );
+
+    // Calculate rankings (only for months with data)
+    const sortedByHours = [...dataByMonth]
+      .filter((d) => d.hours > 0)
+      .sort((a, b) => b.hours - a.hours);
+
+    sortedByHours.forEach((item, index) => {
+      const original = dataByMonth.find(
+        (d) => d.monthIndex === item.monthIndex
+      );
+      if (original) {
+        original.rank = index + 1;
+        if (index === 0) {
+          original.isHighest = true;
+        }
+      }
+    });
+
+    return dataByMonth;
+  }, [downtimeData]);
+
+  // Calculate statistics
+  const stats = useMemo(() => {
+    const totalHours = monthlyData.reduce((sum, d) => sum + d.hours, 0);
+    const monthsWithData = monthlyData.filter((d) => d.hours > 0).length;
+    const averageHours = monthsWithData > 0 ? totalHours / monthsWithData : 0;
+    const highestMonth = monthlyData.find((d) => d.isHighest);
+    const maxHours = highestMonth?.hours || 0;
+
+    return { totalHours, averageHours, highestMonth, maxHours, monthsWithData };
+  }, [monthlyData]);
+
+  // Custom bar component with click handler
+  const handleBarClick = (data: MonthlyDowntimeData) => {
+    if (data.hours > 0) {
+      setSelectedMonth(data);
+    }
+  };
+
+  // Get bar color based on ranking
+  const getBarColor = (entry: MonthlyDowntimeData) => {
+    if (entry.isHighest) return "#ef4444"; // red for highest
+    if (entry.rank === 2) return "#f97316"; // orange for 2nd
+    if (entry.rank === 3) return "#f59e0b"; // amber for 3rd
+    return "#3b82f6"; // blue for others
+  };
+
+  // Custom label renderer
+  const renderCustomLabel = (props: any) => {
+    const { x, y, width, value, index } = props;
+    const entry = monthlyData[index];
+    if (value === 0) return null;
+
+    return (
+      <g>
+        <text
+          x={x + width / 2}
+          y={y - 10}
+          fill={entry.isHighest ? "#ef4444" : "#64748b"}
+          textAnchor="middle"
+          fontSize={11}
+          fontWeight={entry.isHighest ? "bold" : "normal"}
+        >
+          {formatNumber(value)}
+        </text>
+        {entry.isHighest && (
+          <text
+            x={x + width / 2}
+            y={y - 24}
+            fill="#ef4444"
+            textAnchor="middle"
+            fontSize={10}
+            fontWeight="bold"
+          >
+            ⚠️ TERTINGGI
+          </text>
+        )}
+      </g>
+    );
+  };
+
+  return (
+    <>
+      <Card className="overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-red-500 to-rose-500 text-white py-5">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <AlertTriangle className="h-5 w-5" />
+                <CardTitle className="text-white text-lg">
+                  Analisis Downtime Bulanan {year}
+                </CardTitle>
+              </div>
+              <p className="text-red-100 text-sm">
+                {plantLabel} • Klik bar untuk melihat detail
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="bg-white/20 rounded-lg px-4 py-2 backdrop-blur-sm">
+                <p className="text-red-100 text-xs">Total Tahunan</p>
+                <p className="text-xl font-bold">
+                  {formatNumber(stats.totalHours)} Jam
+                </p>
+              </div>
+              {stats.highestMonth && (
+                <div className="bg-white/20 rounded-lg px-4 py-2 backdrop-blur-sm border-2 border-white/30">
+                  <p className="text-red-100 text-xs flex items-center gap-1">
+                    <ChevronUp className="h-3 w-3" /> Bulan Tertinggi
+                  </p>
+                  <p className="text-xl font-bold">
+                    {stats.highestMonth.month}
+                  </p>
+                  <p className="text-red-100 text-xs">
+                    {formatNumber(stats.highestMonth.hours)} Jam
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-6">
+          {/* Quick Stats Row */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 text-center">
+              <p className="text-xs text-red-600 dark:text-red-400 uppercase tracking-wider mb-1">
+                Total Kejadian
+              </p>
+              <p className="text-2xl font-bold text-red-700 dark:text-red-300">
+                {downtimeData.length}
+              </p>
+            </div>
+            <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 text-center">
+              <p className="text-xs text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-1">
+                Rata-rata/Bulan
+              </p>
+              <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">
+                {formatNumber(stats.averageHours)} Jam
+              </p>
+            </div>
+            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 text-center">
+              <p className="text-xs text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">
+                Bulan Dengan Data
+              </p>
+              <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">
+                {stats.monthsWithData} / 12
+              </p>
+            </div>
+            <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4 text-center">
+              <p className="text-xs text-purple-600 dark:text-purple-400 uppercase tracking-wider mb-1">
+                Rata-rata/Kejadian
+              </p>
+              <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">
+                {downtimeData.length > 0
+                  ? (stats.totalHours / downtimeData.length).toFixed(1)
+                  : "0"}{" "}
+                Jam
+              </p>
+            </div>
+          </div>
+
+          {/* Chart */}
+          <div className="h-[400px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={monthlyData}
+                margin={{ top: 40, right: 30, left: 20, bottom: 20 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis
+                  dataKey="month"
+                  stroke="#64748b"
+                  fontSize={12}
+                  tickLine={false}
+                />
+                <YAxis
+                  stroke="#64748b"
+                  fontSize={12}
+                  tickLine={false}
+                  label={{
+                    value: "Jam",
+                    angle: -90,
+                    position: "insideLeft",
+                    style: { textAnchor: "middle", fill: "#64748b" },
+                  }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "white",
+                    border: "none",
+                    borderRadius: "12px",
+                    boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+                    padding: "12px 16px",
+                  }}
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload as MonthlyDowntimeData;
+                      return (
+                        <div className="bg-white dark:bg-dark-800 rounded-xl shadow-xl border border-dark-100 dark:border-dark-700 p-4 min-w-[200px]">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-bold text-dark-900 dark:text-white">
+                              {data.month} {year}
+                            </span>
+                            {data.isHighest && (
+                              <Badge variant="danger" size="sm">
+                                Tertinggi
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-sm">
+                              <span className="text-dark-500">
+                                Total Downtime:
+                              </span>
+                              <span
+                                className={cn(
+                                  "ml-2 font-bold",
+                                  data.isHighest
+                                    ? "text-red-600"
+                                    : "text-amber-600"
+                                )}
+                              >
+                                {formatNumber(data.hours)} Jam
+                              </span>
+                            </p>
+                            <p className="text-sm">
+                              <span className="text-dark-500">
+                                Jumlah Kejadian:
+                              </span>
+                              <span className="ml-2 font-medium text-dark-700 dark:text-dark-200">
+                                {data.count} kejadian
+                              </span>
+                            </p>
+                            {data.rank > 0 && (
+                              <p className="text-sm">
+                                <span className="text-dark-500">
+                                  Peringkat:
+                                </span>
+                                <span className="ml-2 font-medium text-dark-700 dark:text-dark-200">
+                                  #{data.rank} dari {stats.monthsWithData} bulan
+                                </span>
+                              </p>
+                            )}
+                          </div>
+                          {data.hours > 0 && (
+                            <p className="text-xs text-primary-600 dark:text-primary-400 mt-3 pt-2 border-t border-dark-100 dark:border-dark-700">
+                              Klik untuk melihat detail →
+                            </p>
+                          )}
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                {stats.averageHours > 0 && (
+                  <ReferenceLine
+                    y={stats.averageHours}
+                    stroke="#22c55e"
+                    strokeDasharray="5 5"
+                    strokeWidth={2}
+                    label={{
+                      value: `Rata-rata: ${formatNumber(
+                        stats.averageHours
+                      )} Jam`,
+                      position: "right",
+                      fill: "#22c55e",
+                      fontSize: 11,
+                    }}
+                  />
+                )}
+                <Bar
+                  dataKey="hours"
+                  radius={[8, 8, 0, 0]}
+                  cursor="pointer"
+                  onClick={(data) => handleBarClick(data)}
+                >
+                  {monthlyData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={getBarColor(entry)}
+                      className="hover:opacity-80 transition-opacity"
+                    />
+                  ))}
+                  <LabelList dataKey="hours" content={renderCustomLabel} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Legend */}
+          <div className="flex flex-wrap items-center justify-center gap-6 mt-4 pt-4 border-t border-dark-100 dark:border-dark-700">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-red-500"></div>
+              <span className="text-sm text-dark-600 dark:text-dark-300">
+                Tertinggi
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-orange-500"></div>
+              <span className="text-sm text-dark-600 dark:text-dark-300">
+                Top 2
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-amber-500"></div>
+              <span className="text-sm text-dark-600 dark:text-dark-300">
+                Top 3
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-blue-500"></div>
+              <span className="text-sm text-dark-600 dark:text-dark-300">
+                Lainnya
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div
+                className="w-8 h-0.5 bg-green-500"
+                style={{
+                  backgroundImage:
+                    "repeating-linear-gradient(to right, #22c55e, #22c55e 5px, transparent 5px, transparent 10px)",
+                }}
+              ></div>
+              <span className="text-sm text-dark-600 dark:text-dark-300">
+                Rata-rata
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Detail Modal */}
+      {selectedMonth && (
+        <MonthlyDowntimeModal
+          isOpen={!!selectedMonth}
+          onClose={() => setSelectedMonth(null)}
+          monthName={selectedMonth.month}
+          monthIndex={selectedMonth.monthIndex}
+          year={year}
+          totalHours={selectedMonth.hours}
+          details={selectedMonth.details}
+          isHighest={selectedMonth.isHighest}
+          rank={selectedMonth.rank}
+          averageHours={stats.averageHours}
+        />
+      )}
+    </>
   );
 };
 
@@ -1508,6 +2301,13 @@ const DashboardPage = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Monthly Downtime Analysis Chart - NEW */}
+      <MonthlyDowntimeChart
+        downtimeData={filteredData.downtime}
+        year={dashboardYear}
+        plantLabel={plantLabel}
+      />
 
       {/* Charts Row 2 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
