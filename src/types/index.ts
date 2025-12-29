@@ -54,6 +54,15 @@ export interface ProduksiBlending {
   kategori: string;
   formula: string;
   tonase: number;
+  // Alternative field names from backend
+  total?: number;
+  jumlah?: number;
+  Tonase?: number;
+  Total?: number;
+  Jumlah?: number;
+  Formula?: string;
+  Kategori?: string;
+  Tanggal?: string;
   _plant?: PlantType;
 }
 

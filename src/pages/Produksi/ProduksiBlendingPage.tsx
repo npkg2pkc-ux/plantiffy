@@ -125,14 +125,39 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
         ]
       : [{ value: "Retail", label: "Retail" }];
 
-  const formulaOptions = [
-    { value: "NPK 15-15-15", label: "NPK 15-15-15" },
-    { value: "NPK 16-16-16", label: "NPK 16-16-16" },
-    { value: "NPK 20-10-10", label: "NPK 20-10-10" },
-    { value: "NPK 12-12-17", label: "NPK 12-12-17" },
-    { value: "NPK 15-15-15-4S", label: "NPK 15-15-15-4S" },
-    { value: "Custom", label: "Custom" },
+  // Base formula options - these are predefined
+  const baseFormulaOptions = [
+    "NPK 15-15-15",
+    "NPK 16-16-16",
+    "NPK 20-10-10",
+    "NPK 12-12-17",
+    "NPK 15-15-15-4S",
   ];
+
+  // Dynamic formula options - combines base options with formulas from data
+  const formulaOptions = useMemo(() => {
+    // Get all unique formulas from existing data
+    const dataFormulas = [
+      ...new Set(
+        data
+          .map((item) => item.formula)
+          .filter((f) => f && f !== "Tanpa Formula")
+      ),
+    ];
+
+    // Combine base formulas with data formulas (remove duplicates)
+    const allFormulas = [
+      ...new Set([...baseFormulaOptions, ...dataFormulas]),
+    ].sort();
+
+    // Create options array
+    const options = allFormulas.map((f) => ({ value: f, label: f }));
+
+    // Add Custom option at the end
+    options.push({ value: "Custom", label: "Custom (Tambah Baru)" });
+
+    return options;
+  }, [data]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -143,14 +168,102 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
         );
         const sheetName = getSheetNameByPlant(SHEETS.PRODUKSI_BLENDING, plant);
         const result = await readData<ProduksiBlending>(sheetName);
+
+        // Debug: Log raw data from backend
+        console.log("Raw data from backend:", result.data?.slice(0, 2));
+        console.log(
+          "Data keys:",
+          result.data?.[0] ? Object.keys(result.data[0]) : "No data"
+        );
+
         if (result.success && result.data) {
-          const sortedData = result.data
-            .map((item) => ({ ...item, _plant: plant }))
-            .sort(
-              (a, b) =>
-                new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime()
-            );
+          // Normalize data - handle different field names from backend
+          const normalizedData = result.data.map(
+            (item: Record<string, unknown>) => {
+              // Debug log for first item
+              if (
+                result.data &&
+                result.data.indexOf(item as ProduksiBlending) === 0
+              ) {
+                console.log("First item raw:", item);
+              }
+
+              // Handle tonase field - check all possible variations
+              const tonaseValue =
+                item.tonase ??
+                item.Tonase ??
+                item.total ??
+                item.Total ??
+                item.jumlah ??
+                item.Jumlah ??
+                item.ton ??
+                item.Ton ??
+                item.qty ??
+                item.Qty ??
+                item.quantity ??
+                item.Quantity ??
+                0;
+
+              // Handle formula field - might be 'formula', 'Formula', or empty
+              const formulaValue =
+                item.formula ??
+                item.Formula ??
+                item.formulasi ??
+                item.Formulasi ??
+                item.jenis ??
+                item.Jenis ??
+                item.produk ??
+                item.Produk ??
+                "";
+
+              // Handle kategori field
+              const kategoriValue =
+                item.kategori ??
+                item.Kategori ??
+                item.tipe ??
+                item.Tipe ??
+                item.jenis ??
+                item.Jenis ??
+                (type === "retail" ? "Retail" : "Fresh");
+
+              const normalized = {
+                ...item,
+                id: (item.id ??
+                  item.ID ??
+                  item.Id ??
+                  item.no ??
+                  item.No) as string,
+                tanggal: (item.tanggal ??
+                  item.Tanggal ??
+                  item.tgl ??
+                  item.Tgl ??
+                  item.date ??
+                  item.Date ??
+                  "") as string,
+                kategori: kategoriValue as string,
+                formula: ((formulaValue as string) || "Tanpa Formula").trim(),
+                tonase: parseNumber(tonaseValue),
+                _plant: plant,
+              } as ProduksiBlending;
+
+              return normalized;
+            }
+          );
+
+          const sortedData = normalizedData.sort(
+            (a, b) =>
+              new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime()
+          );
           setData(sortedData);
+
+          // Debug log
+          console.log("Normalized data sample:", sortedData.slice(0, 3));
+          console.log(
+            "Total tonase check:",
+            sortedData
+              .slice(0, 5)
+              .map((d) => ({ formula: d.formula, tonase: d.tonase }))
+          );
         } else {
           setData([]);
         }
@@ -180,16 +293,27 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
     "Desember",
   ];
 
-  // Get unique formulas from data
+  // Get unique formulas from data (filter out empty/null values)
   const uniqueFormulas = useMemo(() => {
-    const formulas = [...new Set(data.map((item) => item.formula))].sort();
+    const formulas = [
+      ...new Set(
+        data.map((item) => item.formula).filter((f) => f && f.trim() !== "")
+      ),
+    ].sort();
     return formulas;
   }, [data]);
 
   // Get available years from data
   const availableYears = useMemo(() => {
     const years = [
-      ...new Set(data.map((item) => new Date(item.tanggal).getFullYear())),
+      ...new Set(
+        data.map((item) => {
+          const date = new Date(item.tanggal);
+          return isNaN(date.getTime())
+            ? new Date().getFullYear()
+            : date.getFullYear();
+        })
+      ),
     ].sort((a, b) => b - a);
     if (years.length === 0) years.push(new Date().getFullYear());
     return years;
@@ -199,6 +323,7 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
   const filteredByMonth = useMemo(() => {
     return data.filter((item) => {
       const itemDate = new Date(item.tanggal);
+      if (isNaN(itemDate.getTime())) return false;
       return (
         itemDate.getMonth() === selectedMonth &&
         itemDate.getFullYear() === selectedYear
@@ -212,33 +337,42 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
     return filteredByMonth.filter((item) => item.formula === selectedFormula);
   }, [filteredByMonth, selectedFormula]);
 
+  // Helper function to safely get tonase value
+  const getTonaseValue = (item: ProduksiBlending): number => {
+    // item.tonase should already be normalized, but double-check
+    const value = item.tonase;
+    if (typeof value === "number" && !isNaN(value)) return value;
+    return parseNumber(value);
+  };
+
   // Calculate statistics for selected month
   const monthStats = useMemo(() => {
     const totalTonase = filteredByMonth.reduce(
-      (sum, item) => sum + parseNumber(item.tonase),
+      (sum, item) => sum + getTonaseValue(item),
       0
     );
     const totalFresh = filteredByMonth
       .filter((i) => i.kategori === "Fresh")
-      .reduce((sum, item) => sum + parseNumber(item.tonase), 0);
+      .reduce((sum, item) => sum + getTonaseValue(item), 0);
     const totalOversack = filteredByMonth
       .filter((i) => i.kategori === "Oversack")
-      .reduce((sum, item) => sum + parseNumber(item.tonase), 0);
+      .reduce((sum, item) => sum + getTonaseValue(item), 0);
     const totalRetail = filteredByMonth
       .filter((i) => i.kategori === "Retail")
-      .reduce((sum, item) => sum + parseNumber(item.tonase), 0);
+      .reduce((sum, item) => sum + getTonaseValue(item), 0);
 
     // Get previous month data for comparison
     const prevMonth = selectedMonth === 0 ? 11 : selectedMonth - 1;
     const prevYear = selectedMonth === 0 ? selectedYear - 1 : selectedYear;
     const prevMonthData = data.filter((item) => {
       const itemDate = new Date(item.tanggal);
+      if (isNaN(itemDate.getTime())) return false;
       return (
         itemDate.getMonth() === prevMonth && itemDate.getFullYear() === prevYear
       );
     });
     const prevTotalTonase = prevMonthData.reduce(
-      (sum, item) => sum + parseNumber(item.tonase),
+      (sum, item) => sum + getTonaseValue(item),
       0
     );
 
@@ -253,7 +387,11 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
       totalOversack,
       totalRetail,
       entryCount: filteredByMonth.length,
-      uniqueFormulas: new Set(filteredByMonth.map((i) => i.formula)).size,
+      uniqueFormulas: new Set(
+        filteredByMonth
+          .map((i) => i.formula)
+          .filter((f) => f && f.trim() !== "")
+      ).size,
       growthPercent,
       prevTotalTonase,
       avgPerEntry:
@@ -276,8 +414,14 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
     > = {};
 
     filteredByMonth.forEach((item) => {
-      if (!stats[item.formula]) {
-        stats[item.formula] = {
+      // Use formula name or "Tanpa Formula" for empty formulas
+      const formulaKey =
+        item.formula && item.formula.trim() !== ""
+          ? item.formula
+          : "Tanpa Formula";
+
+      if (!stats[formulaKey]) {
+        stats[formulaKey] = {
           total: 0,
           fresh: 0,
           oversack: 0,
@@ -286,13 +430,13 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
           percentage: 0,
         };
       }
-      const tonase = parseNumber(item.tonase);
-      stats[item.formula].total += tonase;
-      stats[item.formula].count += 1;
-      if (item.kategori === "Fresh") stats[item.formula].fresh += tonase;
+      const tonase = getTonaseValue(item);
+      stats[formulaKey].total += tonase;
+      stats[formulaKey].count += 1;
+      if (item.kategori === "Fresh") stats[formulaKey].fresh += tonase;
       else if (item.kategori === "Oversack")
-        stats[item.formula].oversack += tonase;
-      else if (item.kategori === "Retail") stats[item.formula].retail += tonase;
+        stats[formulaKey].oversack += tonase;
+      else if (item.kategori === "Retail") stats[formulaKey].retail += tonase;
     });
 
     // Calculate percentages
@@ -349,6 +493,7 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
 
     const thisMonthData = data.filter((item) => {
       const itemDate = new Date(item.tanggal);
+      if (isNaN(itemDate.getTime())) return false;
       return (
         itemDate.getMonth() === currentMonth &&
         itemDate.getFullYear() === currentYear
@@ -357,12 +502,12 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
 
     const totalFresh = thisMonthData
       .filter((i) => i.kategori === "Fresh")
-      .reduce((sum, item) => sum + parseNumber(item.tonase || item.total), 0);
+      .reduce((sum, item) => sum + getTonaseValue(item), 0);
     const totalOversack = thisMonthData
       .filter((i) => i.kategori === "Oversack")
-      .reduce((sum, item) => sum + parseNumber(item.tonase || item.total), 0);
+      .reduce((sum, item) => sum + getTonaseValue(item), 0);
     const total = thisMonthData.reduce(
-      (sum, item) => sum + parseNumber(item.tonase || item.total),
+      (sum, item) => sum + getTonaseValue(item),
       0
     );
 
