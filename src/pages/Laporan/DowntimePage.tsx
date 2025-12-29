@@ -637,6 +637,7 @@ const DowntimePage = ({ plant }: DowntimePageProps) => {
           },
         ]}
         plant={plant}
+        compactMode={true}
       />
     </div>
   );
