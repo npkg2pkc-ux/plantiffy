@@ -154,34 +154,41 @@ const RiksaTimbPortabelPage = () => {
     return num.toFixed(2);
   };
 
-  // Handle weight input change - allows decimal input with period
+  // Handle weight input change - allows decimal input with period OR comma (for mobile support)
   const handleWeightInput = (
     field: keyof typeof initialInputState,
     value: string
   ) => {
+    // Replace comma with period for consistency (mobile keyboards often show comma)
+    const normalizedValue = value.replace(",", ".");
+
     // Allow empty, numbers, and one decimal point
-    if (value === "" || /^\d*\.?\d*$/.test(value)) {
-      setInputValues((prev) => ({ ...prev, [field]: value }));
+    if (normalizedValue === "" || /^\d*\.?\d*$/.test(normalizedValue)) {
+      setInputValues((prev) => ({ ...prev, [field]: normalizedValue }));
       // Update form with parsed number for preview
       const numValue =
-        value === "" || value === "." ? 0 : parseFloat(value) || 0;
+        normalizedValue === "" || normalizedValue === "."
+          ? 0
+          : parseFloat(normalizedValue) || 0;
       setForm((prev) => ({ ...prev, [field]: numValue }));
     }
   };
 
   // Get form values from input strings for submission
   const getFormValuesFromInputs = () => {
+    // Replace comma with period before parsing (in case any slipped through)
+    const parseValue = (val: string) => parseFloat(val.replace(",", ".")) || 0;
     return {
-      ujiPenambahan10: parseFloat(inputValues.ujiPenambahan10) || 0,
-      ujiPenambahan20: parseFloat(inputValues.ujiPenambahan20) || 0,
-      ujiPenambahan30: parseFloat(inputValues.ujiPenambahan30) || 0,
-      ujiPenambahan40: parseFloat(inputValues.ujiPenambahan40) || 0,
-      ujiPenambahan50: parseFloat(inputValues.ujiPenambahan50) || 0,
-      ujiPengurangan50: parseFloat(inputValues.ujiPengurangan50) || 0,
-      ujiPengurangan40: parseFloat(inputValues.ujiPengurangan40) || 0,
-      ujiPengurangan30: parseFloat(inputValues.ujiPengurangan30) || 0,
-      ujiPengurangan20: parseFloat(inputValues.ujiPengurangan20) || 0,
-      ujiPengurangan10: parseFloat(inputValues.ujiPengurangan10) || 0,
+      ujiPenambahan10: parseValue(inputValues.ujiPenambahan10),
+      ujiPenambahan20: parseValue(inputValues.ujiPenambahan20),
+      ujiPenambahan30: parseValue(inputValues.ujiPenambahan30),
+      ujiPenambahan40: parseValue(inputValues.ujiPenambahan40),
+      ujiPenambahan50: parseValue(inputValues.ujiPenambahan50),
+      ujiPengurangan50: parseValue(inputValues.ujiPengurangan50),
+      ujiPengurangan40: parseValue(inputValues.ujiPengurangan40),
+      ujiPengurangan30: parseValue(inputValues.ujiPengurangan30),
+      ujiPengurangan20: parseValue(inputValues.ujiPengurangan20),
+      ujiPengurangan10: parseValue(inputValues.ujiPengurangan10),
     };
   };
 
