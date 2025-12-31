@@ -159,7 +159,7 @@ const PrintModal = ({
         <style>
           @page {
             size: A4;
-            margin: ${compactMode ? "6mm" : "12mm"};
+            margin: ${compactMode ? "8mm" : "12mm"};
           }
           * {
             margin: 0;
@@ -168,8 +168,8 @@ const PrintModal = ({
           }
           body {
             font-family: 'Times New Roman', Times, serif;
-            font-size: ${compactMode ? "7.5pt" : "10pt"};
-            line-height: ${compactMode ? "1.1" : "1.4"};
+            font-size: ${compactMode ? "8pt" : "10pt"};
+            line-height: ${compactMode ? "1.2" : "1.4"};
             color: #000;
           }
           .print-container {
@@ -179,34 +179,34 @@ const PrintModal = ({
           }
           .header {
             text-align: center;
-            margin-bottom: ${compactMode ? "6px" : "15px"};
+            margin-bottom: ${compactMode ? "10px" : "15px"};
           }
           .header h1 {
-            font-size: ${compactMode ? "11pt" : "14pt"};
+            font-size: ${compactMode ? "13pt" : "14pt"};
             font-weight: bold;
             text-transform: uppercase;
-            margin-bottom: ${compactMode ? "2px" : "4px"};
+            margin-bottom: ${compactMode ? "3px" : "4px"};
             letter-spacing: 1px;
           }
           .header .periode {
-            font-size: ${compactMode ? "8pt" : "11pt"};
+            font-size: ${compactMode ? "10pt" : "11pt"};
             font-weight: bold;
             text-transform: uppercase;
           }
           .filter-info {
-            font-size: ${compactMode ? "7pt" : "9pt"};
-            margin-bottom: ${compactMode ? "4px" : "10px"};
+            font-size: ${compactMode ? "8pt" : "9pt"};
+            margin-bottom: ${compactMode ? "6px" : "10px"};
             text-align: center;
           }
           table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: ${compactMode ? "4px" : "8px"};
-            font-size: ${compactMode ? "6.5pt" : "9pt"};
+            margin-bottom: ${compactMode ? "6px" : "8px"};
+            font-size: ${compactMode ? "7.5pt" : "9pt"};
           }
           th, td {
             border: 1px solid #000;
-            padding: ${compactMode ? "1px 2px" : "5px 6px"};
+            padding: ${compactMode ? "2px 3px" : "5px 6px"};
             text-align: center;
           }
           thead tr:first-child th {
@@ -238,49 +238,49 @@ const PrintModal = ({
             font-weight: bold;
           }
           .footer {
-            margin-top: ${compactMode ? "6px" : "20px"};
+            margin-top: ${compactMode ? "12px" : "20px"};
             text-align: right;
-            font-size: ${compactMode ? "7pt" : "10pt"};
+            font-size: ${compactMode ? "8pt" : "10pt"};
             color: #000;
             font-style: italic;
           }
           .signatures {
             display: flex;
             justify-content: flex-end;
-            margin-top: ${compactMode ? "10px" : "30px"};
+            margin-top: ${compactMode ? "15px" : "30px"};
             padding-right: 20px;
           }
           .signature-box {
             text-align: center;
-            min-width: ${compactMode ? "120px" : "180px"};
+            min-width: ${compactMode ? "140px" : "180px"};
           }
           .signature-box .label {
-            font-size: ${compactMode ? "7pt" : "10pt"};
-            margin-bottom: ${compactMode ? "2px" : "5px"};
+            font-size: ${compactMode ? "8pt" : "10pt"};
+            margin-bottom: ${compactMode ? "3px" : "5px"};
           }
           .signature-box .position {
-            font-size: ${compactMode ? "7pt" : "10pt"};
+            font-size: ${compactMode ? "8pt" : "10pt"};
             font-weight: bold;
             color: #000;
-            margin-bottom: ${compactMode ? "30px" : "60px"};
+            margin-bottom: ${compactMode ? "40px" : "60px"};
           }
           .signature-box .name {
-            font-size: ${compactMode ? "7pt" : "10pt"};
+            font-size: ${compactMode ? "8pt" : "10pt"};
             font-weight: bold;
             color: #000;
             text-decoration: underline;
             margin-bottom: 2px;
           }
           .signature-box .badge {
-            font-size: ${compactMode ? "7pt" : "10pt"};
+            font-size: ${compactMode ? "8pt" : "10pt"};
             font-weight: bold;
             color: #000;
           }
           .multi-signatures {
             display: flex;
             justify-content: space-between;
-            margin-top: ${compactMode ? "10px" : "30px"};
-            gap: ${compactMode ? "8px" : "20px"};
+            margin-top: ${compactMode ? "15px" : "30px"};
+            gap: ${compactMode ? "12px" : "20px"};
           }
           .multi-signatures .signature-box {
             flex: 1;
