@@ -889,6 +889,7 @@ const RiksaTimbPortabelPage = () => {
               value={form.area}
               onChange={(e) => setForm({ ...form, area: e.target.value })}
               options={areaOptions}
+              placeholder="Pilih Area"
               required
             />
           </div>

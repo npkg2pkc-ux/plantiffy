@@ -122,7 +122,7 @@ export default function DokumentasiFotoPage({
     };
   }, []);
 
-  // Start camera - simplified version
+  // Start camera - HD/4K quality for iPhone and modern devices
   const startCamera = useCallback(
     async (facing: "environment" | "user" = "environment") => {
       setCameraError(null);
@@ -135,15 +135,39 @@ export default function DokumentasiFotoPage({
       }
 
       try {
-        // Simple constraints that work on most devices
+        // High quality constraints for HD/4K capture on iPhone and modern devices
         const constraints: MediaStreamConstraints = {
           video: {
             facingMode: facing,
+            // Request highest resolution available (4K if supported)
+            width: { ideal: 3840, min: 1920 },
+            height: { ideal: 2160, min: 1080 },
+            // Request high frame rate for better preview
+            frameRate: { ideal: 30, min: 24 },
+            // Advanced constraints for better quality
+            aspectRatio: { ideal: 16 / 9 },
           },
           audio: false,
         };
 
-        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        let stream: MediaStream;
+
+        try {
+          // Try high quality first
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
+        } catch {
+          // Fallback to simpler constraints if high quality fails
+          console.log("High quality not supported, falling back to standard");
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: facing,
+              width: { ideal: 1920 },
+              height: { ideal: 1080 },
+            },
+            audio: false,
+          });
+        }
+
         streamRef.current = stream;
 
         if (videoRef.current) {
@@ -194,7 +218,7 @@ export default function DokumentasiFotoPage({
     setCameraReady(false);
   }, []);
 
-  // Capture photo from camera
+  // Capture photo from camera - High quality capture
   const capturePhoto = useCallback(() => {
     if (!videoRef.current || !canvasRef.current) return;
 
@@ -204,15 +228,24 @@ export default function DokumentasiFotoPage({
 
     if (!context) return;
 
-    // Set canvas dimensions to video dimensions
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    // Use actual video dimensions for maximum quality
+    const videoWidth = video.videoWidth;
+    const videoHeight = video.videoHeight;
 
-    // Draw video frame to canvas
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    // Set canvas to match video resolution (preserves full quality)
+    canvas.width = videoWidth;
+    canvas.height = videoHeight;
 
-    // Get image data as base64
-    const imageData = canvas.toDataURL("image/jpeg", 0.9);
+    // Enable high quality image smoothing
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = "high";
+
+    // Draw video frame to canvas at full resolution
+    context.drawImage(video, 0, 0, videoWidth, videoHeight);
+
+    // Get image data as high quality JPEG (0.95 = 95% quality for near-lossless)
+    // Using higher quality for better detail preservation
+    const imageData = canvas.toDataURL("image/jpeg", 0.95);
     setCapturedImage(imageData);
 
     // Stop camera after capture
