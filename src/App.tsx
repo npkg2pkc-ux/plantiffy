@@ -38,6 +38,7 @@ import {
   TroubleRecordPage,
   DokumentasiFotoPage,
   RekapBBMPage,
+  RiksaTimbPortabelPage,
 } from "@/pages/Data";
 import { AkunPage, RKAPPage, UsersPage, ApprovalPage } from "@/pages/Settings";
 
@@ -240,6 +241,10 @@ function App() {
             <Route
               path="rekap-bbm-npk2"
               element={<RekapBBMPage plant="NPK2" />}
+            />
+            <Route
+              path="riksa-timb-portabel"
+              element={<RiksaTimbPortabelPage />}
             />
             {/* Legacy routes for backwards compatibility */}
             <Route path="perta" element={<PertaPage />} />

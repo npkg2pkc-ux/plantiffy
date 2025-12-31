@@ -239,6 +239,9 @@ export const SHEETS = {
   REKAP_BBM: "rekap_bbm",
   PEMANTAUAN_BAHAN_BAKU: "pemantauan_bahan_baku",
 
+  // NPK2 only features
+  RIKSA_TIMB_PORTABEL: "riksa_timb_portabel",
+
   // Shared
   USERS: "users",
   SESSIONS: "sessions",

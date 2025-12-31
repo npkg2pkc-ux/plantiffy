@@ -7,3 +7,4 @@ export { default as PerbaikanTahunanPage } from "./PerbaikanTahunanPage";
 export { default as TroubleRecordPage } from "./TroubleRecordPage";
 export { default as DokumentasiFotoPage } from "./DokumentasiFotoPage";
 export { default as RekapBBMPage } from "./RekapBBMPage";
+export { default as RiksaTimbPortabelPage } from "./RiksaTimbPortabelPage";

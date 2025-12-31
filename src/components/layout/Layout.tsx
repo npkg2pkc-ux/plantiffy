@@ -368,6 +368,7 @@ const navItems: NavItemProps[] = [
       { name: "Dokumentasi Foto NPK2", path: "/data/dokumentasi-foto-npk2" },
       { name: "Rekap BBM NPK1", path: "/data/rekap-bbm-npk1" },
       { name: "Rekap BBM NPK2", path: "/data/rekap-bbm-npk2" },
+      { name: "Riksa Timb Portabel", path: "/data/riksa-timb-portabel" },
     ],
   },
   {
@@ -476,14 +477,16 @@ const Sidebar = () => {
           let filteredChildren = item.children;
 
           if (userPlant === "NPK1") {
-            // NPK1: Only show NPK1 data forms
+            // NPK1: Only show NPK1 data forms (exclude Riksa Timb Portabel)
             filteredChildren = item.children.filter((child) =>
               child.path.includes("npk1")
             );
           } else if (userPlant === "NPK2") {
-            // NPK2: Only show NPK2 data forms
-            filteredChildren = item.children.filter((child) =>
-              child.path.includes("npk2")
+            // NPK2: Show NPK2 data forms AND Riksa Timb Portabel
+            filteredChildren = item.children.filter(
+              (child) =>
+                child.path.includes("npk2") ||
+                child.path === "/data/riksa-timb-portabel"
             );
           }
           // Admin (ALL) sees all
@@ -529,7 +532,7 @@ const Sidebar = () => {
               Plantiffy
             </span>
             <span className="text-xs text-dark-500 dark:text-dark-400">
-              v2.3.0
+              v2.3.2
             </span>
           </Link>
         )}

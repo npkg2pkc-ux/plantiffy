@@ -114,6 +114,39 @@ export interface RekapBBM {
   _plant?: PlantType;
 }
 
+// Riksa Timbangan Portabel (NPK2 only)
+export interface RiksaTimbPortabel {
+  id?: string;
+  tanggal: string;
+  area: string;
+  // Uji Penambahan
+  ujiPenambahan10: number;
+  ujiPenambahan20: number;
+  ujiPenambahan30: number;
+  ujiPenambahan40: number;
+  ujiPenambahan50: number;
+  // Uji Pengurangan
+  ujiPengurangan50: number;
+  ujiPengurangan40: number;
+  ujiPengurangan30: number;
+  ujiPengurangan20: number;
+  ujiPengurangan10: number;
+  // Selisih (calculated)
+  selisihPenambahan10?: number;
+  selisihPenambahan20?: number;
+  selisihPenambahan30?: number;
+  selisihPenambahan40?: number;
+  selisihPenambahan50?: number;
+  selisihPengurangan50?: number;
+  selisihPengurangan40?: number;
+  selisihPengurangan30?: number;
+  selisihPengurangan20?: number;
+  selisihPengurangan10?: number;
+  totalSelisih?: number;
+  rataRataSelisih?: number;
+  _plant?: PlantType;
+}
+
 // Downtime
 export interface Downtime {
   id?: string;

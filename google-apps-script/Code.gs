@@ -45,6 +45,7 @@
  * - kop, kop_NPK1
  * - rekap_bbm, rekap_bbm_NPK1
  * - pemantauan_bahan_baku, pemantauan_bahan_baku_NPK1
+ * - riksa_timb_portabel (NPK2 only - NO NPK1 version)
  * - akun
  * - rkap
  * - approval_requests
@@ -338,6 +339,33 @@ const SHEET_HEADERS = {
     "bahanBakuIn",
     "bahanBakuOut",
     "stockAkhir",
+  ],
+  riksa_timb_portabel: [
+    "id",
+    "tanggal",
+    "area",
+    "ujiPenambahan10",
+    "ujiPenambahan20",
+    "ujiPenambahan30",
+    "ujiPenambahan40",
+    "ujiPenambahan50",
+    "ujiPengurangan50",
+    "ujiPengurangan40",
+    "ujiPengurangan30",
+    "ujiPengurangan20",
+    "ujiPengurangan10",
+    "selisihPenambahan10",
+    "selisihPenambahan20",
+    "selisihPenambahan30",
+    "selisihPenambahan40",
+    "selisihPenambahan50",
+    "selisihPengurangan50",
+    "selisihPengurangan40",
+    "selisihPengurangan30",
+    "selisihPengurangan20",
+    "selisihPengurangan10",
+    "totalSelisih",
+    "rataRataSelisih",
   ],
   kop: [
     "id",
