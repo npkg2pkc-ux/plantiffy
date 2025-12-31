@@ -28,7 +28,6 @@ import {
 import { useAuthStore } from "@/stores";
 import {
   formatDate,
-  formatNumber,
   parseNumber,
   canAdd,
   canEditDirect,
@@ -134,6 +133,12 @@ const RiksaTimbPortabelPage = () => {
     { value: "Blending", label: "Blending" },
     { value: "NPK Mini", label: "NPK Mini" },
   ];
+
+  // Format weight with 2 decimal places using period (.) as decimal separator
+  const formatWeight = (num: number | undefined | null): string => {
+    if (num === undefined || num === null) return "0.00";
+    return num.toFixed(2);
+  };
 
   // Calculate selisih (difference) for each test
   const calculateSelisih = (item: RiksaTimbPortabel) => {
@@ -400,7 +405,7 @@ const RiksaTimbPortabelPage = () => {
               : "text-red-600"
           )}
         >
-          {(value as number)?.toFixed(2) || "0.00"} kg
+          {formatWeight(value as number)} kg
         </span>
       ),
       sortable: true,
@@ -496,7 +501,7 @@ const RiksaTimbPortabelPage = () => {
             )}
           >
             {value >= 0 ? "+" : ""}
-            {value.toFixed(2)} kg
+            {formatWeight(value)} kg
           </span>
         </div>
       </div>
@@ -561,13 +566,13 @@ const RiksaTimbPortabelPage = () => {
                 Total Selisih Absolut
               </p>
               <p className="text-2xl font-bold text-indigo-700">
-                {calculated.totalSelisih.toFixed(2)} kg
+                {formatWeight(calculated.totalSelisih)} kg
               </p>
             </div>
             <div className="bg-gradient-to-br from-purple-50 to-pink-100 rounded-xl p-4 text-center">
               <p className="text-sm text-gray-600 mb-1">Rata-rata Selisih</p>
               <p className="text-2xl font-bold text-purple-700">
-                {calculated.rataRataSelisih.toFixed(2)} kg
+                {formatWeight(calculated.rataRataSelisih)} kg
               </p>
             </div>
           </div>
@@ -624,7 +629,7 @@ const RiksaTimbPortabelPage = () => {
                 >
                   <span className="font-medium">{item.std} kg</span>
                   <span className="text-center font-semibold">
-                    {formatNumber(item.hasil)} kg
+                    {formatWeight(item.hasil)} kg
                   </span>
                   <span
                     className={cn(
@@ -637,7 +642,7 @@ const RiksaTimbPortabelPage = () => {
                     )}
                   >
                     {item.selisih >= 0 ? "+" : ""}
-                    {item.selisih.toFixed(2)} kg
+                    {formatWeight(item.selisih)} kg
                   </span>
                 </div>
               ))}
@@ -696,7 +701,7 @@ const RiksaTimbPortabelPage = () => {
                 >
                   <span className="font-medium">{item.std} kg</span>
                   <span className="text-center font-semibold">
-                    {formatNumber(item.hasil)} kg
+                    {formatWeight(item.hasil)} kg
                   </span>
                   <span
                     className={cn(
@@ -709,7 +714,7 @@ const RiksaTimbPortabelPage = () => {
                     )}
                   >
                     {item.selisih >= 0 ? "+" : ""}
-                    {item.selisih.toFixed(2)} kg
+                    {formatWeight(item.selisih)} kg
                   </span>
                 </div>
               ))}
