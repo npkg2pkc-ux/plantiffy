@@ -578,7 +578,7 @@ const RiksaTimbPortabelPage = () => {
     );
   };
 
-  // View Modal Component
+  // View Modal Component - Compact design for screenshot
   const ViewModal = () => {
     if (!viewItem) return null;
 
@@ -587,6 +587,76 @@ const RiksaTimbPortabelPage = () => {
     const hasWarning =
       calculated.rataRataSelisih > 0.5 && calculated.rataRataSelisih <= 1;
 
+    const penambahan = [
+      {
+        std: 10,
+        hasil: viewItem.ujiPenambahan10,
+        selisih: calculated.selisihPenambahan10,
+      },
+      {
+        std: 20,
+        hasil: viewItem.ujiPenambahan20,
+        selisih: calculated.selisihPenambahan20,
+      },
+      {
+        std: 30,
+        hasil: viewItem.ujiPenambahan30,
+        selisih: calculated.selisihPenambahan30,
+      },
+      {
+        std: 40,
+        hasil: viewItem.ujiPenambahan40,
+        selisih: calculated.selisihPenambahan40,
+      },
+      {
+        std: 50,
+        hasil: viewItem.ujiPenambahan50,
+        selisih: calculated.selisihPenambahan50,
+      },
+    ];
+
+    const pengurangan = [
+      {
+        std: 50,
+        hasil: viewItem.ujiPengurangan50,
+        selisih: calculated.selisihPengurangan50,
+      },
+      {
+        std: 40,
+        hasil: viewItem.ujiPengurangan40,
+        selisih: calculated.selisihPengurangan40,
+      },
+      {
+        std: 30,
+        hasil: viewItem.ujiPengurangan30,
+        selisih: calculated.selisihPengurangan30,
+      },
+      {
+        std: 20,
+        hasil: viewItem.ujiPengurangan20,
+        selisih: calculated.selisihPengurangan20,
+      },
+      {
+        std: 10,
+        hasil: viewItem.ujiPengurangan10,
+        selisih: calculated.selisihPengurangan10,
+      },
+    ];
+
+    const getSelisihColor = (selisih: number) => {
+      const abs = Math.abs(selisih);
+      if (abs <= 0.5) return "text-green-600";
+      if (abs <= 1) return "text-yellow-600";
+      return "text-red-600";
+    };
+
+    const getRowBg = (selisih: number) => {
+      const abs = Math.abs(selisih);
+      if (abs <= 0.5) return "bg-green-50";
+      if (abs <= 1) return "bg-yellow-50";
+      return "bg-red-50";
+    };
+
     return (
       <Modal
         isOpen={showViewModal}
@@ -594,11 +664,11 @@ const RiksaTimbPortabelPage = () => {
         title=""
         size="xl"
       >
-        <div className="space-y-6">
-          {/* Header */}
+        <div className="space-y-3">
+          {/* Compact Header */}
           <div
             className={cn(
-              "p-6 rounded-xl text-center",
+              "p-4 rounded-xl text-center",
               allGood
                 ? "bg-gradient-to-r from-green-500 to-emerald-600"
                 : hasWarning
@@ -606,20 +676,20 @@ const RiksaTimbPortabelPage = () => {
                 : "bg-gradient-to-r from-red-500 to-rose-600"
             )}
           >
-            <Scale className="h-12 w-12 mx-auto text-white mb-3" />
-            <h2 className="text-2xl font-bold text-white">
+            <Scale className="h-8 w-8 mx-auto text-white mb-1" />
+            <h2 className="text-xl font-bold text-white">
               Hasil Riksa Timbangan Portabel
             </h2>
-            <p className="text-white/90 mt-1">
+            <p className="text-white/90 text-sm">
               {viewItem.area} • {formatDate(viewItem.tanggal)}
             </p>
-            <div className="mt-4 inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
+            <div className="mt-2 inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1">
               {allGood ? (
-                <CheckCircle2 className="h-5 w-5 text-white" />
+                <CheckCircle2 className="h-4 w-4 text-white" />
               ) : (
-                <XCircle className="h-5 w-5 text-white" />
+                <XCircle className="h-4 w-4 text-white" />
               )}
-              <span className="font-semibold text-white">
+              <span className="font-semibold text-white text-sm">
                 {allGood
                   ? "Kalibrasi BAIK"
                   : hasWarning
@@ -629,188 +699,128 @@ const RiksaTimbPortabelPage = () => {
             </div>
           </div>
 
-          {/* Summary Stats */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl p-4 text-center">
-              <p className="text-sm text-gray-600 mb-1">
-                Total Selisih Absolut
-              </p>
-              <p className="text-2xl font-bold text-indigo-700">
+          {/* Summary Stats - Inline */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg p-3 text-center">
+              <p className="text-xs text-gray-600">Total Selisih Absolut</p>
+              <p className="text-lg font-bold text-indigo-700">
                 {formatWeight(calculated.totalSelisih)} kg
               </p>
             </div>
-            <div className="bg-gradient-to-br from-purple-50 to-pink-100 rounded-xl p-4 text-center">
-              <p className="text-sm text-gray-600 mb-1">Rata-rata Selisih</p>
-              <p className="text-2xl font-bold text-purple-700">
+            <div className="bg-gradient-to-br from-purple-50 to-pink-100 rounded-lg p-3 text-center">
+              <p className="text-xs text-gray-600">Rata-rata Selisih</p>
+              <p className="text-lg font-bold text-purple-700">
                 {formatWeight(calculated.rataRataSelisih)} kg
               </p>
             </div>
           </div>
 
-          {/* Uji Penambahan */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-green-500" />
-              Uji Penambahan
-            </h3>
-            <div className="space-y-2">
-              <div className="grid grid-cols-3 gap-2 text-sm font-medium text-gray-500 px-3">
-                <span>Beban Standar</span>
-                <span className="text-center">Hasil Ukur</span>
-                <span className="text-right">Selisih</span>
+          {/* Combined Tables - Side by Side */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Uji Penambahan */}
+            <div className="border rounded-lg overflow-hidden">
+              <div className="bg-green-500 px-3 py-1.5 flex items-center gap-1.5">
+                <TrendingUp className="h-4 w-4 text-white" />
+                <span className="font-semibold text-white text-sm">
+                  Uji Penambahan
+                </span>
               </div>
-              {[
-                {
-                  std: 10,
-                  hasil: viewItem.ujiPenambahan10,
-                  selisih: calculated.selisihPenambahan10,
-                },
-                {
-                  std: 20,
-                  hasil: viewItem.ujiPenambahan20,
-                  selisih: calculated.selisihPenambahan20,
-                },
-                {
-                  std: 30,
-                  hasil: viewItem.ujiPenambahan30,
-                  selisih: calculated.selisihPenambahan30,
-                },
-                {
-                  std: 40,
-                  hasil: viewItem.ujiPenambahan40,
-                  selisih: calculated.selisihPenambahan40,
-                },
-                {
-                  std: 50,
-                  hasil: viewItem.ujiPenambahan50,
-                  selisih: calculated.selisihPenambahan50,
-                },
-              ].map((item, idx) => (
-                <div
-                  key={idx}
-                  className={cn(
-                    "grid grid-cols-3 gap-2 p-3 rounded-lg",
-                    Math.abs(item.selisih) <= 0.5
-                      ? "bg-green-50"
-                      : Math.abs(item.selisih) <= 1
-                      ? "bg-yellow-50"
-                      : "bg-red-50"
-                  )}
-                >
-                  <span className="font-medium">{item.std} kg</span>
-                  <span className="text-center font-semibold">
-                    {formatWeight(item.hasil)} kg
-                  </span>
-                  <span
+              <div className="divide-y divide-gray-100">
+                <div className="grid grid-cols-3 gap-1 px-2 py-1 bg-gray-50 text-xs font-medium text-gray-500">
+                  <span>Standar</span>
+                  <span className="text-center">Hasil</span>
+                  <span className="text-right">Selisih</span>
+                </div>
+                {penambahan.map((item, idx) => (
+                  <div
+                    key={idx}
                     className={cn(
-                      "text-right font-bold",
-                      Math.abs(item.selisih) <= 0.5
-                        ? "text-green-600"
-                        : Math.abs(item.selisih) <= 1
-                        ? "text-yellow-600"
-                        : "text-red-600"
+                      "grid grid-cols-3 gap-1 px-2 py-1.5 text-sm",
+                      getRowBg(item.selisih)
                     )}
                   >
-                    {item.selisih >= 0 ? "+" : ""}
-                    {formatWeight(item.selisih)} kg
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Uji Pengurangan */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
-              <TrendingDown className="h-5 w-5 text-red-500" />
-              Uji Pengurangan
-            </h3>
-            <div className="space-y-2">
-              <div className="grid grid-cols-3 gap-2 text-sm font-medium text-gray-500 px-3">
-                <span>Beban Standar</span>
-                <span className="text-center">Hasil Ukur</span>
-                <span className="text-right">Selisih</span>
+                    <span className="font-medium text-gray-700">
+                      {item.std} kg
+                    </span>
+                    <span className="text-center font-semibold text-gray-800">
+                      {formatWeight(item.hasil)} kg
+                    </span>
+                    <span
+                      className={cn(
+                        "text-right font-bold",
+                        getSelisihColor(item.selisih)
+                      )}
+                    >
+                      {item.selisih >= 0 ? "+" : ""}
+                      {formatWeight(item.selisih)} kg
+                    </span>
+                  </div>
+                ))}
               </div>
-              {[
-                {
-                  std: 50,
-                  hasil: viewItem.ujiPengurangan50,
-                  selisih: calculated.selisihPengurangan50,
-                },
-                {
-                  std: 40,
-                  hasil: viewItem.ujiPengurangan40,
-                  selisih: calculated.selisihPengurangan40,
-                },
-                {
-                  std: 30,
-                  hasil: viewItem.ujiPengurangan30,
-                  selisih: calculated.selisihPengurangan30,
-                },
-                {
-                  std: 20,
-                  hasil: viewItem.ujiPengurangan20,
-                  selisih: calculated.selisihPengurangan20,
-                },
-                {
-                  std: 10,
-                  hasil: viewItem.ujiPengurangan10,
-                  selisih: calculated.selisihPengurangan10,
-                },
-              ].map((item, idx) => (
-                <div
-                  key={idx}
-                  className={cn(
-                    "grid grid-cols-3 gap-2 p-3 rounded-lg",
-                    Math.abs(item.selisih) <= 0.5
-                      ? "bg-green-50"
-                      : Math.abs(item.selisih) <= 1
-                      ? "bg-yellow-50"
-                      : "bg-red-50"
-                  )}
-                >
-                  <span className="font-medium">{item.std} kg</span>
-                  <span className="text-center font-semibold">
-                    {formatWeight(item.hasil)} kg
-                  </span>
-                  <span
+            </div>
+
+            {/* Uji Pengurangan */}
+            <div className="border rounded-lg overflow-hidden">
+              <div className="bg-red-500 px-3 py-1.5 flex items-center gap-1.5">
+                <TrendingDown className="h-4 w-4 text-white" />
+                <span className="font-semibold text-white text-sm">
+                  Uji Pengurangan
+                </span>
+              </div>
+              <div className="divide-y divide-gray-100">
+                <div className="grid grid-cols-3 gap-1 px-2 py-1 bg-gray-50 text-xs font-medium text-gray-500">
+                  <span>Standar</span>
+                  <span className="text-center">Hasil</span>
+                  <span className="text-right">Selisih</span>
+                </div>
+                {pengurangan.map((item, idx) => (
+                  <div
+                    key={idx}
                     className={cn(
-                      "text-right font-bold",
-                      Math.abs(item.selisih) <= 0.5
-                        ? "text-green-600"
-                        : Math.abs(item.selisih) <= 1
-                        ? "text-yellow-600"
-                        : "text-red-600"
+                      "grid grid-cols-3 gap-1 px-2 py-1.5 text-sm",
+                      getRowBg(item.selisih)
                     )}
                   >
-                    {item.selisih >= 0 ? "+" : ""}
-                    {formatWeight(item.selisih)} kg
-                  </span>
-                </div>
-              ))}
+                    <span className="font-medium text-gray-700">
+                      {item.std} kg
+                    </span>
+                    <span className="text-center font-semibold text-gray-800">
+                      {formatWeight(item.hasil)} kg
+                    </span>
+                    <span
+                      className={cn(
+                        "text-right font-bold",
+                        getSelisihColor(item.selisih)
+                      )}
+                    >
+                      {item.selisih >= 0 ? "+" : ""}
+                      {formatWeight(item.selisih)} kg
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* Legend */}
-          <div className="flex flex-wrap gap-4 justify-center pt-4 border-t">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-green-500"></div>
-              <span className="text-sm text-gray-600">Baik (≤ 0.5 kg)</span>
+          {/* Compact Legend & Close */}
+          <div className="flex items-center justify-between pt-2 border-t">
+            <div className="flex items-center gap-3 text-xs">
+              <div className="flex items-center gap-1">
+                <div className="w-2.5 h-2.5 rounded-sm bg-green-500"></div>
+                <span className="text-gray-500">≤0.5kg</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-2.5 h-2.5 rounded-sm bg-yellow-500"></div>
+                <span className="text-gray-500">0.5-1kg</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-2.5 h-2.5 rounded-sm bg-red-500"></div>
+                <span className="text-gray-500">&gt;1kg</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-yellow-500"></div>
-              <span className="text-sm text-gray-600">
-                Perhatian (0.5 - 1 kg)
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-red-500"></div>
-              <span className="text-sm text-gray-600">Buruk ({"> "}1 kg)</span>
-            </div>
-          </div>
-
-          <div className="flex justify-end">
-            <Button onClick={() => setShowViewModal(false)}>Tutup</Button>
+            <Button size="sm" onClick={() => setShowViewModal(false)}>
+              Tutup
+            </Button>
           </div>
         </div>
       </Modal>

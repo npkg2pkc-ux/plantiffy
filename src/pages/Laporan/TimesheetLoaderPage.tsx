@@ -456,7 +456,9 @@ const TimesheetLoaderPage = ({ plant }: TimesheetLoaderPageProps) => {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">Total Jam Grounded</p>
+          <p className="text-sm text-dark-500 dark:text-dark-400">
+            Total Jam Grounded
+          </p>
           <p className="text-2xl font-bold text-amber-600">
             {formatNumber(
               filteredData.reduce(
@@ -468,7 +470,9 @@ const TimesheetLoaderPage = ({ plant }: TimesheetLoaderPageProps) => {
           </p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">Total Jam Operasi</p>
+          <p className="text-sm text-dark-500 dark:text-dark-400">
+            Total Jam Operasi
+          </p>
           <p className="text-2xl font-bold text-secondary-600">
             {formatNumber(
               filteredData.reduce(
@@ -480,13 +484,17 @@ const TimesheetLoaderPage = ({ plant }: TimesheetLoaderPageProps) => {
           </p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">Total Shift</p>
+          <p className="text-sm text-dark-500 dark:text-dark-400">
+            Total Shift
+          </p>
           <p className="text-2xl font-bold text-dark-900 dark:text-white">
             {filteredData.length}
           </p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">Jumlah Entry</p>
+          <p className="text-sm text-dark-500 dark:text-dark-400">
+            Jumlah Entry
+          </p>
           <p className="text-2xl font-bold text-dark-900 dark:text-white">
             {filteredData.length}
           </p>
@@ -615,13 +623,17 @@ const TimesheetLoaderPage = ({ plant }: TimesheetLoaderPageProps) => {
 
           <div className="p-4 bg-dark-50 rounded-xl space-y-2">
             <div className="flex justify-between">
-              <span className="text-dark-500 dark:text-dark-400">Jam Grounded:</span>
+              <span className="text-dark-500 dark:text-dark-400">
+                Jam Grounded:
+              </span>
               <span className="font-semibold text-amber-600">
                 {formatNumber(form.jamGrounded || 0)} Jam
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-dark-500 dark:text-dark-400">Jam Operasi:</span>
+              <span className="text-dark-500 dark:text-dark-400">
+                Jam Operasi:
+              </span>
               <span className="font-semibold text-secondary-600">
                 {formatNumber(form.jamOperasi || 0)} Jam
               </span>
@@ -695,7 +707,7 @@ const TimesheetLoaderPage = ({ plant }: TimesheetLoaderPageProps) => {
         title="Timesheet Loader"
         plant={plant === "NPK1" ? "NPK Plant 1" : "NPK Plant 2"}
         data={data as unknown as Record<string, unknown>[]}
-        compactMode={false}
+        compactMode={true}
         columns={[
           {
             key: "tanggal",
