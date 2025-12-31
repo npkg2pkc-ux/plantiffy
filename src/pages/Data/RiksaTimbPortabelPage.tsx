@@ -28,7 +28,6 @@ import {
 import { useAuthStore } from "@/stores";
 import {
   formatDate,
-  parseNumber,
   canAdd,
   canEditDirect,
   canDeleteDirect,
@@ -88,6 +87,20 @@ const initialFormState: RiksaTimbPortabel = {
   ujiPengurangan10: 0,
 };
 
+// Initial state for string inputs (for decimal handling)
+const initialInputState = {
+  ujiPenambahan10: "",
+  ujiPenambahan20: "",
+  ujiPenambahan30: "",
+  ujiPenambahan40: "",
+  ujiPenambahan50: "",
+  ujiPengurangan50: "",
+  ujiPengurangan40: "",
+  ujiPengurangan30: "",
+  ujiPengurangan20: "",
+  ujiPengurangan10: "",
+};
+
 const RiksaTimbPortabelPage = () => {
   const { user } = useAuthStore();
   const [data, setData] = useState<RiksaTimbPortabel[]>([]);
@@ -100,6 +113,7 @@ const RiksaTimbPortabelPage = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState<RiksaTimbPortabel>(initialFormState);
+  const [inputValues, setInputValues] = useState(initialInputState);
   const [searchTerm, setSearchTerm] = useState("");
 
   // Approval states
@@ -138,6 +152,37 @@ const RiksaTimbPortabelPage = () => {
   const formatWeight = (num: number | undefined | null): string => {
     if (num === undefined || num === null) return "0.00";
     return num.toFixed(2);
+  };
+
+  // Handle weight input change - allows decimal input with period
+  const handleWeightInput = (
+    field: keyof typeof initialInputState,
+    value: string
+  ) => {
+    // Allow empty, numbers, and one decimal point
+    if (value === "" || /^\d*\.?\d*$/.test(value)) {
+      setInputValues((prev) => ({ ...prev, [field]: value }));
+      // Update form with parsed number for preview
+      const numValue =
+        value === "" || value === "." ? 0 : parseFloat(value) || 0;
+      setForm((prev) => ({ ...prev, [field]: numValue }));
+    }
+  };
+
+  // Get form values from input strings for submission
+  const getFormValuesFromInputs = () => {
+    return {
+      ujiPenambahan10: parseFloat(inputValues.ujiPenambahan10) || 0,
+      ujiPenambahan20: parseFloat(inputValues.ujiPenambahan20) || 0,
+      ujiPenambahan30: parseFloat(inputValues.ujiPenambahan30) || 0,
+      ujiPenambahan40: parseFloat(inputValues.ujiPenambahan40) || 0,
+      ujiPenambahan50: parseFloat(inputValues.ujiPenambahan50) || 0,
+      ujiPengurangan50: parseFloat(inputValues.ujiPengurangan50) || 0,
+      ujiPengurangan40: parseFloat(inputValues.ujiPengurangan40) || 0,
+      ujiPengurangan30: parseFloat(inputValues.ujiPengurangan30) || 0,
+      ujiPengurangan20: parseFloat(inputValues.ujiPengurangan20) || 0,
+      ujiPengurangan10: parseFloat(inputValues.ujiPengurangan10) || 0,
+    };
   };
 
   // Calculate selisih (difference) for each test
@@ -226,8 +271,12 @@ const RiksaTimbPortabelPage = () => {
     try {
       const { createData, updateData, SHEETS } = await import("@/services/api");
 
-      const calculatedSelisih = calculateSelisih(form);
-      const dataToSave = { ...form, ...calculatedSelisih };
+      // Get final values from input strings
+      const weightValues = getFormValuesFromInputs();
+      const formData = { ...form, ...weightValues };
+
+      const calculatedSelisih = calculateSelisih(formData);
+      const dataToSave = { ...formData, ...calculatedSelisih };
 
       if (editingId) {
         const dataToUpdate = { ...dataToSave, id: editingId };
@@ -262,6 +311,7 @@ const RiksaTimbPortabelPage = () => {
 
       setShowForm(false);
       setForm(initialFormState);
+      setInputValues(initialInputState);
       setEditingId(null);
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 2000);
@@ -285,6 +335,19 @@ const RiksaTimbPortabelPage = () => {
       return;
     }
     setForm(item);
+    // Populate input values with existing data
+    setInputValues({
+      ujiPenambahan10: item.ujiPenambahan10?.toString() || "",
+      ujiPenambahan20: item.ujiPenambahan20?.toString() || "",
+      ujiPenambahan30: item.ujiPenambahan30?.toString() || "",
+      ujiPenambahan40: item.ujiPenambahan40?.toString() || "",
+      ujiPenambahan50: item.ujiPenambahan50?.toString() || "",
+      ujiPengurangan50: item.ujiPengurangan50?.toString() || "",
+      ujiPengurangan40: item.ujiPengurangan40?.toString() || "",
+      ujiPengurangan30: item.ujiPengurangan30?.toString() || "",
+      ujiPengurangan20: item.ujiPengurangan20?.toString() || "",
+      ujiPengurangan10: item.ujiPengurangan10?.toString() || "",
+    });
     setEditingId(item.id || null);
     setShowForm(true);
   };
@@ -795,6 +858,7 @@ const RiksaTimbPortabelPage = () => {
         onClose={() => {
           setShowForm(false);
           setForm(initialFormState);
+          setInputValues(initialInputState);
           setEditingId(null);
         }}
         title={
@@ -831,72 +895,57 @@ const RiksaTimbPortabelPage = () => {
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <Input
                 label="10 Kg"
-                type="number"
-                step="0.01"
-                value={form.ujiPenambahan10 || ""}
+                type="text"
+                inputMode="decimal"
+                value={inputValues.ujiPenambahan10}
                 onChange={(e) =>
-                  setForm({
-                    ...form,
-                    ujiPenambahan10: parseNumber(e.target.value),
-                  })
+                  handleWeightInput("ujiPenambahan10", e.target.value)
                 }
-                placeholder="Hasil ukur"
+                placeholder="Contoh: 10.02"
                 required
               />
               <Input
                 label="20 Kg"
-                type="number"
-                step="0.01"
-                value={form.ujiPenambahan20 || ""}
+                type="text"
+                inputMode="decimal"
+                value={inputValues.ujiPenambahan20}
                 onChange={(e) =>
-                  setForm({
-                    ...form,
-                    ujiPenambahan20: parseNumber(e.target.value),
-                  })
+                  handleWeightInput("ujiPenambahan20", e.target.value)
                 }
-                placeholder="Hasil ukur"
+                placeholder="Contoh: 20.05"
                 required
               />
               <Input
                 label="30 Kg"
-                type="number"
-                step="0.01"
-                value={form.ujiPenambahan30 || ""}
+                type="text"
+                inputMode="decimal"
+                value={inputValues.ujiPenambahan30}
                 onChange={(e) =>
-                  setForm({
-                    ...form,
-                    ujiPenambahan30: parseNumber(e.target.value),
-                  })
+                  handleWeightInput("ujiPenambahan30", e.target.value)
                 }
-                placeholder="Hasil ukur"
+                placeholder="Contoh: 30.01"
                 required
               />
               <Input
                 label="40 Kg"
-                type="number"
-                step="0.01"
-                value={form.ujiPenambahan40 || ""}
+                type="text"
+                inputMode="decimal"
+                value={inputValues.ujiPenambahan40}
                 onChange={(e) =>
-                  setForm({
-                    ...form,
-                    ujiPenambahan40: parseNumber(e.target.value),
-                  })
+                  handleWeightInput("ujiPenambahan40", e.target.value)
                 }
-                placeholder="Hasil ukur"
+                placeholder="Contoh: 40.03"
                 required
               />
               <Input
                 label="50 Kg"
-                type="number"
-                step="0.01"
-                value={form.ujiPenambahan50 || ""}
+                type="text"
+                inputMode="decimal"
+                value={inputValues.ujiPenambahan50}
                 onChange={(e) =>
-                  setForm({
-                    ...form,
-                    ujiPenambahan50: parseNumber(e.target.value),
-                  })
+                  handleWeightInput("ujiPenambahan50", e.target.value)
                 }
-                placeholder="Hasil ukur"
+                placeholder="Contoh: 50.02"
                 required
               />
             </div>
@@ -911,72 +960,57 @@ const RiksaTimbPortabelPage = () => {
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <Input
                 label="50 Kg"
-                type="number"
-                step="0.01"
-                value={form.ujiPengurangan50 || ""}
+                type="text"
+                inputMode="decimal"
+                value={inputValues.ujiPengurangan50}
                 onChange={(e) =>
-                  setForm({
-                    ...form,
-                    ujiPengurangan50: parseNumber(e.target.value),
-                  })
+                  handleWeightInput("ujiPengurangan50", e.target.value)
                 }
-                placeholder="Hasil ukur"
+                placeholder="Contoh: 50.01"
                 required
               />
               <Input
                 label="40 Kg"
-                type="number"
-                step="0.01"
-                value={form.ujiPengurangan40 || ""}
+                type="text"
+                inputMode="decimal"
+                value={inputValues.ujiPengurangan40}
                 onChange={(e) =>
-                  setForm({
-                    ...form,
-                    ujiPengurangan40: parseNumber(e.target.value),
-                  })
+                  handleWeightInput("ujiPengurangan40", e.target.value)
                 }
-                placeholder="Hasil ukur"
+                placeholder="Contoh: 40.02"
                 required
               />
               <Input
                 label="30 Kg"
-                type="number"
-                step="0.01"
-                value={form.ujiPengurangan30 || ""}
+                type="text"
+                inputMode="decimal"
+                value={inputValues.ujiPengurangan30}
                 onChange={(e) =>
-                  setForm({
-                    ...form,
-                    ujiPengurangan30: parseNumber(e.target.value),
-                  })
+                  handleWeightInput("ujiPengurangan30", e.target.value)
                 }
-                placeholder="Hasil ukur"
+                placeholder="Contoh: 30.03"
                 required
               />
               <Input
                 label="20 Kg"
-                type="number"
-                step="0.01"
-                value={form.ujiPengurangan20 || ""}
+                type="text"
+                inputMode="decimal"
+                value={inputValues.ujiPengurangan20}
                 onChange={(e) =>
-                  setForm({
-                    ...form,
-                    ujiPengurangan20: parseNumber(e.target.value),
-                  })
+                  handleWeightInput("ujiPengurangan20", e.target.value)
                 }
-                placeholder="Hasil ukur"
+                placeholder="Contoh: 20.01"
                 required
               />
               <Input
                 label="10 Kg"
-                type="number"
-                step="0.01"
-                value={form.ujiPengurangan10 || ""}
+                type="text"
+                inputMode="decimal"
+                value={inputValues.ujiPengurangan10}
                 onChange={(e) =>
-                  setForm({
-                    ...form,
-                    ujiPengurangan10: parseNumber(e.target.value),
-                  })
+                  handleWeightInput("ujiPengurangan10", e.target.value)
                 }
-                placeholder="Hasil ukur"
+                placeholder="Contoh: 10.02"
                 required
               />
             </div>
@@ -1060,6 +1094,7 @@ const RiksaTimbPortabelPage = () => {
               onClick={() => {
                 setShowForm(false);
                 setForm(initialFormState);
+                setInputValues(initialInputState);
                 setEditingId(null);
               }}
             >
