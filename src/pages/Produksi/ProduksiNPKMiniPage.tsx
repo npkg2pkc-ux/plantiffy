@@ -59,6 +59,9 @@ const ProduksiNPKMiniPage = () => {
   const [selectedYear, setSelectedYear] = useState<number>(
     new Date().getFullYear()
   );
+  const [selectedMonth, setSelectedMonth] = useState<number>(
+    new Date().getMonth()
+  );
   const [isCustomFormulasi, setIsCustomFormulasi] = useState(false);
   const [customFormulasiValue, setCustomFormulasiValue] = useState("");
 
@@ -168,12 +171,9 @@ const ProduksiNPKMiniPage = () => {
   }, [data, selectedYear]);
 
   const currentMonthProduksi = useMemo(() => {
-    const now = new Date();
-    const currentMonth = now.getMonth();
-
     const thisMonthData = filteredByYear.filter((item) => {
       const itemDate = new Date(item.tanggal);
-      return itemDate.getMonth() === currentMonth;
+      return itemDate.getMonth() === selectedMonth;
     });
 
     const total = thisMonthData.reduce(
@@ -183,13 +183,13 @@ const ProduksiNPKMiniPage = () => {
     const formulasiCount = new Set(thisMonthData.map((i) => i.formulasi)).size;
 
     return {
-      monthName: MONTH_NAMES[currentMonth],
+      monthName: MONTH_NAMES[selectedMonth],
       year: selectedYear,
       total,
       formulasiCount,
       entryCount: thisMonthData.length,
     };
-  }, [filteredByYear, selectedYear]);
+  }, [filteredByYear, selectedYear, selectedMonth]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -434,6 +434,17 @@ const ProduksiNPKMiniPage = () => {
           </div>
 
           <div className="flex items-center gap-4 md:gap-6">
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(Number(e.target.value))}
+              className="bg-white/20 border-white/30 text-white rounded-lg px-3 py-2 text-sm backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white/50"
+            >
+              {MONTH_NAMES.map((name, index) => (
+                <option key={index} value={index} className="text-dark-900">
+                  {name}
+                </option>
+              ))}
+            </select>
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(Number(e.target.value))}

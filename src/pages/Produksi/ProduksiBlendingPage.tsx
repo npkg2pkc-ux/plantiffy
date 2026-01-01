@@ -79,8 +79,12 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
 
   // Filter states
   const [selectedFormula, setSelectedFormula] = useState<string>("all");
-  const [selectedMonth, setSelectedMonth] = useState<number | "all">("all");
-  const [selectedYear, setSelectedYear] = useState<number | "all">("all");
+  const [selectedMonth, setSelectedMonth] = useState<number | "all">(
+    new Date().getMonth()
+  );
+  const [selectedYear, setSelectedYear] = useState<number | "all">(
+    new Date().getFullYear()
+  );
 
   const plant = type === "blending" ? "NPK2" : "NPK1";
   const pageTitle =
