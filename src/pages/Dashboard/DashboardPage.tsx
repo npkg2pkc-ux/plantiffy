@@ -1010,6 +1010,11 @@ const DashboardPage = () => {
 
   const [loading, setLoading] = useState(true);
 
+  // Production card filter (month filter for "Produksi Bulan" card)
+  const [produksiMonthFilter, setProduksiMonthFilter] = useState<number>(
+    new Date().getMonth()
+  );
+
   // Downtime chart filter states
   const [downtimePeriodFilter, setDowntimePeriodFilter] = useState<
     "bulanan" | "tahunan"
@@ -1426,16 +1431,16 @@ const DashboardPage = () => {
     return monthlyData;
   }, [filteredData]);
 
-  // Current month production data
+  // Current month production data (filtered by produksiMonthFilter)
   const currentMonthData = useMemo(() => {
-    const currentMonth = new Date().getMonth();
-    const currentMonthName = MONTH_SHORT[currentMonth];
-    const monthKey = MONTH_KEY[currentMonth];
+    const selectedMonth = produksiMonthFilter;
+    const currentMonthName = MONTH_SHORT[selectedMonth];
+    const monthKey = MONTH_KEY[selectedMonth];
 
     // NPK Production this month
     const npkThisMonth = filteredData.produksiNPK.filter((item) => {
       const month = new Date(item.tanggal).getMonth();
-      return month === currentMonth;
+      return month === selectedMonth;
     });
 
     const npkProduksi = npkThisMonth.reduce((sum, item) => {
@@ -1474,7 +1479,7 @@ const DashboardPage = () => {
     // Blending Production this month
     const blendingThisMonth = filteredData.produksiBlending.filter((item) => {
       const month = new Date(item.tanggal).getMonth();
-      return month === currentMonth;
+      return month === selectedMonth;
     });
 
     const blendingProduksi = blendingThisMonth.reduce((sum, item) => {
@@ -1484,7 +1489,7 @@ const DashboardPage = () => {
     // NPK Mini Production this month
     const npkMiniThisMonth = filteredData.produksiNPKMini.filter((item) => {
       const month = new Date(item.tanggal).getMonth();
-      return month === currentMonth;
+      return month === selectedMonth;
     });
 
     const npkMiniProduksi = npkMiniThisMonth.reduce((sum, item) => {
@@ -1512,7 +1517,7 @@ const DashboardPage = () => {
       percentageRkap,
       totalProduksi: npkProduksi + blendingProduksi + npkMiniProduksi,
     };
-  }, [filteredData]);
+  }, [filteredData, produksiMonthFilter]);
 
   // Downtime by equipment chart data - with period and value filters
   const downtimeChartData = useMemo(() => {
@@ -1689,15 +1694,17 @@ const DashboardPage = () => {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        onClick={() =>
-          navigate(
-            `/produksi/${effectivePlantFilter === "NPK1" ? "npk1" : "npk2"}`
-          )
-        }
-        className="bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl p-6 text-white shadow-lg cursor-pointer hover:shadow-xl hover:scale-[1.01] transition-all duration-300"
+        className="bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl p-6 text-white shadow-lg"
       >
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div>
+          <div
+            onClick={() =>
+              navigate(
+                `/produksi/${effectivePlantFilter === "NPK1" ? "npk1" : "npk2"}`
+              )
+            }
+            className="cursor-pointer hover:opacity-80 transition-opacity"
+          >
             <div className="flex items-center gap-2 mb-2">
               <CalendarDays className="h-6 w-6" />
               <h2 className="text-xl font-bold">
@@ -1710,7 +1717,34 @@ const DashboardPage = () => {
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-4 lg:gap-8">
+          {/* Month Filter */}
+          <div
+            className="flex items-center gap-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <select
+              value={produksiMonthFilter}
+              onChange={(e) => setProduksiMonthFilter(Number(e.target.value))}
+              className="bg-white/20 backdrop-blur-sm text-white border-0 rounded-lg px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-white/30 cursor-pointer"
+            >
+              {MONTH_SHORT.map((month, index) => (
+                <option key={index} value={index} className="text-dark-900">
+                  {month}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div
+          onClick={() =>
+            navigate(
+              `/produksi/${effectivePlantFilter === "NPK1" ? "npk1" : "npk2"}`
+            )
+          }
+          className="cursor-pointer hover:opacity-90 transition-opacity"
+        >
+          <div className="flex flex-wrap gap-4 lg:gap-8 mt-4">
             <div className="bg-white/20 rounded-xl px-6 py-4 backdrop-blur-sm min-w-[140px]">
               <p className="text-primary-100 text-xs uppercase tracking-wider mb-1">
                 NPK Produksi
