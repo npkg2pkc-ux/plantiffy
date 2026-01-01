@@ -146,18 +146,15 @@ const ProduksiNPKMiniPage = () => {
   ];
   // Get available years from data
   const availableYears = useMemo(() => {
-    const years = [
-      ...new Set(
-        data.map((item) => {
-          const date = new Date(item.tanggal);
-          return isNaN(date.getTime())
-            ? new Date().getFullYear()
-            : date.getFullYear();
-        })
-      ),
-    ].sort((a, b) => b - a);
-    if (years.length === 0) years.push(new Date().getFullYear());
-    return years;
+    const currentYear = new Date().getFullYear();
+    const yearsFromData = data.map((item) => {
+      const date = new Date(item.tanggal);
+      return isNaN(date.getTime()) ? currentYear : date.getFullYear();
+    });
+    // Include current year and a few years back
+    const defaultYears = [currentYear, currentYear - 1, currentYear - 2];
+    const allYears = [...new Set([...yearsFromData, ...defaultYears])];
+    return allYears.sort((a, b) => b - a);
   }, [data]);
 
   // Filter data by selected year for summary cards
