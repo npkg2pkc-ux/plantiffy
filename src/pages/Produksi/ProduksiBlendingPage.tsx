@@ -79,12 +79,8 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
 
   // Filter states
   const [selectedFormula, setSelectedFormula] = useState<string>("all");
-  const [selectedMonth, setSelectedMonth] = useState<number>(
-    new Date().getMonth()
-  );
-  const [selectedYear, setSelectedYear] = useState<number>(
-    new Date().getFullYear()
-  );
+  const [selectedMonth, setSelectedMonth] = useState<number | "all">("all");
+  const [selectedYear, setSelectedYear] = useState<number | "all">("all");
 
   const plant = type === "blending" ? "NPK2" : "NPK1";
   const pageTitle =
@@ -324,10 +320,13 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
     return data.filter((item) => {
       const itemDate = new Date(item.tanggal);
       if (isNaN(itemDate.getTime())) return false;
-      return (
-        itemDate.getMonth() === selectedMonth &&
-        itemDate.getFullYear() === selectedYear
-      );
+      
+      // If "all" is selected for year, show all years
+      const yearMatches = selectedYear === "all" || itemDate.getFullYear() === selectedYear;
+      // If "all" is selected for month, show all months
+      const monthMatches = selectedMonth === "all" || itemDate.getMonth() === selectedMonth;
+      
+      return yearMatches && monthMatches;
     });
   }, [data, selectedMonth, selectedYear]);
 
@@ -361,25 +360,30 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
       .filter((i) => i.kategori === "Retail")
       .reduce((sum, item) => sum + getTonaseValue(item), 0);
 
-    // Get previous month data for comparison
-    const prevMonth = selectedMonth === 0 ? 11 : selectedMonth - 1;
-    const prevYear = selectedMonth === 0 ? selectedYear - 1 : selectedYear;
-    const prevMonthData = data.filter((item) => {
-      const itemDate = new Date(item.tanggal);
-      if (isNaN(itemDate.getTime())) return false;
-      return (
-        itemDate.getMonth() === prevMonth && itemDate.getFullYear() === prevYear
+    // Get previous month data for comparison (only if specific month/year selected)
+    let growthPercent = 0;
+    let prevTotalTonase = 0;
+    
+    if (selectedMonth !== "all" && selectedYear !== "all") {
+      const prevMonth = selectedMonth === 0 ? 11 : selectedMonth - 1;
+      const prevYear = selectedMonth === 0 ? (selectedYear as number) - 1 : selectedYear;
+      const prevMonthData = data.filter((item) => {
+        const itemDate = new Date(item.tanggal);
+        if (isNaN(itemDate.getTime())) return false;
+        return (
+          itemDate.getMonth() === prevMonth && itemDate.getFullYear() === prevYear
+        );
+      });
+      prevTotalTonase = prevMonthData.reduce(
+        (sum, item) => sum + getTonaseValue(item),
+        0
       );
-    });
-    const prevTotalTonase = prevMonthData.reduce(
-      (sum, item) => sum + getTonaseValue(item),
-      0
-    );
 
-    const growthPercent =
-      prevTotalTonase > 0
-        ? ((totalTonase - prevTotalTonase) / prevTotalTonase) * 100
-        : 0;
+      growthPercent =
+        prevTotalTonase > 0
+          ? ((totalTonase - prevTotalTonase) / prevTotalTonase) * 100
+          : 0;
+    }
 
     return {
       totalTonase,
@@ -469,20 +473,30 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
 
   // Navigation functions for month
   const goToPrevMonth = () => {
-    if (selectedMonth === 0) {
+    if (selectedMonth === "all" || selectedYear === "all") {
+      // If "all" is selected, start from current month/year
+      const now = new Date();
+      setSelectedMonth(now.getMonth() === 0 ? 11 : now.getMonth() - 1);
+      setSelectedYear(now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear());
+    } else if (selectedMonth === 0) {
       setSelectedMonth(11);
-      setSelectedYear((y) => y - 1);
+      setSelectedYear((y) => (y as number) - 1);
     } else {
-      setSelectedMonth((m) => m - 1);
+      setSelectedMonth((m) => (m as number) - 1);
     }
   };
 
   const goToNextMonth = () => {
-    if (selectedMonth === 11) {
+    if (selectedMonth === "all" || selectedYear === "all") {
+      // If "all" is selected, start from current month/year
+      const now = new Date();
+      setSelectedMonth(now.getMonth() === 11 ? 0 : now.getMonth() + 1);
+      setSelectedYear(now.getMonth() === 11 ? now.getFullYear() + 1 : now.getFullYear());
+    } else if (selectedMonth === 11) {
       setSelectedMonth(0);
-      setSelectedYear((y) => y + 1);
+      setSelectedYear((y) => (y as number) + 1);
     } else {
-      setSelectedMonth((m) => m + 1);
+      setSelectedMonth((m) => (m as number) + 1);
     }
   };
 
@@ -807,7 +821,7 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
                     <ChevronLeft className="h-5 w-5 text-white" />
                   </button>
                   <h2 className="text-2xl font-bold text-white min-w-[200px] text-center">
-                    {MONTH_NAMES[selectedMonth]} {selectedYear}
+                    {selectedMonth === "all" ? "Semua Bulan" : MONTH_NAMES[selectedMonth]} {selectedYear === "all" ? "Semua Tahun" : selectedYear}
                   </h2>
                   <button
                     onClick={goToNextMonth}
@@ -821,13 +835,28 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
 
             <div className="flex items-center gap-3">
               <Select
+                value={selectedMonth.toString()}
+                onChange={(e) => setSelectedMonth(e.target.value === "all" ? "all" : Number(e.target.value))}
+                options={[
+                  { value: "all", label: "Semua Bulan" },
+                  ...MONTH_NAMES.map((name, index) => ({
+                    value: index.toString(),
+                    label: name,
+                  })),
+                ]}
+                className="bg-white/10 border-white/20 text-white min-w-[130px] [&>option]:text-dark-900"
+              />
+              <Select
                 value={selectedYear.toString()}
-                onChange={(e) => setSelectedYear(Number(e.target.value))}
-                options={availableYears.map((y) => ({
-                  value: y.toString(),
-                  label: y.toString(),
-                }))}
-                className="bg-white/10 border-white/20 text-white min-w-[100px] [&>option]:text-dark-900"
+                onChange={(e) => setSelectedYear(e.target.value === "all" ? "all" : Number(e.target.value))}
+                options={[
+                  { value: "all", label: "Semua Tahun" },
+                  ...availableYears.map((y) => ({
+                    value: y.toString(),
+                    label: y.toString(),
+                  })),
+                ]}
+                className="bg-white/10 border-white/20 text-white min-w-[130px] [&>option]:text-dark-900"
               />
             </div>
           </div>
