@@ -68,6 +68,9 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState<ProduksiNPK>(initialFormState);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedYear, setSelectedYear] = useState<number>(
+    new Date().getFullYear()
+  );
 
   // Approval states
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
@@ -142,17 +145,39 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
     "November",
     "Desember",
   ];
+  // Get available years from data
+  const availableYears = useMemo(() => {
+    const years = [
+      ...new Set(
+        data.map((item) => {
+          const date = new Date(item.tanggal);
+          return isNaN(date.getTime())
+            ? new Date().getFullYear()
+            : date.getFullYear();
+        })
+      ),
+    ].sort((a, b) => b - a);
+    if (years.length === 0) years.push(new Date().getFullYear());
+    return years;
+  }, [data]);
+
+  // Filter data by selected year for summary cards
+  const filteredByYear = useMemo(() => {
+    return data.filter((item) => {
+      const itemDate = new Date(item.tanggal);
+      return (
+        !isNaN(itemDate.getTime()) && itemDate.getFullYear() === selectedYear
+      );
+    });
+  }, [data, selectedYear]);
+
   const currentMonthProduksi = useMemo(() => {
     const now = new Date();
     const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
 
-    const thisMonthData = data.filter((item) => {
+    const thisMonthData = filteredByYear.filter((item) => {
       const itemDate = new Date(item.tanggal);
-      return (
-        itemDate.getMonth() === currentMonth &&
-        itemDate.getFullYear() === currentYear
-      );
+      return itemDate.getMonth() === currentMonth;
     });
 
     const totalOnspek = thisMonthData.reduce(
@@ -170,13 +195,13 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
 
     return {
       monthName: MONTH_NAMES[currentMonth],
-      year: currentYear,
+      year: selectedYear,
       totalOnspek,
       totalOffspek,
       total,
       entryCount: thisMonthData.length,
     };
-  }, [data]);
+  }, [filteredByYear, selectedYear]);
 
   // Auto calculate totals
   useEffect(() => {
@@ -501,7 +526,18 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
             </div>
           </div>
 
-          <div className="flex gap-4 md:gap-6">
+          <div className="flex items-center gap-4 md:gap-6">
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              className="bg-white/20 border-white/30 text-white rounded-lg px-3 py-2 text-sm backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white/50"
+            >
+              {availableYears.map((y) => (
+                <option key={y} value={y} className="text-dark-900">
+                  {y}
+                </option>
+              ))}
+            </select>
             <div className="bg-white/20 rounded-lg px-4 py-2 backdrop-blur-sm">
               <p className="text-white/80 text-xs uppercase">Onspek</p>
               <p className="text-xl font-bold">
@@ -530,18 +566,25 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">Total Onspek</p>
+          <p className="text-sm text-dark-500 dark:text-dark-400">
+            Total Onspek ({selectedYear})
+          </p>
           <p className="text-2xl font-bold text-primary-600">
             {formatNumber(
-              data.reduce((sum, item) => sum + parseNumber(item.totalOnspek), 0)
+              filteredByYear.reduce(
+                (sum, item) => sum + parseNumber(item.totalOnspek),
+                0
+              )
             )}
           </p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">Total Offspek</p>
+          <p className="text-sm text-dark-500 dark:text-dark-400">
+            Total Offspek ({selectedYear})
+          </p>
           <p className="text-2xl font-bold text-red-600">
             {formatNumber(
-              data.reduce(
+              filteredByYear.reduce(
                 (sum, item) => sum + parseNumber(item.totalOffspek),
                 0
               )
@@ -549,16 +592,25 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
           </p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">Total Produksi</p>
+          <p className="text-sm text-dark-500 dark:text-dark-400">
+            Total Produksi ({selectedYear})
+          </p>
           <p className="text-2xl font-bold text-dark-900 dark:text-white">
             {formatNumber(
-              data.reduce((sum, item) => sum + parseNumber(item.total), 0)
+              filteredByYear.reduce(
+                (sum, item) => sum + parseNumber(item.total),
+                0
+              )
             )}
           </p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">Jumlah Entry</p>
-          <p className="text-2xl font-bold text-dark-900 dark:text-white">{data.length}</p>
+          <p className="text-sm text-dark-500 dark:text-dark-400">
+            Jumlah Entry ({selectedYear})
+          </p>
+          <p className="text-2xl font-bold text-dark-900 dark:text-white">
+            {filteredByYear.length}
+          </p>
         </Card>
       </div>
 
@@ -748,13 +800,17 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
               </h4>
               <div className="p-4 bg-dark-50 rounded-xl">
                 <div className="flex justify-between mb-2">
-                  <span className="text-dark-500 dark:text-dark-400">Total Onspek:</span>
+                  <span className="text-dark-500 dark:text-dark-400">
+                    Total Onspek:
+                  </span>
                   <span className="font-semibold text-primary-600">
                     {formatNumber(form.totalOnspek || 0)} Ton
                   </span>
                 </div>
                 <div className="flex justify-between mb-2">
-                  <span className="text-dark-500 dark:text-dark-400">Total Offspek:</span>
+                  <span className="text-dark-500 dark:text-dark-400">
+                    Total Offspek:
+                  </span>
                   <span className="font-semibold text-red-600">
                     {formatNumber(form.totalOffspek || 0)} Ton
                   </span>

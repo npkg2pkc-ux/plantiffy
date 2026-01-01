@@ -320,12 +320,14 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
     return data.filter((item) => {
       const itemDate = new Date(item.tanggal);
       if (isNaN(itemDate.getTime())) return false;
-      
+
       // If "all" is selected for year, show all years
-      const yearMatches = selectedYear === "all" || itemDate.getFullYear() === selectedYear;
+      const yearMatches =
+        selectedYear === "all" || itemDate.getFullYear() === selectedYear;
       // If "all" is selected for month, show all months
-      const monthMatches = selectedMonth === "all" || itemDate.getMonth() === selectedMonth;
-      
+      const monthMatches =
+        selectedMonth === "all" || itemDate.getMonth() === selectedMonth;
+
       return yearMatches && monthMatches;
     });
   }, [data, selectedMonth, selectedYear]);
@@ -363,15 +365,17 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
     // Get previous month data for comparison (only if specific month/year selected)
     let growthPercent = 0;
     let prevTotalTonase = 0;
-    
+
     if (selectedMonth !== "all" && selectedYear !== "all") {
       const prevMonth = selectedMonth === 0 ? 11 : selectedMonth - 1;
-      const prevYear = selectedMonth === 0 ? (selectedYear as number) - 1 : selectedYear;
+      const prevYear =
+        selectedMonth === 0 ? (selectedYear as number) - 1 : selectedYear;
       const prevMonthData = data.filter((item) => {
         const itemDate = new Date(item.tanggal);
         if (isNaN(itemDate.getTime())) return false;
         return (
-          itemDate.getMonth() === prevMonth && itemDate.getFullYear() === prevYear
+          itemDate.getMonth() === prevMonth &&
+          itemDate.getFullYear() === prevYear
         );
       });
       prevTotalTonase = prevMonthData.reduce(
@@ -477,7 +481,9 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
       // If "all" is selected, start from current month/year
       const now = new Date();
       setSelectedMonth(now.getMonth() === 0 ? 11 : now.getMonth() - 1);
-      setSelectedYear(now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear());
+      setSelectedYear(
+        now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
+      );
     } else if (selectedMonth === 0) {
       setSelectedMonth(11);
       setSelectedYear((y) => (y as number) - 1);
@@ -491,7 +497,9 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
       // If "all" is selected, start from current month/year
       const now = new Date();
       setSelectedMonth(now.getMonth() === 11 ? 0 : now.getMonth() + 1);
-      setSelectedYear(now.getMonth() === 11 ? now.getFullYear() + 1 : now.getFullYear());
+      setSelectedYear(
+        now.getMonth() === 11 ? now.getFullYear() + 1 : now.getFullYear()
+      );
     } else if (selectedMonth === 11) {
       setSelectedMonth(0);
       setSelectedYear((y) => (y as number) + 1);
@@ -821,7 +829,10 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
                     <ChevronLeft className="h-5 w-5 text-white" />
                   </button>
                   <h2 className="text-2xl font-bold text-white min-w-[200px] text-center">
-                    {selectedMonth === "all" ? "Semua Bulan" : MONTH_NAMES[selectedMonth]} {selectedYear === "all" ? "Semua Tahun" : selectedYear}
+                    {selectedMonth === "all"
+                      ? "Semua Bulan"
+                      : MONTH_NAMES[selectedMonth]}{" "}
+                    {selectedYear === "all" ? "Semua Tahun" : selectedYear}
                   </h2>
                   <button
                     onClick={goToNextMonth}
@@ -836,7 +847,11 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
             <div className="flex items-center gap-3">
               <Select
                 value={selectedMonth.toString()}
-                onChange={(e) => setSelectedMonth(e.target.value === "all" ? "all" : Number(e.target.value))}
+                onChange={(e) =>
+                  setSelectedMonth(
+                    e.target.value === "all" ? "all" : Number(e.target.value)
+                  )
+                }
                 options={[
                   { value: "all", label: "Semua Bulan" },
                   ...MONTH_NAMES.map((name, index) => ({
@@ -848,7 +863,11 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
               />
               <Select
                 value={selectedYear.toString()}
-                onChange={(e) => setSelectedYear(e.target.value === "all" ? "all" : Number(e.target.value))}
+                onChange={(e) =>
+                  setSelectedYear(
+                    e.target.value === "all" ? "all" : Number(e.target.value)
+                  )
+                }
                 options={[
                   { value: "all", label: "Semua Tahun" },
                   ...availableYears.map((y) => ({
@@ -1135,7 +1154,11 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
                     Detail Formula: {selectedFormula}
                   </CardTitle>
                   <p className="text-white/70 text-sm mt-1">
-                    Data untuk bulan {MONTH_NAMES[selectedMonth]} {selectedYear}
+                    Data untuk{" "}
+                    {selectedMonth === "all"
+                      ? "semua bulan"
+                      : `bulan ${MONTH_NAMES[selectedMonth as number]}`}{" "}
+                    {selectedYear === "all" ? "semua tahun" : selectedYear}
                   </p>
                 </div>
               </div>
@@ -1206,7 +1229,7 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <CardTitle>
-                Data {pageTitle} - {MONTH_NAMES[selectedMonth]} {selectedYear}
+                Data {pageTitle} - Semua Data
                 {selectedFormula !== "all" && (
                   <Badge variant="primary" className="ml-2">
                     {selectedFormula}
@@ -1214,7 +1237,7 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
                 )}
               </CardTitle>
               <p className="text-sm text-dark-500 dark:text-dark-400 mt-1">
-                {filteredData.length} data ditemukan
+                {data.length} data total
               </p>
             </div>
             <div className="relative">
@@ -1230,11 +1253,14 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
           </div>
         </CardHeader>
         <DataTable
-          data={filteredData.filter(
+          data={data.filter(
             (item) =>
-              item.tanggal?.includes(searchTerm) ||
-              item.formula?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              item.kategori?.toLowerCase().includes(searchTerm.toLowerCase())
+              (selectedFormula === "all" || item.formula === selectedFormula) &&
+              (item.tanggal?.includes(searchTerm) ||
+                item.formula
+                  ?.toLowerCase()
+                  .includes(searchTerm.toLowerCase()) ||
+                item.kategori?.toLowerCase().includes(searchTerm.toLowerCase()))
           )}
           columns={columns}
           loading={loading}
