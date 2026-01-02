@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -1188,25 +1188,34 @@ const DashboardPage = () => {
   }, []);
 
   // Filter data by plant - use effectivePlantFilter
-  const filterByPlant = <T extends { _plant?: PlantType }>(data: T[]): T[] => {
-    if (effectivePlantFilter === "ALL") return data;
-    return data.filter((item) => item._plant === effectivePlantFilter);
-  };
+  const filterByPlant = useCallback(
+    <T extends { _plant?: PlantType }>(data: T[]): T[] => {
+      if (effectivePlantFilter === "ALL") return data;
+      return data.filter((item) => item._plant === effectivePlantFilter);
+    },
+    [effectivePlantFilter]
+  );
 
   // Filter RKAP by plant (uses 'plant' field instead of '_plant')
-  const filterRKAPByPlant = (data: RKAP[]): RKAP[] => {
-    if (effectivePlantFilter === "ALL") return data;
-    return data.filter((item) => item.plant === effectivePlantFilter);
-  };
+  const filterRKAPByPlant = useCallback(
+    (data: RKAP[]): RKAP[] => {
+      if (effectivePlantFilter === "ALL") return data;
+      return data.filter((item) => item.plant === effectivePlantFilter);
+    },
+    [effectivePlantFilter]
+  );
 
   // Filter data by year
-  const filterByYear = <T extends { tanggal?: string }>(data: T[]): T[] => {
-    return data.filter((item) => {
-      if (!item.tanggal) return false;
-      const year = new Date(item.tanggal).getFullYear();
-      return year === dashboardYear;
-    });
-  };
+  const filterByYear = useCallback(
+    <T extends { tanggal?: string }>(data: T[]): T[] => {
+      return data.filter((item) => {
+        if (!item.tanggal) return false;
+        const year = new Date(item.tanggal).getFullYear();
+        return year === dashboardYear;
+      });
+    },
+    [dashboardYear]
+  );
 
   // Filtered data
   const filteredData = useMemo(() => {
@@ -1235,16 +1244,25 @@ const DashboardPage = () => {
         (item) => Number(item.tahun) === dashboardYear
       ),
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dashboardData, effectivePlantFilter, dashboardYear]);
+  }, [
+    dashboardData,
+    filterByPlant,
+    filterByYear,
+    filterRKAPByPlant,
+    dashboardYear,
+  ]);
 
   // Calculate metrics
   const metrics = useMemo(() => {
-    // Total produksi NPK (sum of total field or calculate from shifts)
+    // Total produksi NPK - use total field if available (not undefined/null), otherwise calculate from shifts
     const totalProduksiNPK = filteredData.produksiNPK.reduce((sum, item) => {
-      const total =
-        parseNumber(item.total) ||
-        parseNumber(item.shiftMalamOnspek) +
+      // Check if total field exists and is a valid value (not undefined/null)
+      // If total is 0, it's still valid and should be used
+      const hasTotal =
+        item.total !== undefined && item.total !== null && item.total !== "";
+      const total = hasTotal
+        ? parseNumber(item.total)
+        : parseNumber(item.shiftMalamOnspek) +
           parseNumber(item.shiftMalamOffspek) +
           parseNumber(item.shiftPagiOnspek) +
           parseNumber(item.shiftPagiOffspek) +
@@ -1254,20 +1272,30 @@ const DashboardPage = () => {
     }, 0);
 
     const totalOnspek = filteredData.produksiNPK.reduce((sum, item) => {
+      const hasTotal =
+        item.totalOnspek !== undefined &&
+        item.totalOnspek !== null &&
+        item.totalOnspek !== "";
       return (
         sum +
-        (parseNumber(item.totalOnspek) ||
-          parseNumber(item.shiftMalamOnspek) +
+        (hasTotal
+          ? parseNumber(item.totalOnspek)
+          : parseNumber(item.shiftMalamOnspek) +
             parseNumber(item.shiftPagiOnspek) +
             parseNumber(item.shiftSoreOnspek))
       );
     }, 0);
 
     const totalOffspek = filteredData.produksiNPK.reduce((sum, item) => {
+      const hasTotal =
+        item.totalOffspek !== undefined &&
+        item.totalOffspek !== null &&
+        item.totalOffspek !== "";
       return (
         sum +
-        (parseNumber(item.totalOffspek) ||
-          parseNumber(item.shiftMalamOffspek) +
+        (hasTotal
+          ? parseNumber(item.totalOffspek)
+          : parseNumber(item.shiftMalamOffspek) +
             parseNumber(item.shiftPagiOffspek) +
             parseNumber(item.shiftSoreOffspek))
       );
@@ -1287,13 +1315,17 @@ const DashboardPage = () => {
 
     // Total RKAP target - sum all monthly targets from all matching RKAP records
     const totalRKAP = filteredData.rkap.reduce((total, rkapItem) => {
-      const rkapTotal =
-        parseNumber(rkapItem.total) ||
-        MONTH_KEY.reduce(
-          (sum, monthKey) =>
-            sum + parseNumber(rkapItem[monthKey as keyof RKAP]),
-          0
-        );
+      const hasTotal =
+        rkapItem.total !== undefined &&
+        rkapItem.total !== null &&
+        rkapItem.total !== "";
+      const rkapTotal = hasTotal
+        ? parseNumber(rkapItem.total)
+        : MONTH_KEY.reduce(
+            (sum, monthKey) =>
+              sum + parseNumber(rkapItem[monthKey as keyof RKAP]),
+            0
+          );
       return total + rkapTotal;
     }, 0);
 
@@ -1387,10 +1419,13 @@ const DashboardPage = () => {
       });
 
       const produksi = monthProduksi.reduce((sum, item) => {
+        const hasTotal =
+          item.total !== undefined && item.total !== null && item.total !== "";
         return (
           sum +
-          (parseNumber(item.total) ||
-            parseNumber(item.shiftMalamOnspek) +
+          (hasTotal
+            ? parseNumber(item.total)
+            : parseNumber(item.shiftMalamOnspek) +
               parseNumber(item.shiftMalamOffspek) +
               parseNumber(item.shiftPagiOnspek) +
               parseNumber(item.shiftPagiOffspek) +
@@ -1400,20 +1435,30 @@ const DashboardPage = () => {
       }, 0);
 
       const onspek = monthProduksi.reduce((sum, item) => {
+        const hasTotal =
+          item.totalOnspek !== undefined &&
+          item.totalOnspek !== null &&
+          item.totalOnspek !== "";
         return (
           sum +
-          (parseNumber(item.totalOnspek) ||
-            parseNumber(item.shiftMalamOnspek) +
+          (hasTotal
+            ? parseNumber(item.totalOnspek)
+            : parseNumber(item.shiftMalamOnspek) +
               parseNumber(item.shiftPagiOnspek) +
               parseNumber(item.shiftSoreOnspek))
         );
       }, 0);
 
       const offspek = monthProduksi.reduce((sum, item) => {
+        const hasTotal =
+          item.totalOffspek !== undefined &&
+          item.totalOffspek !== null &&
+          item.totalOffspek !== "";
         return (
           sum +
-          (parseNumber(item.totalOffspek) ||
-            parseNumber(item.shiftMalamOffspek) +
+          (hasTotal
+            ? parseNumber(item.totalOffspek)
+            : parseNumber(item.shiftMalamOffspek) +
               parseNumber(item.shiftPagiOffspek) +
               parseNumber(item.shiftSoreOffspek))
         );
@@ -1444,10 +1489,13 @@ const DashboardPage = () => {
     });
 
     const npkProduksi = npkThisMonth.reduce((sum, item) => {
+      const hasTotal =
+        item.total !== undefined && item.total !== null && item.total !== "";
       return (
         sum +
-        (parseNumber(item.total) ||
-          parseNumber(item.shiftMalamOnspek) +
+        (hasTotal
+          ? parseNumber(item.total)
+          : parseNumber(item.shiftMalamOnspek) +
             parseNumber(item.shiftMalamOffspek) +
             parseNumber(item.shiftPagiOnspek) +
             parseNumber(item.shiftPagiOffspek) +
@@ -1457,20 +1505,30 @@ const DashboardPage = () => {
     }, 0);
 
     const npkOnspek = npkThisMonth.reduce((sum, item) => {
+      const hasTotal =
+        item.totalOnspek !== undefined &&
+        item.totalOnspek !== null &&
+        item.totalOnspek !== "";
       return (
         sum +
-        (parseNumber(item.totalOnspek) ||
-          parseNumber(item.shiftMalamOnspek) +
+        (hasTotal
+          ? parseNumber(item.totalOnspek)
+          : parseNumber(item.shiftMalamOnspek) +
             parseNumber(item.shiftPagiOnspek) +
             parseNumber(item.shiftSoreOnspek))
       );
     }, 0);
 
     const npkOffspek = npkThisMonth.reduce((sum, item) => {
+      const hasTotal =
+        item.totalOffspek !== undefined &&
+        item.totalOffspek !== null &&
+        item.totalOffspek !== "";
       return (
         sum +
-        (parseNumber(item.totalOffspek) ||
-          parseNumber(item.shiftMalamOffspek) +
+        (hasTotal
+          ? parseNumber(item.totalOffspek)
+          : parseNumber(item.shiftMalamOffspek) +
             parseNumber(item.shiftPagiOffspek) +
             parseNumber(item.shiftSoreOffspek))
       );
