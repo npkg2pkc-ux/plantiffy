@@ -288,3 +288,19 @@
     font-size: 16px !important;
   }
 }
+
+/* Force Desktop View Mode */
+.force-desktop-view {
+  /* Scale the viewport to show desktop view on mobile */
+  min-width: 1024px;
+  overflow-x: auto;
+}
+
+/* Ensure force-desktop class enables scrolling */
+html.force-desktop {
+  overflow-x: auto;
+}
+
+html.force-desktop body {
+  min-width: 1024px;
+}

@@ -21,6 +21,10 @@ import {
   Moon,
   Users,
   Circle,
+  Monitor,
+  Smartphone,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import {
   cn,
@@ -398,22 +402,23 @@ const Sidebar = () => {
     toggleSidebarCollapse,
     sidebarOpen,
     toggleSidebar,
+    forceDesktopView,
   } = useUIStore();
   const [isMobile, setIsMobile] = useState(false);
 
-  // Detect mobile screen
+  // Detect mobile screen - but respect forceDesktopView
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024);
+      setIsMobile(window.innerWidth < 1024 && !forceDesktopView);
     };
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+  }, [forceDesktopView]);
 
   // Close sidebar when clicking on link in mobile
   const handleLinkClick = () => {
-    if (isMobile && sidebarOpen) {
+    if (isMobile && sidebarOpen && !forceDesktopView) {
       toggleSidebar();
     }
   };
@@ -539,12 +544,15 @@ const Sidebar = () => {
     return location.pathname === item.path;
   };
 
+  // Effective mobile state - forceDesktopView overrides mobile behavior
+  const effectiveMobile = isMobile && !forceDesktopView;
+
   return (
     <>
       {/* Mobile Overlay */}
-      {isMobile && sidebarOpen && (
+      {effectiveMobile && sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/50 z-40"
           onClick={toggleSidebar}
         />
       )}
@@ -552,12 +560,12 @@ const Sidebar = () => {
       <aside
         className={cn(
           "fixed left-0 top-0 z-50 h-screen bg-white dark:bg-dark-800 border-r border-dark-100 dark:border-dark-700 transition-all duration-300",
-          // Mobile: hidden by default, show when sidebarOpen
-          isMobile
+          // Mobile: hidden by default, show when sidebarOpen (unless forceDesktopView)
+          effectiveMobile
             ? sidebarOpen
               ? "translate-x-0 w-64"
               : "-translate-x-full w-64"
-            : // Desktop: collapse behavior
+            : // Desktop or forceDesktopView: collapse behavior
             sidebarCollapsed
             ? "w-20"
             : "w-64"
@@ -565,7 +573,7 @@ const Sidebar = () => {
       >
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-dark-100 dark:border-dark-700">
-          {(!sidebarCollapsed || isMobile) && (
+          {(!sidebarCollapsed || effectiveMobile) && (
             <Link
               to="/dashboard"
               className="flex items-center gap-3"
@@ -581,7 +589,7 @@ const Sidebar = () => {
             </Link>
           )}
           {/* Desktop: collapse toggle */}
-          {!isMobile && (
+          {!effectiveMobile && (
             <button
               onClick={toggleSidebarCollapse}
               className="p-2 text-dark-500 dark:text-dark-400 hover:bg-dark-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
@@ -594,7 +602,7 @@ const Sidebar = () => {
             </button>
           )}
           {/* Mobile: close button */}
-          {isMobile && (
+          {effectiveMobile && (
             <button
               onClick={toggleSidebar}
               className="p-2 text-dark-500 dark:text-dark-400 hover:bg-dark-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
@@ -612,7 +620,8 @@ const Sidebar = () => {
                 <>
                   <button
                     onClick={() =>
-                      (!sidebarCollapsed || isMobile) && toggleExpand(item.name)
+                      (!sidebarCollapsed || effectiveMobile) &&
+                      toggleExpand(item.name)
                     }
                     className={cn(
                       "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200",
@@ -622,7 +631,7 @@ const Sidebar = () => {
                     )}
                   >
                     {item.icon}
-                    {(!sidebarCollapsed || isMobile) && (
+                    {(!sidebarCollapsed || effectiveMobile) && (
                       <>
                         <span className="flex-1 text-left">{item.name}</span>
                         <ChevronDown
@@ -634,7 +643,7 @@ const Sidebar = () => {
                       </>
                     )}
                   </button>
-                  {(!sidebarCollapsed || isMobile) && (
+                  {(!sidebarCollapsed || effectiveMobile) && (
                     <AnimatePresence>
                       {expandedItems.includes(item.name) && (
                         <motion.div
@@ -678,7 +687,9 @@ const Sidebar = () => {
                   )}
                 >
                   {item.icon}
-                  {(!sidebarCollapsed || isMobile) && <span>{item.name}</span>}
+                  {(!sidebarCollapsed || effectiveMobile) && (
+                    <span>{item.name}</span>
+                  )}
                 </Link>
               )}
             </div>
@@ -692,8 +703,14 @@ const Sidebar = () => {
 const Header = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
-  const { sidebarCollapsed, toggleSidebar, darkMode, toggleDarkMode } =
-    useUIStore();
+  const {
+    sidebarCollapsed,
+    toggleSidebar,
+    darkMode,
+    toggleDarkMode,
+    forceDesktopView,
+    toggleForceDesktopView,
+  } = useUIStore();
   const {
     notifications,
     unreadCount,
@@ -711,6 +728,22 @@ const Header = () => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+
+  // Detect if user is on mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      const isMobile =
+        window.innerWidth < 1024 ||
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent
+        );
+      setIsMobileDevice(isMobile);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Handle mark notification as read - also update backend.
   const handleMarkAsRead = async (notifId: string) => {
@@ -872,24 +905,46 @@ const Header = () => {
       className={cn(
         "fixed top-8 right-0 z-30 h-16 bg-white/80 dark:bg-dark-800/80 backdrop-blur-md border-b border-dark-100 dark:border-dark-700 transition-all duration-300",
         // Mobile: full width (left-0), Desktop: depends on sidebar
-        "left-0 lg:left-64",
-        sidebarCollapsed && "lg:left-20"
+        forceDesktopView ? "left-64" : "left-0 lg:left-64",
+        sidebarCollapsed && (forceDesktopView ? "left-20" : "lg:left-20")
       )}
     >
       <div className="h-full px-4 lg:px-6 flex items-center justify-between">
-        {/* Mobile menu button */}
-        <button
-          onClick={toggleSidebar}
-          className="lg:hidden p-2 text-dark-500 hover:bg-dark-100 dark:text-dark-300 dark:hover:bg-dark-700 rounded-lg"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
+        {/* Mobile menu button - hide if forceDesktopView */}
+        {!forceDesktopView && (
+          <button
+            onClick={toggleSidebar}
+            className="lg:hidden p-2 text-dark-500 hover:bg-dark-100 dark:text-dark-300 dark:hover:bg-dark-700 rounded-lg"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        )}
 
         {/* Search placeholder / Logo for mobile */}
-        <div className="hidden lg:block" />
+        <div className={forceDesktopView ? "block" : "hidden lg:block"} />
 
         {/* Right side */}
         <div className="flex items-center gap-1 sm:gap-2">
+          {/* Desktop/Mobile View Toggle - Only show on mobile devices */}
+          {isMobileDevice && (
+            <button
+              onClick={toggleForceDesktopView}
+              className={cn(
+                "p-2 rounded-lg transition-colors",
+                forceDesktopView
+                  ? "bg-primary-100 text-primary-600 dark:bg-primary-900/50 dark:text-primary-400"
+                  : "text-dark-500 hover:bg-dark-100 dark:text-dark-300 dark:hover:bg-dark-700"
+              )}
+              title={forceDesktopView ? "Tampilan HP" : "Tampilan Desktop"}
+            >
+              {forceDesktopView ? (
+                <Smartphone className="h-5 w-5" />
+              ) : (
+                <Monitor className="h-5 w-5" />
+              )}
+            </button>
+          )}
+
           {/* Dark Mode Toggle */}
           <button
             onClick={toggleDarkMode}
@@ -1089,6 +1144,35 @@ const ChatPanel = () => {
   const [isUserScrolling, setIsUserScrolling] = useState(false);
   const prevMessagesLengthRef = useRef(0);
 
+  // Context menu state for edit/delete
+  const [contextMenu, setContextMenu] = useState<{
+    visible: boolean;
+    x: number;
+    y: number;
+    messageId: string;
+    messageText: string;
+  } | null>(null);
+  const [editingMessage, setEditingMessage] = useState<{
+    id: string;
+    text: string;
+  } | null>(null);
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const contextMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close context menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        contextMenuRef.current &&
+        !contextMenuRef.current.contains(e.target as Node)
+      ) {
+        setContextMenu(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   // Check if user is near the bottom of chat
   const isNearBottom = () => {
     const container = messagesContainerRef.current;
@@ -1180,6 +1264,93 @@ const ChatPanel = () => {
     }
   };
 
+  // Handle context menu for right-click (desktop)
+  const handleContextMenu = (e: React.MouseEvent, msg: any, isOwn: boolean) => {
+    if (!isOwn) return; // Only allow context menu for own messages
+    e.preventDefault();
+    setContextMenu({
+      visible: true,
+      x: e.clientX,
+      y: e.clientY,
+      messageId: msg.id,
+      messageText: msg.message,
+    });
+  };
+
+  // Handle long press for mobile
+  const handleTouchStart = (msg: any, isOwn: boolean) => {
+    if (!isOwn) return;
+    longPressTimerRef.current = setTimeout(() => {
+      // Use fixed position at center-bottom of screen for mobile
+      setContextMenu({
+        visible: true,
+        x: window.innerWidth / 2,
+        y: window.innerHeight - 200,
+        messageId: msg.id,
+        messageText: msg.message,
+      });
+    }, 500); // 500ms long press
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  // Handle edit message
+  const handleEditMessage = async () => {
+    if (!editingMessage || !editingMessage.text.trim()) return;
+
+    try {
+      const { updateData, SHEETS } = await import("@/services/api");
+      await updateData(SHEETS.CHAT_MESSAGES, {
+        id: editingMessage.id,
+        message: editingMessage.text.trim(),
+        edited: true,
+      });
+
+      // Update local state
+      setMessages(
+        messages.map((msg) =>
+          msg.id === editingMessage.id
+            ? { ...msg, message: editingMessage.text.trim(), edited: true }
+            : msg
+        )
+      );
+
+      setEditingMessage(null);
+    } catch (error) {
+      console.error("Error editing message:", error);
+    }
+  };
+
+  // Handle delete message
+  const handleDeleteMessage = async (messageId: string) => {
+    try {
+      const { deleteData, SHEETS } = await import("@/services/api");
+      await deleteData(SHEETS.CHAT_MESSAGES, messageId);
+
+      // Update local state
+      setMessages(messages.filter((msg) => msg.id !== messageId));
+      setContextMenu(null);
+    } catch (error) {
+      console.error("Error deleting message:", error);
+    }
+  };
+
+  // Start editing
+  const startEditing = () => {
+    if (contextMenu) {
+      setEditingMessage({
+        id: contextMenu.messageId,
+        text: contextMenu.messageText,
+      });
+      setContextMenu(null);
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !user) return;
 
@@ -1237,7 +1408,15 @@ const ChatPanel = () => {
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      if (editingMessage) {
+        handleEditMessage();
+      } else {
+        handleSendMessage();
+      }
+    }
+    // Cancel editing with Escape
+    if (e.key === "Escape" && editingMessage) {
+      setEditingMessage(null);
     }
   };
 
@@ -1248,7 +1427,7 @@ const ChatPanel = () => {
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="fixed left-4 bottom-4 z-50 w-80 bg-white rounded-2xl shadow-2xl border border-dark-100 overflow-hidden"
+      className="fixed left-4 bottom-4 z-50 w-80 bg-white dark:bg-dark-800 rounded-2xl shadow-2xl border border-dark-100 dark:border-dark-700 overflow-hidden"
     >
       {/* Header */}
       <div className="px-4 py-3 bg-gradient-to-r from-primary-600 to-primary-500 text-white flex items-center justify-between">
@@ -1264,11 +1443,38 @@ const ChatPanel = () => {
         </button>
       </div>
 
+      {/* Context Menu */}
+      {contextMenu?.visible && (
+        <div
+          ref={contextMenuRef}
+          className="fixed z-[100] bg-white dark:bg-dark-800 rounded-xl shadow-xl border border-dark-200 dark:border-dark-600 py-2 min-w-[140px]"
+          style={{
+            left: Math.min(contextMenu.x, window.innerWidth - 160),
+            top: Math.min(contextMenu.y, window.innerHeight - 100),
+          }}
+        >
+          <button
+            onClick={startEditing}
+            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-dark-700 dark:text-dark-200 hover:bg-dark-100 dark:hover:bg-dark-700 transition-colors"
+          >
+            <Pencil className="h-4 w-4" />
+            Edit
+          </button>
+          <button
+            onClick={() => handleDeleteMessage(contextMenu.messageId)}
+            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+          >
+            <Trash2 className="h-4 w-4" />
+            Hapus
+          </button>
+        </div>
+      )}
+
       {/* Messages */}
       <div
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className="h-80 overflow-y-auto p-4 space-y-3 bg-dark-50"
+        className="h-80 overflow-y-auto p-4 space-y-3 bg-dark-50 dark:bg-dark-900"
       >
         {messages.length === 0 ? (
           <div className="text-center text-dark-400 py-8">
@@ -1286,18 +1492,24 @@ const ChatPanel = () => {
                 className={cn("flex", isOwn ? "justify-end" : "justify-start")}
               >
                 <div
+                  onContextMenu={(e) => handleContextMenu(e, msg, isOwn)}
+                  onTouchStart={() => handleTouchStart(msg, isOwn)}
+                  onTouchEnd={handleTouchEnd}
+                  onTouchMove={handleTouchEnd}
                   className={cn(
-                    "max-w-[80%] rounded-2xl px-4 py-2",
+                    "max-w-[80%] rounded-2xl px-4 py-2 select-none",
                     isOwn
-                      ? "bg-primary-500 text-white rounded-br-md"
-                      : "bg-white text-dark-700 rounded-bl-md shadow-sm"
+                      ? "bg-primary-500 text-white rounded-br-md cursor-pointer"
+                      : "bg-white dark:bg-dark-800 text-dark-700 dark:text-dark-200 rounded-bl-md shadow-sm"
                   )}
                 >
                   {/* Always show sender name and role */}
                   <p
                     className={cn(
                       "text-xs font-medium mb-1",
-                      isOwn ? "text-white/90" : "text-primary-600"
+                      isOwn
+                        ? "text-white/90"
+                        : "text-primary-600 dark:text-primary-400"
                     )}
                   >
                     {msg.sender}
@@ -1313,7 +1525,7 @@ const ChatPanel = () => {
                   <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
                   <p
                     className={cn(
-                      "text-[10px] mt-1",
+                      "text-[10px] mt-1 flex items-center gap-1",
                       isOwn ? "text-white/70" : "text-dark-400"
                     )}
                   >
@@ -1321,6 +1533,7 @@ const ChatPanel = () => {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
+                    {msg.edited && <span className="italic">(diedit)</span>}
                   </p>
                 </div>
               </div>
@@ -1330,23 +1543,61 @@ const ChatPanel = () => {
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Edit Mode Banner */}
+      {editingMessage && (
+        <div className="px-3 py-2 bg-amber-100 dark:bg-amber-900/30 border-t border-amber-200 dark:border-amber-700 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-300">
+            <Pencil className="h-4 w-4" />
+            <span>Mengedit pesan</span>
+          </div>
+          <button
+            onClick={() => setEditingMessage(null)}
+            className="text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       {/* Input */}
-      <div className="p-3 border-t border-dark-100 bg-white">
+      <div className="p-3 border-t border-dark-100 dark:border-dark-700 bg-white dark:bg-dark-800">
         <div className="flex items-center gap-2">
           <input
             type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Ketik pesan..."
-            className="flex-1 px-4 py-2 bg-dark-50 border border-dark-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            value={editingMessage ? editingMessage.text : newMessage}
+            onChange={(e) =>
+              editingMessage
+                ? setEditingMessage({ ...editingMessage, text: e.target.value })
+                : setNewMessage(e.target.value)
+            }
+            onKeyDown={handleKeyPress}
+            placeholder={editingMessage ? "Edit pesan..." : "Ketik pesan..."}
+            className={cn(
+              "flex-1 px-4 py-2 bg-dark-50 dark:bg-dark-900 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:border-transparent text-dark-900 dark:text-dark-100",
+              editingMessage
+                ? "border-amber-300 dark:border-amber-600 focus:ring-amber-500"
+                : "border-dark-100 dark:border-dark-600 focus:ring-primary-500"
+            )}
           />
           <button
-            onClick={handleSendMessage}
-            disabled={!newMessage.trim() || loading}
-            className="p-2 bg-primary-500 text-white rounded-xl hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            onClick={editingMessage ? handleEditMessage : handleSendMessage}
+            disabled={
+              editingMessage
+                ? !editingMessage.text.trim()
+                : !newMessage.trim() || loading
+            }
+            className={cn(
+              "p-2 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-colors",
+              editingMessage
+                ? "bg-amber-500 hover:bg-amber-600"
+                : "bg-primary-500 hover:bg-primary-600"
+            )}
           >
-            <Send className="h-4 w-4" />
+            {editingMessage ? (
+              <Pencil className="h-4 w-4" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
           </button>
         </div>
       </div>
@@ -1359,7 +1610,7 @@ interface LayoutProps {
 }
 
 const Layout = ({ children }: LayoutProps) => {
-  const { sidebarCollapsed, darkMode } = useUIStore();
+  const { sidebarCollapsed, darkMode, forceDesktopView } = useUIStore();
   const { isOpen: chatOpen } = useChatStore();
 
   // Apply dark mode class to document
@@ -1371,15 +1622,29 @@ const Layout = ({ children }: LayoutProps) => {
     }
   }, [darkMode]);
 
+  // Apply force desktop view class
+  useEffect(() => {
+    if (forceDesktopView) {
+      document.documentElement.classList.add("force-desktop");
+    } else {
+      document.documentElement.classList.remove("force-desktop");
+    }
+  }, [forceDesktopView]);
+
   return (
-    <div className="min-h-screen bg-dark-50 dark:bg-dark-900 transition-colors duration-300">
+    <div
+      className={cn(
+        "min-h-screen bg-dark-50 dark:bg-dark-900 transition-colors duration-300",
+        forceDesktopView && "force-desktop-view"
+      )}
+    >
       {/* Active Users Marquee - Fixed at top */}
       <div
         className={cn(
           "fixed top-0 right-0 z-40 transition-all duration-300",
           // Mobile: full width (left-0), Desktop: depends on sidebar
-          "left-0 lg:left-64",
-          sidebarCollapsed && "lg:left-20"
+          forceDesktopView ? "left-64" : "left-0 lg:left-64",
+          sidebarCollapsed && (forceDesktopView ? "left-20" : "lg:left-20")
         )}
       >
         <ActiveUsersMarquee />
@@ -1391,8 +1656,8 @@ const Layout = ({ children }: LayoutProps) => {
         className={cn(
           "pt-24 min-h-screen transition-all duration-300",
           // Mobile: no left padding, Desktop: depends on sidebar
-          "pl-0 lg:pl-64",
-          sidebarCollapsed && "lg:pl-20"
+          forceDesktopView ? "pl-64" : "pl-0 lg:pl-64",
+          sidebarCollapsed && (forceDesktopView ? "pl-20" : "lg:pl-20")
         )}
       >
         <div className="p-4 lg:p-6">{children || <Outlet />}</div>

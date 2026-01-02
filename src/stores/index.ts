@@ -49,12 +49,14 @@ interface UIState {
   dashboardPlantFilter: PlantType;
   dashboardYear: number;
   darkMode: boolean;
+  forceDesktopView: boolean; // Force desktop view on mobile
   toggleSidebar: () => void;
   toggleSidebarCollapse: () => void;
   setActiveTab: (tab: string) => void;
   setDashboardPlantFilter: (plant: PlantType) => void;
   setDashboardYear: (year: number) => void;
   toggleDarkMode: () => void;
+  toggleForceDesktopView: () => void;
 }
 
 export const useUIStore = create<UIState>()(
@@ -66,6 +68,7 @@ export const useUIStore = create<UIState>()(
       dashboardPlantFilter: "ALL",
       dashboardYear: new Date().getFullYear(),
       darkMode: false,
+      forceDesktopView: false,
       toggleSidebar: () =>
         set((state) => ({ sidebarOpen: !state.sidebarOpen })),
       toggleSidebarCollapse: () =>
@@ -74,10 +77,15 @@ export const useUIStore = create<UIState>()(
       setDashboardPlantFilter: (plant) => set({ dashboardPlantFilter: plant }),
       setDashboardYear: (year) => set({ dashboardYear: year }),
       toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
+      toggleForceDesktopView: () =>
+        set((state) => ({ forceDesktopView: !state.forceDesktopView })),
     }),
     {
       name: "ui-storage",
-      partialize: (state) => ({ darkMode: state.darkMode }),
+      partialize: (state) => ({
+        darkMode: state.darkMode,
+        forceDesktopView: state.forceDesktopView,
+      }),
     }
   )
 );

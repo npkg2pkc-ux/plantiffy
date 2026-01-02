@@ -362,6 +362,7 @@ export interface ChatMessage {
   role: string;
   message: string;
   timestamp: string;
+  edited?: boolean;
 }
 
 // Notification
