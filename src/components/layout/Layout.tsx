@@ -393,7 +393,30 @@ const Sidebar = () => {
     "Data",
     "Pengaturan",
   ]);
-  const { sidebarCollapsed, toggleSidebarCollapse } = useUIStore();
+  const {
+    sidebarCollapsed,
+    toggleSidebarCollapse,
+    sidebarOpen,
+    toggleSidebar,
+  } = useUIStore();
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile screen
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // Close sidebar when clicking on link in mobile
+  const handleLinkClick = () => {
+    if (isMobile && sidebarOpen) {
+      toggleSidebar();
+    }
+  };
 
   // Filter menu items based on user's plant and role
   const getFilteredNavItems = () => {
@@ -517,114 +540,152 @@ const Sidebar = () => {
   };
 
   return (
-    <aside
-      className={cn(
-        "fixed left-0 top-0 z-40 h-screen bg-white dark:bg-dark-800 border-r border-dark-100 dark:border-dark-700 transition-all duration-300",
-        sidebarCollapsed ? "w-20" : "w-64"
+    <>
+      {/* Mobile Overlay */}
+      {isMobile && sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={toggleSidebar}
+        />
       )}
-    >
-      {/* Logo */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-dark-100 dark:border-dark-700">
-        {!sidebarCollapsed && (
-          <Link to="/dashboard" className="flex items-center gap-3">
-            <img src="/favicon.png" alt="PlantIQ Logo" className="h-9 w-9" />
-            <span className="font-display font-bold text-dark-900 dark:text-white">
-              Plantiffy
-            </span>
-            <span className="text-xs text-dark-500 dark:text-dark-400">
-              v2.3.2
-            </span>
-          </Link>
-        )}
-        <button
-          onClick={toggleSidebarCollapse}
-          className="p-2 text-dark-500 dark:text-dark-400 hover:bg-dark-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
-        >
-          {sidebarCollapsed ? (
-            <ChevronRight className="h-5 w-5" />
-          ) : (
-            <ChevronLeft className="h-5 w-5" />
-          )}
-        </button>
-      </div>
 
-      {/* Navigation */}
-      <nav className="p-4 space-y-1 overflow-y-auto h-[calc(100vh-4rem)]">
-        {filteredNavItems.map((item) => (
-          <div key={item.name}>
-            {item.children ? (
-              <>
-                <button
-                  onClick={() => !sidebarCollapsed && toggleExpand(item.name)}
+      <aside
+        className={cn(
+          "fixed left-0 top-0 z-50 h-screen bg-white dark:bg-dark-800 border-r border-dark-100 dark:border-dark-700 transition-all duration-300",
+          // Mobile: hidden by default, show when sidebarOpen
+          isMobile
+            ? sidebarOpen
+              ? "translate-x-0 w-64"
+              : "-translate-x-full w-64"
+            : // Desktop: collapse behavior
+            sidebarCollapsed
+            ? "w-20"
+            : "w-64"
+        )}
+      >
+        {/* Logo */}
+        <div className="h-16 flex items-center justify-between px-4 border-b border-dark-100 dark:border-dark-700">
+          {(!sidebarCollapsed || isMobile) && (
+            <Link
+              to="/dashboard"
+              className="flex items-center gap-3"
+              onClick={handleLinkClick}
+            >
+              <img src="/favicon.png" alt="PlantIQ Logo" className="h-9 w-9" />
+              <span className="font-display font-bold text-dark-900 dark:text-white">
+                Plantiffy
+              </span>
+              <span className="text-xs text-dark-500 dark:text-dark-400">
+                v2.3.2
+              </span>
+            </Link>
+          )}
+          {/* Desktop: collapse toggle */}
+          {!isMobile && (
+            <button
+              onClick={toggleSidebarCollapse}
+              className="p-2 text-dark-500 dark:text-dark-400 hover:bg-dark-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
+            >
+              {sidebarCollapsed ? (
+                <ChevronRight className="h-5 w-5" />
+              ) : (
+                <ChevronLeft className="h-5 w-5" />
+              )}
+            </button>
+          )}
+          {/* Mobile: close button */}
+          {isMobile && (
+            <button
+              onClick={toggleSidebar}
+              className="p-2 text-dark-500 dark:text-dark-400 hover:bg-dark-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
+        </div>
+
+        {/* Navigation */}
+        <nav className="p-4 space-y-1 overflow-y-auto h-[calc(100vh-4rem)]">
+          {filteredNavItems.map((item) => (
+            <div key={item.name}>
+              {item.children ? (
+                <>
+                  <button
+                    onClick={() =>
+                      (!sidebarCollapsed || isMobile) && toggleExpand(item.name)
+                    }
+                    className={cn(
+                      "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200",
+                      isParentActive(item)
+                        ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400"
+                        : "text-dark-600 dark:text-dark-300 hover:bg-dark-50 dark:hover:bg-dark-700 hover:text-dark-900 dark:hover:text-white"
+                    )}
+                  >
+                    {item.icon}
+                    {(!sidebarCollapsed || isMobile) && (
+                      <>
+                        <span className="flex-1 text-left">{item.name}</span>
+                        <ChevronDown
+                          className={cn(
+                            "h-4 w-4 transition-transform duration-200",
+                            expandedItems.includes(item.name) && "rotate-180"
+                          )}
+                        />
+                      </>
+                    )}
+                  </button>
+                  {(!sidebarCollapsed || isMobile) && (
+                    <AnimatePresence>
+                      {expandedItems.includes(item.name) && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="pl-12 py-1 space-y-1">
+                            {item.children.map((child) => (
+                              <Link
+                                key={child.path}
+                                to={child.path}
+                                onClick={handleLinkClick}
+                                className={cn(
+                                  "block px-4 py-2 text-sm rounded-lg transition-colors",
+                                  isActive(child.path)
+                                    ? "bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-400 font-medium"
+                                    : "text-dark-500 dark:text-dark-400 hover:text-dark-900 dark:hover:text-white hover:bg-dark-50 dark:hover:bg-dark-700"
+                                )}
+                              >
+                                {child.name}
+                              </Link>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  )}
+                </>
+              ) : (
+                <Link
+                  to={item.path}
+                  onClick={handleLinkClick}
                   className={cn(
-                    "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200",
-                    isParentActive(item)
-                      ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400"
+                    "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200",
+                    isActive(item.path)
+                      ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 shadow-sm"
                       : "text-dark-600 dark:text-dark-300 hover:bg-dark-50 dark:hover:bg-dark-700 hover:text-dark-900 dark:hover:text-white"
                   )}
                 >
                   {item.icon}
-                  {!sidebarCollapsed && (
-                    <>
-                      <span className="flex-1 text-left">{item.name}</span>
-                      <ChevronDown
-                        className={cn(
-                          "h-4 w-4 transition-transform duration-200",
-                          expandedItems.includes(item.name) && "rotate-180"
-                        )}
-                      />
-                    </>
-                  )}
-                </button>
-                {!sidebarCollapsed && (
-                  <AnimatePresence>
-                    {expandedItems.includes(item.name) && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="pl-12 py-1 space-y-1">
-                          {item.children.map((child) => (
-                            <Link
-                              key={child.path}
-                              to={child.path}
-                              className={cn(
-                                "block px-4 py-2 text-sm rounded-lg transition-colors",
-                                isActive(child.path)
-                                  ? "bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-400 font-medium"
-                                  : "text-dark-500 dark:text-dark-400 hover:text-dark-900 dark:hover:text-white hover:bg-dark-50 dark:hover:bg-dark-700"
-                              )}
-                            >
-                              {child.name}
-                            </Link>
-                          ))}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                )}
-              </>
-            ) : (
-              <Link
-                to={item.path}
-                className={cn(
-                  "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200",
-                  isActive(item.path)
-                    ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 shadow-sm"
-                    : "text-dark-600 dark:text-dark-300 hover:bg-dark-50 dark:hover:bg-dark-700 hover:text-dark-900 dark:hover:text-white"
-                )}
-              >
-                {item.icon}
-                {!sidebarCollapsed && <span>{item.name}</span>}
-              </Link>
-            )}
-          </div>
-        ))}
-      </nav>
-    </aside>
+                  {(!sidebarCollapsed || isMobile) && <span>{item.name}</span>}
+                </Link>
+              )}
+            </div>
+          ))}
+        </nav>
+      </aside>
+    </>
   );
 };
 
@@ -810,10 +871,12 @@ const Header = () => {
     <header
       className={cn(
         "fixed top-8 right-0 z-30 h-16 bg-white/80 dark:bg-dark-800/80 backdrop-blur-md border-b border-dark-100 dark:border-dark-700 transition-all duration-300",
-        sidebarCollapsed ? "left-20" : "left-64"
+        // Mobile: full width (left-0), Desktop: depends on sidebar
+        "left-0 lg:left-64",
+        sidebarCollapsed && "lg:left-20"
       )}
     >
-      <div className="h-full px-6 flex items-center justify-between">
+      <div className="h-full px-4 lg:px-6 flex items-center justify-between">
         {/* Mobile menu button */}
         <button
           onClick={toggleSidebar}
@@ -822,11 +885,11 @@ const Header = () => {
           <Menu className="h-5 w-5" />
         </button>
 
-        {/* Search placeholder */}
-        <div className="hidden md:block" />
+        {/* Search placeholder / Logo for mobile */}
+        <div className="hidden lg:block" />
 
         {/* Right side */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           {/* Dark Mode Toggle */}
           <button
             onClick={toggleDarkMode}
@@ -1314,7 +1377,9 @@ const Layout = ({ children }: LayoutProps) => {
       <div
         className={cn(
           "fixed top-0 right-0 z-40 transition-all duration-300",
-          sidebarCollapsed ? "left-20" : "left-64"
+          // Mobile: full width (left-0), Desktop: depends on sidebar
+          "left-0 lg:left-64",
+          sidebarCollapsed && "lg:left-20"
         )}
       >
         <ActiveUsersMarquee />
@@ -1325,10 +1390,12 @@ const Layout = ({ children }: LayoutProps) => {
       <main
         className={cn(
           "pt-24 min-h-screen transition-all duration-300",
-          sidebarCollapsed ? "pl-20" : "pl-64"
+          // Mobile: no left padding, Desktop: depends on sidebar
+          "pl-0 lg:pl-64",
+          sidebarCollapsed && "lg:pl-20"
         )}
       >
-        <div className="p-6">{children || <Outlet />}</div>
+        <div className="p-4 lg:p-6">{children || <Outlet />}</div>
       </main>
 
       {/* Chat Panel */}

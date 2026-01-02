@@ -230,3 +230,61 @@
     page-break-before: always;
   }
 }
+
+/* PWA / Mobile Optimizations */
+@media (max-width: 1023px) {
+  /* Ensure proper touch targets */
+  button,
+  a,
+  [role="button"] {
+    min-height: 44px;
+  }
+
+  /* Prevent text selection issues on mobile */
+  .no-select {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Improve touch scrolling */
+  .scroll-touch {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Safe area insets for notched devices */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Standalone PWA mode specific styles */
+@media all and (display-mode: standalone) {
+  /* Adjust for PWA standalone mode */
+  body {
+    overscroll-behavior-y: contain;
+  }
+
+  /* Prevent pull-to-refresh in PWA */
+  html {
+    overscroll-behavior: none;
+  }
+}
+
+/* Fix iOS input zoom */
+@media screen and (max-width: 767px) {
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="password"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}

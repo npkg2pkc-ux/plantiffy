@@ -60,7 +60,7 @@ interface UIState {
 export const useUIStore = create<UIState>()(
   persist(
     (set) => ({
-      sidebarOpen: true,
+      sidebarOpen: false, // Default closed for mobile
       sidebarCollapsed: false,
       activeTab: "dashboard",
       dashboardPlantFilter: "ALL",
