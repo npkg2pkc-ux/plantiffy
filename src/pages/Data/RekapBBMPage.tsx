@@ -70,6 +70,17 @@ const MONTH_NAMES = [
   "Desember",
 ];
 
+// Generate year options from 2023 to current year + 1
+const currentYear = new Date().getFullYear();
+const YEAR_OPTIONS = [
+  { value: "all", label: "Semua Tahun" },
+  ...Array.from({ length: currentYear - 2022 }, (_, i) => ({
+    value: String(2023 + i),
+    label: String(2023 + i),
+  })),
+  { value: String(currentYear + 1), label: String(currentYear + 1) },
+];
+
 const initialFormState: RekapBBM = {
   tanggal: getCurrentDate(),
   namaAlatBerat: "",
@@ -93,6 +104,9 @@ const RekapBBMPage = ({ plant }: RekapBBMPageProps) => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState<RekapBBM>(initialFormState);
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
+  const [selectedYear, setSelectedYear] = useState<string>(
+    String(new Date().getFullYear())
+  );
   const [showPrintModal, setShowPrintModal] = useState(false);
   const currentPlant = plant;
 
@@ -278,13 +292,21 @@ const RekapBBMPage = ({ plant }: RekapBBMPageProps) => {
   const filteredData = useMemo(() => {
     return data.filter((item) => {
       if (item._plant !== currentPlant) return false;
+
+      // Filter by year
+      if (selectedYear !== "all") {
+        const year = new Date(item.tanggal).getFullYear();
+        if (year !== parseInt(selectedYear)) return false;
+      }
+
+      // Filter by month
       if (selectedMonth !== "all") {
         const month = new Date(item.tanggal).getMonth();
         if (month !== parseInt(selectedMonth)) return false;
       }
       return true;
     });
-  }, [data, currentPlant, selectedMonth]);
+  }, [data, currentPlant, selectedMonth, selectedYear]);
 
   // Summary statistics
   const summaryStats = useMemo(() => {
@@ -477,9 +499,11 @@ const RekapBBMPage = ({ plant }: RekapBBMPageProps) => {
                 {summaryStats.totalRecord}
               </p>
               <p className="text-xs text-slate-600">
-                {selectedMonth === "all"
-                  ? "Semua bulan"
-                  : `Bulan ${MONTH_NAMES[parseInt(selectedMonth)]}`}
+                {selectedYear === "all"
+                  ? "Semua tahun"
+                  : `Tahun ${selectedYear}`}
+                {selectedMonth !== "all" &&
+                  `, ${MONTH_NAMES[parseInt(selectedMonth)]}`}
               </p>
             </div>
           </div>
@@ -500,6 +524,12 @@ const RekapBBMPage = ({ plant }: RekapBBMPageProps) => {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <Select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              options={YEAR_OPTIONS}
+              className="w-32"
+            />
             <Select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
