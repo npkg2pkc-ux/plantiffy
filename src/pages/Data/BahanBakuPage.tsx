@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Edit2, Trash2, Search, Package } from "lucide-react";
+import { Plus, Edit2, Trash2, Search, Package, History } from "lucide-react";
 import { useSaveShortcut, useDataWithLogging } from "@/hooks";
 import {
   Button,
@@ -13,6 +13,7 @@ import {
   DataTable,
   SuccessOverlay,
   ApprovalDialog,
+  ActivityLogModal,
 } from "@/components/ui";
 import { useAuthStore } from "@/stores";
 import {
@@ -66,6 +67,16 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
   const [pendingEditItem, setPendingEditItem] = useState<BahanBaku | null>(
     null
   );
+
+  // Log modal state
+  const [showLogModal, setShowLogModal] = useState(false);
+  const [logRecordId, setLogRecordId] = useState<string>("");
+
+  // Handle view log
+  const handleViewLog = (id: string) => {
+    setLogRecordId(id);
+    setShowLogModal(true);
+  };
 
   // Check if user is view only
   const userIsViewOnly = isViewOnly(user?.role || "");
@@ -414,8 +425,20 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
                       size="icon"
                       onClick={(e) => {
                         e.stopPropagation();
+                        handleViewLog(row.id!);
+                      }}
+                      title="Lihat Log"
+                    >
+                      <History className="h-4 w-4 text-blue-600" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
                         handleEdit(row);
                       }}
+                      title="Edit"
                     >
                       <Edit2 className="h-4 w-4 text-primary-600" />
                     </Button>
@@ -426,12 +449,27 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
                         e.stopPropagation();
                         handleDelete(row.id!);
                       }}
+                      title="Hapus"
                     >
                       <Trash2 className="h-4 w-4 text-red-600" />
                     </Button>
                   </div>
                 )
-              : undefined
+              : (row) => (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewLog(row.id!);
+                      }}
+                      title="Lihat Log"
+                    >
+                      <History className="h-4 w-4 text-blue-600" />
+                    </Button>
+                  </div>
+                )
           }
         />
       </Card>
@@ -576,6 +614,18 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
         isVisible={showSuccess}
         message="Data berhasil disimpan!"
         onClose={() => setShowSuccess(false)}
+      />
+
+      {/* Activity Log Modal */}
+      <ActivityLogModal
+        isOpen={showLogModal}
+        onClose={() => {
+          setShowLogModal(false);
+          setLogRecordId("");
+        }}
+        sheetName={currentPlant === "NPK1" ? "BahanBaku_NPK1" : "BahanBaku"}
+        recordId={logRecordId}
+        title="Log Aktivitas Bahan Baku"
       />
     </div>
   );

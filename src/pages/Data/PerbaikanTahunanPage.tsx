@@ -12,6 +12,7 @@ import {
   FileText,
   Clock,
   CheckCircle,
+  History,
 } from "lucide-react";
 import { useSaveShortcut } from "@/hooks";
 import {
@@ -26,6 +27,7 @@ import {
   DataTable,
   SuccessOverlay,
   ApprovalDialog,
+  ActivityLogModal,
 } from "@/components/ui";
 import { useAuthStore } from "@/stores";
 import {
@@ -73,6 +75,16 @@ const PerbaikanTahunanPage = ({ plant }: PerbaikanTahunanPageProps) => {
   // View states
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewItem, setViewItem] = useState<PerbaikanTahunan | null>(null);
+
+  // Log modal state
+  const [showLogModal, setShowLogModal] = useState(false);
+  const [logRecordId, setLogRecordId] = useState("");
+
+  // Handler for viewing log
+  const handleViewLog = (id: string) => {
+    setLogRecordId(id);
+    setShowLogModal(true);
+  };
 
   // Approval states
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
@@ -522,6 +534,17 @@ const PerbaikanTahunanPage = ({ plant }: PerbaikanTahunanPageProps) => {
               >
                 <Eye className="h-4 w-4 text-dark-500" />
               </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleViewLog(row.id!);
+                }}
+                title="Lihat Log"
+              >
+                <History className="h-4 w-4 text-purple-600" />
+              </Button>
               {!userIsViewOnly && (
                 <>
                   <Button
@@ -850,6 +873,20 @@ const PerbaikanTahunanPage = ({ plant }: PerbaikanTahunanPageProps) => {
         isVisible={showSuccess}
         message="Data berhasil disimpan!"
         onClose={() => setShowSuccess(false)}
+      />
+
+      {/* Activity Log Modal */}
+      <ActivityLogModal
+        isOpen={showLogModal}
+        onClose={() => {
+          setShowLogModal(false);
+          setLogRecordId("");
+        }}
+        sheetName={
+          currentPlant === "NPK1" ? "PerbaikanTahunan_NPK1" : "PerbaikanTahunan"
+        }
+        recordId={logRecordId}
+        title="Log Aktivitas Perbaikan Tahunan"
       />
     </div>
   );

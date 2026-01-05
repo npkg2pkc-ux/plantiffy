@@ -10,6 +10,7 @@ import {
   XCircle,
   TrendingUp,
   TrendingDown,
+  History,
 } from "lucide-react";
 import { useSaveShortcut } from "@/hooks";
 import {
@@ -24,6 +25,7 @@ import {
   DataTable,
   SuccessOverlay,
   ApprovalDialog,
+  ActivityLogModal,
 } from "@/components/ui";
 import { useAuthStore } from "@/stores";
 import {
@@ -110,6 +112,17 @@ const RiksaTimbPortabelPage = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewItem, setViewItem] = useState<RiksaTimbPortabel | null>(null);
+
+  // Log modal state
+  const [showLogModal, setShowLogModal] = useState(false);
+  const [logRecordId, setLogRecordId] = useState("");
+
+  // Handler for viewing log
+  const handleViewLog = (id: string) => {
+    setLogRecordId(id);
+    setShowLogModal(true);
+  };
+
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState<RiksaTimbPortabel>(initialFormState);
@@ -492,6 +505,14 @@ const RiksaTimbPortabelPage = () => {
             title="Lihat Detail"
           >
             <Eye className="h-4 w-4 text-blue-500" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleViewLog(row.id!)}
+            title="Lihat Log"
+          >
+            <History className="h-4 w-4 text-purple-600" />
           </Button>
           {(userCanEditDirect || userNeedsApprovalEdit) && !userIsViewOnly && (
             <Button
@@ -1160,6 +1181,18 @@ const RiksaTimbPortabelPage = () => {
       <SuccessOverlay
         isVisible={showSuccess}
         message="Data berhasil disimpan!"
+      />
+
+      {/* Activity Log Modal */}
+      <ActivityLogModal
+        isOpen={showLogModal}
+        onClose={() => {
+          setShowLogModal(false);
+          setLogRecordId("");
+        }}
+        sheetName="RiksaTimbPortabel"
+        recordId={logRecordId}
+        title="Log Aktivitas Riksa Timbangan Portabel"
       />
     </div>
   );

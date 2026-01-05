@@ -9,6 +9,7 @@ import {
   TrendingDown,
   BarChart3,
   Filter,
+  History,
 } from "lucide-react";
 import { useSaveShortcut } from "@/hooks";
 import {
@@ -24,6 +25,7 @@ import {
   SuccessOverlay,
   ApprovalDialog,
   Select,
+  ActivityLogModal,
 } from "@/components/ui";
 import { useAuthStore } from "@/stores";
 import {
@@ -104,6 +106,16 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
   );
   const [pendingEditItem, setPendingEditItem] =
     useState<PemantauanBahanBaku | null>(null);
+
+  // Log modal state
+  const [showLogModal, setShowLogModal] = useState(false);
+  const [logRecordId, setLogRecordId] = useState("");
+
+  // Handler for viewing log
+  const handleViewLog = (id: string) => {
+    setLogRecordId(id);
+    setShowLogModal(true);
+  };
 
   // Permission checks
   const userRole = user?.role || "";
@@ -709,8 +721,20 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
                       size="icon"
                       onClick={(e) => {
                         e.stopPropagation();
+                        handleViewLog(row.id!);
+                      }}
+                      title="Lihat Log"
+                    >
+                      <History className="h-4 w-4 text-purple-600" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
                         handleEdit(row);
                       }}
+                      title="Edit"
                     >
                       <Edit2 className="h-4 w-4 text-primary-600" />
                     </Button>
@@ -721,12 +745,27 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
                         e.stopPropagation();
                         handleDelete(row.id!);
                       }}
+                      title="Hapus"
                     >
                       <Trash2 className="h-4 w-4 text-red-600" />
                     </Button>
                   </div>
                 )
-              : undefined
+              : (row) => (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewLog(row.id!);
+                      }}
+                      title="Lihat Log"
+                    >
+                      <History className="h-4 w-4 text-purple-600" />
+                    </Button>
+                  </div>
+                )
           }
         />
       </Card>
@@ -876,6 +915,20 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
         isVisible={showSuccess}
         message="Data berhasil disimpan!"
         onClose={() => setShowSuccess(false)}
+      />
+
+      {/* Activity Log Modal */}
+      <ActivityLogModal
+        isOpen={showLogModal}
+        onClose={() => {
+          setShowLogModal(false);
+          setLogRecordId("");
+        }}
+        sheetName={
+          plant === "NPK1" ? "PemantauanBahanBaku_NPK1" : "PemantauanBahanBaku"
+        }
+        recordId={logRecordId}
+        title="Log Aktivitas Pemantauan Bahan Baku"
       />
     </div>
   );

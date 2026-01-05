@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Edit2, Trash2, Printer, Search } from "lucide-react";
+import { Plus, Edit2, Trash2, Printer, Search, History } from "lucide-react";
 import { useSaveShortcut } from "@/hooks";
 import {
   Button,
@@ -15,6 +15,7 @@ import {
   SuccessOverlay,
   ApprovalDialog,
   PrintModal,
+  ActivityLogModal,
 } from "@/components/ui";
 import { useAuthStore } from "@/stores";
 import {
@@ -66,6 +67,16 @@ const TimesheetForkliftPage = ({ plant }: TimesheetForkliftPageProps) => {
   );
   const [pendingEditItem, setPendingEditItem] =
     useState<TimesheetForklift | null>(null);
+
+  // Log modal state
+  const [showLogModal, setShowLogModal] = useState(false);
+  const [logRecordId, setLogRecordId] = useState("");
+
+  // Handler for viewing log
+  const handleViewLog = (id: string) => {
+    setLogRecordId(id);
+    setShowLogModal(true);
+  };
 
   // Permission checks
   const userRole = user?.role || "";
@@ -439,7 +450,9 @@ const TimesheetForkliftPage = ({ plant }: TimesheetForkliftPageProps) => {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">Total Jam Grounded</p>
+          <p className="text-sm text-dark-500 dark:text-dark-400">
+            Total Jam Grounded
+          </p>
           <p className="text-2xl font-bold text-amber-600">
             {formatNumber(
               filteredData.reduce(
@@ -451,7 +464,9 @@ const TimesheetForkliftPage = ({ plant }: TimesheetForkliftPageProps) => {
           </p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">Total Jam Operasi</p>
+          <p className="text-sm text-dark-500 dark:text-dark-400">
+            Total Jam Operasi
+          </p>
           <p className="text-2xl font-bold text-secondary-600">
             {formatNumber(
               filteredData.reduce(
@@ -463,13 +478,17 @@ const TimesheetForkliftPage = ({ plant }: TimesheetForkliftPageProps) => {
           </p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">Forklift Aktif</p>
+          <p className="text-sm text-dark-500 dark:text-dark-400">
+            Forklift Aktif
+          </p>
           <p className="text-2xl font-bold text-dark-900 dark:text-white">
             {new Set(filteredData.map((item) => item.forklift)).size}
           </p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">Jumlah Entry</p>
+          <p className="text-sm text-dark-500 dark:text-dark-400">
+            Jumlah Entry
+          </p>
           <p className="text-2xl font-bold text-dark-900 dark:text-white">
             {filteredData.length}
           </p>
@@ -507,8 +526,20 @@ const TimesheetForkliftPage = ({ plant }: TimesheetForkliftPageProps) => {
                       size="icon"
                       onClick={(e) => {
                         e.stopPropagation();
+                        handleViewLog(row.id!);
+                      }}
+                      title="Lihat Log"
+                    >
+                      <History className="h-4 w-4 text-purple-600" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
                         handleEdit(row);
                       }}
+                      title="Edit"
                     >
                       <Edit2 className="h-4 w-4 text-primary-600" />
                     </Button>
@@ -519,12 +550,27 @@ const TimesheetForkliftPage = ({ plant }: TimesheetForkliftPageProps) => {
                         e.stopPropagation();
                         handleDelete(row.id!);
                       }}
+                      title="Hapus"
                     >
                       <Trash2 className="h-4 w-4 text-red-600" />
                     </Button>
                   </div>
                 )
-              : undefined
+              : (row) => (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewLog(row.id!);
+                      }}
+                      title="Lihat Log"
+                    >
+                      <History className="h-4 w-4 text-purple-600" />
+                    </Button>
+                  </div>
+                )
           }
         />
       </Card>
@@ -601,13 +647,17 @@ const TimesheetForkliftPage = ({ plant }: TimesheetForkliftPageProps) => {
 
           <div className="p-4 bg-dark-50 rounded-xl space-y-2">
             <div className="flex justify-between">
-              <span className="text-dark-500 dark:text-dark-400">Jam Grounded:</span>
+              <span className="text-dark-500 dark:text-dark-400">
+                Jam Grounded:
+              </span>
               <span className="font-semibold text-amber-600">
                 {formatNumber(form.jamGrounded || 0)} Jam
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-dark-500 dark:text-dark-400">Jam Operasi:</span>
+              <span className="text-dark-500 dark:text-dark-400">
+                Jam Operasi:
+              </span>
               <span className="font-semibold text-secondary-600">
                 {formatNumber(form.jamOperasi || 0)} Jam
               </span>
@@ -746,6 +796,20 @@ const TimesheetForkliftPage = ({ plant }: TimesheetForkliftPageProps) => {
               ) + " Jam",
           },
         ]}
+      />
+
+      {/* Activity Log Modal */}
+      <ActivityLogModal
+        isOpen={showLogModal}
+        onClose={() => {
+          setShowLogModal(false);
+          setLogRecordId("");
+        }}
+        sheetName={
+          plant === "NPK1" ? "TimesheetForklift_NPK1" : "TimesheetForklift"
+        }
+        recordId={logRecordId}
+        title="Log Aktivitas Timesheet Forklift"
       />
     </div>
   );

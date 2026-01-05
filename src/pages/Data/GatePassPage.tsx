@@ -1,5 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Edit2, Trash2, Search, Truck, Printer } from "lucide-react";
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  Search,
+  Truck,
+  Printer,
+  History,
+} from "lucide-react";
 import { useSaveShortcut, useDataWithLogging } from "@/hooks";
 import {
   Button,
@@ -14,6 +22,7 @@ import {
   SuccessOverlay,
   ApprovalDialog,
   GatePassPrintModal,
+  ActivityLogModal,
 } from "@/components/ui";
 import { useAuthStore } from "@/stores";
 import {
@@ -60,6 +69,16 @@ const GatePassPage = ({ plant }: GatePassPageProps) => {
   const [printItem, setPrintItem] = useState<GatePass | null>(null);
   // Plant is now set from prop
   const currentPlant = plant;
+
+  // Log modal state
+  const [showLogModal, setShowLogModal] = useState(false);
+  const [logRecordId, setLogRecordId] = useState("");
+
+  // Handler for viewing log
+  const handleViewLog = (id: string) => {
+    setLogRecordId(id);
+    setShowLogModal(true);
+  };
 
   // Approval states
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
@@ -448,6 +467,17 @@ const GatePassPage = ({ plant }: GatePassPageProps) => {
               >
                 <Printer className="h-4 w-4 text-amber-600" />
               </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleViewLog(row.id!);
+                }}
+                title="Lihat Log"
+              >
+                <History className="h-4 w-4 text-purple-600" />
+              </Button>
               {!userIsViewOnly && (
                 <>
                   <Button
@@ -457,6 +487,7 @@ const GatePassPage = ({ plant }: GatePassPageProps) => {
                       e.stopPropagation();
                       handleEdit(row);
                     }}
+                    title="Edit"
                   >
                     <Edit2 className="h-4 w-4 text-primary-600" />
                   </Button>
@@ -467,6 +498,7 @@ const GatePassPage = ({ plant }: GatePassPageProps) => {
                       e.stopPropagation();
                       handleDelete(row.id!);
                     }}
+                    title="Hapus"
                   >
                     <Trash2 className="h-4 w-4 text-red-600" />
                   </Button>
@@ -658,6 +690,18 @@ const GatePassPage = ({ plant }: GatePassPageProps) => {
           plant={currentPlant}
         />
       )}
+
+      {/* Activity Log Modal */}
+      <ActivityLogModal
+        isOpen={showLogModal}
+        onClose={() => {
+          setShowLogModal(false);
+          setLogRecordId("");
+        }}
+        sheetName={currentPlant === "NPK1" ? "GatePass_NPK1" : "GatePass"}
+        recordId={logRecordId}
+        title="Log Aktivitas Gate Pass"
+      />
     </div>
   );
 };

@@ -8,6 +8,7 @@ import {
   TrendingDown,
   BarChart3,
   Printer,
+  History,
 } from "lucide-react";
 import { useSaveShortcut } from "@/hooks";
 import {
@@ -23,6 +24,7 @@ import {
   ApprovalDialog,
   Select,
   BBMPrintModal,
+  ActivityLogModal,
 } from "@/components/ui";
 import { useAuthStore } from "@/stores";
 import {
@@ -116,6 +118,16 @@ const RekapBBMPage = ({ plant }: RekapBBMPageProps) => {
     "edit"
   );
   const [pendingEditItem, setPendingEditItem] = useState<RekapBBM | null>(null);
+
+  // Log modal state
+  const [showLogModal, setShowLogModal] = useState(false);
+  const [logRecordId, setLogRecordId] = useState("");
+
+  // Handler for viewing log
+  const handleViewLog = (id: string) => {
+    setLogRecordId(id);
+    setShowLogModal(true);
+  };
 
   // Check if user is view only
   const userIsViewOnly = isViewOnly(user?.role || "");
@@ -373,11 +385,16 @@ const RekapBBMPage = ({ plant }: RekapBBMPageProps) => {
   ];
 
   const renderActions = (row: RekapBBM) => {
-    if (userIsViewOnly) return null;
-
     return (
       <div className="flex items-center gap-2">
-        {(userCanEditDirect || userNeedsApprovalEdit) && (
+        <button
+          onClick={() => handleViewLog(row.id || "")}
+          className="p-1.5 text-dark-500 dark:text-dark-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+          title="Lihat Log"
+        >
+          <History className="h-4 w-4" />
+        </button>
+        {!userIsViewOnly && (userCanEditDirect || userNeedsApprovalEdit) && (
           <button
             onClick={() => handleEdit(row)}
             className="p-1.5 text-dark-500 dark:text-dark-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
@@ -386,15 +403,16 @@ const RekapBBMPage = ({ plant }: RekapBBMPageProps) => {
             <Edit2 className="h-4 w-4" />
           </button>
         )}
-        {(userCanDeleteDirect || userNeedsApprovalDelete) && (
-          <button
-            onClick={() => handleDelete(row.id || "")}
-            className="p-1.5 text-dark-500 dark:text-dark-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-            title={userNeedsApprovalDelete ? "Ajukan Hapus" : "Hapus"}
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
-        )}
+        {!userIsViewOnly &&
+          (userCanDeleteDirect || userNeedsApprovalDelete) && (
+            <button
+              onClick={() => handleDelete(row.id || "")}
+              className="p-1.5 text-dark-500 dark:text-dark-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              title={userNeedsApprovalDelete ? "Ajukan Hapus" : "Hapus"}
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
       </div>
     );
   };
@@ -703,6 +721,18 @@ const RekapBBMPage = ({ plant }: RekapBBMPageProps) => {
         onClose={() => setShowPrintModal(false)}
         data={filteredData}
         plant={currentPlant}
+      />
+
+      {/* Activity Log Modal */}
+      <ActivityLogModal
+        isOpen={showLogModal}
+        onClose={() => {
+          setShowLogModal(false);
+          setLogRecordId("");
+        }}
+        sheetName={currentPlant === "NPK1" ? "RekapBBM_NPK1" : "RekapBBM"}
+        recordId={logRecordId}
+        title="Log Aktivitas Rekap BBM"
       />
     </div>
   );

@@ -1,5 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Edit2, Trash2, FileText, Search, Eye } from "lucide-react";
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  FileText,
+  Search,
+  Eye,
+  History,
+} from "lucide-react";
 import { useSaveShortcut, useDataWithLogging } from "@/hooks";
 import {
   Button,
@@ -14,6 +22,7 @@ import {
   SuccessOverlay,
   ApprovalDialog,
   Badge,
+  ActivityLogModal,
 } from "@/components/ui";
 import { useAuthStore } from "@/stores";
 import {
@@ -78,6 +87,16 @@ const WorkRequestPage = ({ plant }: WorkRequestPageProps) => {
   );
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewItem, setViewItem] = useState<WorkRequest | null>(null);
+
+  // Log modal state
+  const [showLogModal, setShowLogModal] = useState(false);
+  const [logRecordId, setLogRecordId] = useState("");
+
+  // Handler for viewing log
+  const handleViewLog = (id: string) => {
+    setLogRecordId(id);
+    setShowLogModal(true);
+  };
 
   // Check if user is view only (manager/eksternal)
   const userIsViewOnly = isViewOnly(user?.role || "");
@@ -404,6 +423,18 @@ const WorkRequestPage = ({ plant }: WorkRequestPageProps) => {
               >
                 <Eye className="h-4 w-4 text-blue-600" />
               </Button>
+              {/* Log Button - visible to all users */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleViewLog(row.id!);
+                }}
+                title="Lihat Log"
+              >
+                <History className="h-4 w-4 text-purple-600" />
+              </Button>
               {!userIsViewOnly && (
                 <>
                   <Button
@@ -700,6 +731,18 @@ const WorkRequestPage = ({ plant }: WorkRequestPageProps) => {
           </div>
         )}
       </Modal>
+
+      {/* Activity Log Modal */}
+      <ActivityLogModal
+        isOpen={showLogModal}
+        onClose={() => {
+          setShowLogModal(false);
+          setLogRecordId("");
+        }}
+        sheetName={currentPlant === "NPK1" ? "WorkRequest_NPK1" : "WorkRequest"}
+        recordId={logRecordId}
+        title="Log Aktivitas Work Request"
+      />
     </div>
   );
 };

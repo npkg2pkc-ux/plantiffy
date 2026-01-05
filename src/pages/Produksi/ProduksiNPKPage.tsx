@@ -6,6 +6,7 @@ import {
   Printer,
   Search,
   CalendarDays,
+  History,
 } from "lucide-react";
 import { useSaveShortcut } from "@/hooks";
 import {
@@ -21,6 +22,7 @@ import {
   SuccessOverlay,
   ApprovalDialog,
   PrintModal,
+  ActivityLogModal,
 } from "@/components/ui";
 import { useAuthStore } from "@/stores";
 import {
@@ -83,6 +85,16 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
   const [pendingEditItem, setPendingEditItem] = useState<ProduksiNPK | null>(
     null
   );
+
+  // Log modal state
+  const [showLogModal, setShowLogModal] = useState(false);
+  const [logRecordId, setLogRecordId] = useState("");
+
+  // Handler for viewing log
+  const handleViewLog = (id: string) => {
+    setLogRecordId(id);
+    setShowLogModal(true);
+  };
 
   // Permission checks
   const userRole = user?.role || "";
@@ -659,8 +671,20 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
                       size="icon"
                       onClick={(e) => {
                         e.stopPropagation();
+                        handleViewLog(row.id!);
+                      }}
+                      title="Lihat Log"
+                    >
+                      <History className="h-4 w-4 text-purple-600" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
                         handleEdit(row);
                       }}
+                      title="Edit"
                     >
                       <Edit2 className="h-4 w-4 text-primary-600" />
                     </Button>
@@ -671,12 +695,27 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
                         e.stopPropagation();
                         handleDelete(row.id!);
                       }}
+                      title="Hapus"
                     >
                       <Trash2 className="h-4 w-4 text-red-600" />
                     </Button>
                   </div>
                 )
-              : undefined
+              : (row) => (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewLog(row.id!);
+                      }}
+                      title="Lihat Log"
+                    >
+                      <History className="h-4 w-4 text-purple-600" />
+                    </Button>
+                  </div>
+                )
           }
         />
       </Card>
@@ -989,6 +1028,18 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
               " Ton",
           },
         ]}
+      />
+
+      {/* Activity Log Modal */}
+      <ActivityLogModal
+        isOpen={showLogModal}
+        onClose={() => {
+          setShowLogModal(false);
+          setLogRecordId("");
+        }}
+        sheetName={plant === "NPK1" ? "ProduksiNPK_NPK1" : "ProduksiNPK"}
+        recordId={logRecordId}
+        title="Log Aktivitas Produksi NPK"
       />
     </div>
   );

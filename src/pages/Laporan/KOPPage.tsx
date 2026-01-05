@@ -17,6 +17,7 @@ import {
   Eye,
   Thermometer,
   Droplets,
+  History,
 } from "lucide-react";
 import { useSaveShortcut } from "@/hooks";
 import {
@@ -29,6 +30,7 @@ import {
   Badge,
   SuccessOverlay,
   ApprovalDialog,
+  ActivityLogModal,
 } from "@/components/ui";
 import { useAuthStore } from "@/stores";
 import {
@@ -383,6 +385,16 @@ const KOPPage = ({ plant }: KOPPageProps) => {
   // View states
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewItem, setViewItem] = useState<KOPEntry | null>(null);
+
+  // Log modal state
+  const [showLogModal, setShowLogModal] = useState(false);
+  const [logRecordId, setLogRecordId] = useState("");
+
+  // Handler for viewing log
+  const handleViewLog = (id: string) => {
+    setLogRecordId(id);
+    setShowLogModal(true);
+  };
 
   // Print report states
   const [showPrintReportModal, setShowPrintReportModal] = useState(false);
@@ -1752,6 +1764,13 @@ const KOPPage = ({ plant }: KOPPageProps) => {
                             title="Print"
                           >
                             <Printer className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleViewLog(item.id!)}
+                            className="p-2 text-dark-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                            title="Lihat Log"
+                          >
+                            <History className="h-4 w-4" />
                           </button>
                           {!userIsViewOnly && (
                             <>
@@ -3230,6 +3249,18 @@ const KOPPage = ({ plant }: KOPPageProps) => {
       <SuccessOverlay
         isVisible={showSuccess}
         message="Data berhasil disimpan!"
+      />
+
+      {/* Activity Log Modal */}
+      <ActivityLogModal
+        isOpen={showLogModal}
+        onClose={() => {
+          setShowLogModal(false);
+          setLogRecordId("");
+        }}
+        sheetName={plant === "NPK1" ? "KOP_NPK1" : "KOP"}
+        recordId={logRecordId}
+        title="Log Aktivitas KOP"
       />
     </div>
   );

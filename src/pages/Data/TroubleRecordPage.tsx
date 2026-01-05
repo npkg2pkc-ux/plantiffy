@@ -12,6 +12,7 @@ import {
   Target,
   FileText,
   CheckCircle,
+  History,
 } from "lucide-react";
 import { useSaveShortcut, useDataWithLogging } from "@/hooks";
 import {
@@ -27,6 +28,7 @@ import {
   DataTable,
   SuccessOverlay,
   ApprovalDialog,
+  ActivityLogModal,
 } from "@/components/ui";
 import { useAuthStore } from "@/stores";
 import {
@@ -82,6 +84,16 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
   // View states
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewItem, setViewItem] = useState<TroubleRecord | null>(null);
+
+  // Log modal state
+  const [showLogModal, setShowLogModal] = useState(false);
+  const [logRecordId, setLogRecordId] = useState("");
+
+  // Handler for viewing log
+  const handleViewLog = (id: string) => {
+    setLogRecordId(id);
+    setShowLogModal(true);
+  };
 
   // Approval states
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
@@ -535,6 +547,17 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
               >
                 <Eye className="h-4 w-4 text-dark-500" />
               </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleViewLog(row.id!);
+                }}
+                title="Lihat Log"
+              >
+                <History className="h-4 w-4 text-purple-600" />
+              </Button>
               {!userIsViewOnly && (
                 <>
                   <Button
@@ -925,6 +948,20 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
         isVisible={showSuccess}
         message="Data berhasil disimpan!"
         onClose={() => setShowSuccess(false)}
+      />
+
+      {/* Activity Log Modal */}
+      <ActivityLogModal
+        isOpen={showLogModal}
+        onClose={() => {
+          setShowLogModal(false);
+          setLogRecordId("");
+        }}
+        sheetName={
+          currentPlant === "NPK1" ? "TroubleRecord_NPK1" : "TroubleRecord"
+        }
+        recordId={logRecordId}
+        title="Log Aktivitas Trouble Record"
       />
     </div>
   );
