@@ -506,10 +506,9 @@ const Sidebar = () => {
           let filteredChildren = item.children;
 
           if (userPlant === "NPK1") {
-            // NPK1: Only show NPK1 data forms (exclude Riksa Timb Portabel) + Inventaris Material
-            filteredChildren = item.children.filter(
-              (child) =>
-                child.path.includes("npk1") || child.path === "/data/inventaris"
+            // NPK1: Only show NPK1 data forms (exclude Riksa Timb Portabel and Inventaris Material)
+            filteredChildren = item.children.filter((child) =>
+              child.path.includes("npk1")
             );
           } else if (userPlant === "NPK2") {
             // NPK2: Show NPK2 data forms AND Riksa Timb Portabel + Inventaris Material
