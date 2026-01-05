@@ -680,7 +680,7 @@ const DowntimePage = ({ plant }: DowntimePageProps) => {
           setShowLogModal(false);
           setLogRecordId("");
         }}
-        sheetName={plant === "NPK1" ? "Downtime_NPK1" : "Downtime"}
+        sheetName={plant === "NPK1" ? "downtime_NPK1" : "downtime"}
         recordId={logRecordId}
         title="Log Aktivitas Downtime"
       />

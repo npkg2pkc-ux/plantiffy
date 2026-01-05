@@ -207,11 +207,14 @@ const ProduksiNPKMiniPage = () => {
 
     try {
       if (editingId) {
-        const updateResult = await updateWithLog<ProduksiNPKMini>("produksi_npk_mini", {
-          ...form,
-          id: editingId,
-          _plant: "NPK2",
-        });
+        const updateResult = await updateWithLog<ProduksiNPKMini>(
+          "produksi_npk_mini",
+          {
+            ...form,
+            id: editingId,
+            _plant: "NPK2",
+          }
+        );
         if (updateResult.success) {
           setData((prev) =>
             prev.map((item) =>
@@ -339,7 +342,10 @@ const ProduksiNPKMiniPage = () => {
 
     setLoading(true);
     try {
-      const deleteResult = await deleteWithLog("produksi_npk_mini", { id: deleteId, _plant: "NPK2" });
+      const deleteResult = await deleteWithLog("produksi_npk_mini", {
+        id: deleteId,
+        _plant: "NPK2",
+      });
       if (deleteResult.success) {
         setData((prev) => prev.filter((item) => item.id !== deleteId));
         setShowDeleteConfirm(false);
@@ -759,7 +765,7 @@ const ProduksiNPKMiniPage = () => {
           setShowLogModal(false);
           setLogRecordId("");
         }}
-        sheetName="ProduksiNPKMini"
+        sheetName="produksi_npk_mini"
         recordId={logRecordId}
         title="Log Aktivitas Produksi NPK Mini"
       />

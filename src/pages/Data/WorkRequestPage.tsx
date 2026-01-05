@@ -739,7 +739,7 @@ const WorkRequestPage = ({ plant }: WorkRequestPageProps) => {
           setShowLogModal(false);
           setLogRecordId("");
         }}
-        sheetName={currentPlant === "NPK1" ? "WorkRequest_NPK1" : "WorkRequest"}
+        sheetName={currentPlant === "NPK1" ? "workrequest_NPK1" : "workrequest"}
         recordId={logRecordId}
         title="Log Aktivitas Work Request"
       />

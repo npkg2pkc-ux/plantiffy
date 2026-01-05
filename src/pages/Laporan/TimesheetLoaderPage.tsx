@@ -823,7 +823,7 @@ const TimesheetLoaderPage = ({ plant }: TimesheetLoaderPageProps) => {
           setLogRecordId("");
         }}
         sheetName={
-          plant === "NPK1" ? "TimesheetLoader_NPK1" : "TimesheetLoader"
+          plant === "NPK1" ? "timesheet_loader_NPK1" : "timesheet_loader"
         }
         recordId={logRecordId}
         title="Log Aktivitas Timesheet Loader"

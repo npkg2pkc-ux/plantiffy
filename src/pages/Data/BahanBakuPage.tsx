@@ -623,7 +623,7 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
           setShowLogModal(false);
           setLogRecordId("");
         }}
-        sheetName={currentPlant === "NPK1" ? "BahanBaku_NPK1" : "BahanBaku"}
+        sheetName={currentPlant === "NPK1" ? "bahanbaku_NPK1" : "bahanbaku"}
         recordId={logRecordId}
         title="Log Aktivitas Bahan Baku"
       />

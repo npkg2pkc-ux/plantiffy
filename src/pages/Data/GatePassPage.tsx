@@ -698,7 +698,7 @@ const GatePassPage = ({ plant }: GatePassPageProps) => {
           setShowLogModal(false);
           setLogRecordId("");
         }}
-        sheetName={currentPlant === "NPK1" ? "GatePass_NPK1" : "GatePass"}
+        sheetName={currentPlant === "NPK1" ? "gatepass_NPK1" : "gatepass"}
         recordId={logRecordId}
         title="Log Aktivitas Gate Pass"
       />

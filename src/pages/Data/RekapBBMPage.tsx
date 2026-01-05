@@ -726,7 +726,7 @@ const RekapBBMPage = ({ plant }: RekapBBMPageProps) => {
           setShowLogModal(false);
           setLogRecordId("");
         }}
-        sheetName={currentPlant === "NPK1" ? "RekapBBM_NPK1" : "RekapBBM"}
+        sheetName={currentPlant === "NPK1" ? "rekap_bbm_NPK1" : "rekap_bbm"}
         recordId={logRecordId}
         title="Log Aktivitas Rekap BBM"
       />

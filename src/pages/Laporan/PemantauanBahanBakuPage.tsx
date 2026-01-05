@@ -914,7 +914,7 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
           setLogRecordId("");
         }}
         sheetName={
-          plant === "NPK1" ? "PemantauanBahanBaku_NPK1" : "PemantauanBahanBaku"
+          plant === "NPK1" ? "pemantauan_bahan_baku_NPK1" : "pemantauan_bahan_baku"
         }
         recordId={logRecordId}
         title="Log Aktivitas Pemantauan Bahan Baku"

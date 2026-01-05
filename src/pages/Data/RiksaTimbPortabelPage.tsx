@@ -390,7 +390,9 @@ const RiksaTimbPortabelPage = () => {
     setLoading(true);
 
     try {
-      const result = await deleteWithLog("riksa_timb_portabel", { id: deleteId });
+      const result = await deleteWithLog("riksa_timb_portabel", {
+        id: deleteId,
+      });
 
       if (result.success) {
         setData((prev) => prev.filter((item) => item.id !== deleteId));
@@ -1188,7 +1190,7 @@ const RiksaTimbPortabelPage = () => {
           setShowLogModal(false);
           setLogRecordId("");
         }}
-        sheetName="RiksaTimbPortabel"
+        sheetName="riksa_timb_portabel"
         recordId={logRecordId}
         title="Log Aktivitas Riksa Timbangan Portabel"
       />

@@ -805,7 +805,7 @@ const TimesheetForkliftPage = ({ plant }: TimesheetForkliftPageProps) => {
           setLogRecordId("");
         }}
         sheetName={
-          plant === "NPK1" ? "TimesheetForklift_NPK1" : "TimesheetForklift"
+          plant === "NPK1" ? "timesheet_forklift_NPK1" : "timesheet_forklift"
         }
         recordId={logRecordId}
         title="Log Aktivitas Timesheet Forklift"

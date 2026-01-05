@@ -879,7 +879,7 @@ const PerbaikanTahunanPage = ({ plant }: PerbaikanTahunanPageProps) => {
           setLogRecordId("");
         }}
         sheetName={
-          currentPlant === "NPK1" ? "PerbaikanTahunan_NPK1" : "PerbaikanTahunan"
+          currentPlant === "NPK1" ? "perbaikan_tahunan_NPK1" : "perbaikan_tahunan"
         }
         recordId={logRecordId}
         title="Log Aktivitas Perbaikan Tahunan"

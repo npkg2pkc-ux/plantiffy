@@ -264,7 +264,10 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
       } else {
         // Add new
         const newData = { ...form, _plant: plant };
-        const createResult = await createWithLog<ProduksiNPK>("produksi_npk", newData);
+        const createResult = await createWithLog<ProduksiNPK>(
+          "produksi_npk",
+          newData
+        );
         if (createResult.success && createResult.data) {
           const newItem: ProduksiNPK = {
             ...createResult.data,
@@ -367,7 +370,10 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
 
     setLoading(true);
     try {
-      const deleteResult = await deleteWithLog("produksi_npk", { id: deleteId, _plant: plant });
+      const deleteResult = await deleteWithLog("produksi_npk", {
+        id: deleteId,
+        _plant: plant,
+      });
       if (deleteResult.success) {
         setData((prev) => prev.filter((item) => item.id !== deleteId));
         setShowDeleteConfirm(false);
@@ -1003,7 +1009,7 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
           setShowLogModal(false);
           setLogRecordId("");
         }}
-        sheetName={plant === "NPK1" ? "ProduksiNPK_NPK1" : "ProduksiNPK"}
+        sheetName={plant === "NPK1" ? "produksi_npk_NPK1" : "produksi_npk"}
         recordId={logRecordId}
         title="Log Aktivitas Produksi NPK"
       />

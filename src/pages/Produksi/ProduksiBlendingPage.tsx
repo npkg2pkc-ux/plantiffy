@@ -563,11 +563,14 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
 
     try {
       if (editingId) {
-        const updateResult = await updateWithLog<ProduksiBlending>("produksi_blending", {
-          ...form,
-          id: editingId,
-          _plant: plant,
-        });
+        const updateResult = await updateWithLog<ProduksiBlending>(
+          "produksi_blending",
+          {
+            ...form,
+            id: editingId,
+            _plant: plant,
+          }
+        );
         if (updateResult.success) {
           setData((prev) =>
             prev.map((item) =>
@@ -696,7 +699,10 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
 
     setLoading(true);
     try {
-      const deleteResult = await deleteWithLog("produksi_blending", { id: deleteId, _plant: plant });
+      const deleteResult = await deleteWithLog("produksi_blending", {
+        id: deleteId,
+        _plant: plant,
+      });
       if (deleteResult.success) {
         setData((prev) => prev.filter((item) => item.id !== deleteId));
         setShowDeleteConfirm(false);
@@ -1520,7 +1526,7 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
           setShowLogModal(false);
           setLogRecordId("");
         }}
-        sheetName={type === "blending" ? "ProduksiBlending" : "ProduksiRetail"}
+        sheetName={type === "blending" ? "produksi_blending" : "produksi_blending_NPK1"}
         recordId={logRecordId}
         title={`Log Aktivitas ${pageTitle}`}
       />

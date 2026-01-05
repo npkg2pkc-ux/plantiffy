@@ -3254,7 +3254,7 @@ const KOPPage = ({ plant }: KOPPageProps) => {
           setShowLogModal(false);
           setLogRecordId("");
         }}
-        sheetName={plant === "NPK1" ? "KOP_NPK1" : "KOP"}
+        sheetName={plant === "NPK1" ? "kop_NPK1" : "kop"}
         recordId={logRecordId}
         title="Log Aktivitas KOP"
       />

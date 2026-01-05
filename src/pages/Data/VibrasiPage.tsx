@@ -764,7 +764,7 @@ const VibrasiPage = ({ plant }: VibrasiPageProps) => {
           setShowLogModal(false);
           setLogRecordId("");
         }}
-        sheetName={currentPlant === "NPK1" ? "Vibrasi_NPK1" : "Vibrasi"}
+        sheetName={currentPlant === "NPK1" ? "vibrasi_NPK1" : "vibrasi"}
         recordId={logRecordId}
         title="Log Aktivitas Vibrasi"
       />
