@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Plus, Edit2, Trash2, FileText, Search, Eye } from "lucide-react";
-import { useSaveShortcut } from "@/hooks";
+import { useSaveShortcut, useDataWithLogging } from "@/hooks";
 import {
   Button,
   Card,
@@ -26,6 +26,7 @@ import {
   isViewOnly,
   getCurrentDate,
 } from "@/lib/utils";
+import { SHEETS } from "@/services/api";
 import type { WorkRequest, PlantType } from "@/types";
 
 const initialFormState: WorkRequest = {
@@ -54,6 +55,7 @@ interface WorkRequestPageProps {
 
 const WorkRequestPage = ({ plant }: WorkRequestPageProps) => {
   const { user } = useAuthStore();
+  const { createWithLog, updateWithLog, deleteWithLog } = useDataWithLogging();
   const [data, setData] = useState<WorkRequest[]>([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -125,13 +127,10 @@ const WorkRequestPage = ({ plant }: WorkRequestPageProps) => {
     setLoading(true);
 
     try {
-      const { saveDataByPlant, updateDataByPlant, SHEETS } = await import(
-        "@/services/api"
-      );
-
       if (editingId) {
+        // Update with logging
         const dataToUpdate = { ...form, id: editingId, _plant: currentPlant };
-        const updateResult = await updateDataByPlant<WorkRequest>(
+        const updateResult = await updateWithLog<WorkRequest>(
           SHEETS.WORK_REQUEST,
           dataToUpdate
         );
@@ -147,8 +146,9 @@ const WorkRequestPage = ({ plant }: WorkRequestPageProps) => {
           throw new Error(updateResult.error || "Gagal mengupdate data");
         }
       } else {
+        // Create with logging
         const newData = { ...form, _plant: currentPlant };
-        const createResult = await saveDataByPlant<WorkRequest>(
+        const createResult = await createWithLog<WorkRequest>(
           SHEETS.WORK_REQUEST,
           newData
         );
@@ -250,10 +250,10 @@ const WorkRequestPage = ({ plant }: WorkRequestPageProps) => {
 
     setLoading(true);
     try {
-      const { deleteDataByPlant, SHEETS } = await import("@/services/api");
       const itemToDelete = data.find((item) => item.id === deleteId);
 
-      const deleteResult = await deleteDataByPlant(SHEETS.WORK_REQUEST, {
+      // Delete with logging
+      const deleteResult = await deleteWithLog(SHEETS.WORK_REQUEST, {
         id: deleteId,
         _plant: itemToDelete?._plant,
       });

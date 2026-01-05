@@ -374,6 +374,35 @@ export interface Notification {
   fromUser?: string;
   fromPlant?: PlantType;
   toUser?: string;
+  relatedLogId?: string;
+  sheetName?: string;
+  recordId?: string;
+}
+
+// Activity Log for tracking all data changes
+export interface ActivityLog {
+  id: string;
+  timestamp: string;
+  action: "create" | "update" | "delete";
+  sheet_name: string;
+  record_id: string;
+  record_preview: string;
+  user_id: string;
+  user_name: string;
+  user_role: UserRole;
+  plant: PlantType;
+  ip_address?: string;
+  changes?: string; // JSON string of changes {key: {old, new}}
+}
+
+// Activity Log Filter
+export interface ActivityLogFilter {
+  sheet_name?: string;
+  user_id?: string;
+  plant?: PlantType;
+  record_id?: string;
+  start_date?: string;
+  end_date?: string;
 }
 
 // Session

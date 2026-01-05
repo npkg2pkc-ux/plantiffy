@@ -52,3 +52,5 @@ export { default as BBMPrintModal } from "./BBMPrintModal";
 export { default as GatePassPrintModal } from "./GatePassPrintModal";
 
 export { InstallPrompt } from "./InstallPrompt";
+
+export { NotificationLogModal } from "./NotificationLogModal";

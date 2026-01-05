@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Plus, Edit2, Trash2, Search, Package } from "lucide-react";
-import { useSaveShortcut } from "@/hooks";
+import { useSaveShortcut, useDataWithLogging } from "@/hooks";
 import {
   Button,
   Card,
@@ -27,6 +27,7 @@ import {
   isViewOnly,
   getCurrentDate,
 } from "@/lib/utils";
+import { SHEETS } from "@/services/api";
 import type { BahanBaku, PlantType } from "@/types";
 
 const initialFormState: BahanBaku = {
@@ -44,6 +45,7 @@ interface BahanBakuPageProps {
 
 const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
   const { user } = useAuthStore();
+  const { createWithLog, updateWithLog, deleteWithLog } = useDataWithLogging();
   const [data, setData] = useState<BahanBaku[]>([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -135,13 +137,10 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
     setLoading(true);
 
     try {
-      const { saveDataByPlant, updateDataByPlant, SHEETS } = await import(
-        "@/services/api"
-      );
-
       if (editingId) {
+        // Update with logging
         const dataToUpdate = { ...form, id: editingId, _plant: currentPlant };
-        const updateResult = await updateDataByPlant<BahanBaku>(
+        const updateResult = await updateWithLog<BahanBaku>(
           SHEETS.BAHAN_BAKU,
           dataToUpdate
         );
@@ -157,8 +156,9 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
           throw new Error(updateResult.error || "Gagal mengupdate data");
         }
       } else {
+        // Create with logging
         const newData = { ...form, _plant: currentPlant };
-        const createResult = await saveDataByPlant<BahanBaku>(
+        const createResult = await createWithLog<BahanBaku>(
           SHEETS.BAHAN_BAKU,
           newData
         );
@@ -252,10 +252,10 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
 
     setLoading(true);
     try {
-      const { deleteDataByPlant, SHEETS } = await import("@/services/api");
       const itemToDelete = data.find((item) => item.id === deleteId);
 
-      const deleteResult = await deleteDataByPlant(SHEETS.BAHAN_BAKU, {
+      // Delete with logging
+      const deleteResult = await deleteWithLog(SHEETS.BAHAN_BAKU, {
         id: deleteId,
         _plant: itemToDelete?._plant,
       });
@@ -345,7 +345,9 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
           <h1 className="text-2xl font-display font-bold text-dark-900 dark:text-white">
             Data Bahan Baku {currentPlant === "NPK1" ? "NPK 1" : "NPK 2"}
           </h1>
-          <p className="text-dark-500 dark:text-dark-400 mt-1">Kelola data pemakaian bahan baku</p>
+          <p className="text-dark-500 dark:text-dark-400 mt-1">
+            Kelola data pemakaian bahan baku
+          </p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -369,7 +371,9 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
                   <Package className="h-5 w-5 text-primary-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-dark-500 dark:text-dark-400">{name}</p>
+                  <p className="text-sm text-dark-500 dark:text-dark-400">
+                    {name}
+                  </p>
                   <p className="text-lg font-bold text-dark-900 dark:text-white">
                     {formatNumber(total)} Kg
                   </p>

@@ -25,6 +25,7 @@ import {
   Smartphone,
   Pencil,
   Trash2,
+  Eye,
 } from "lucide-react";
 import {
   cn,
@@ -39,7 +40,8 @@ import {
   useNotificationStore,
   useChatStore,
 } from "@/stores";
-import { Badge } from "@/components/ui";
+import { Badge, NotificationLogModal } from "@/components/ui";
+import type { Notification } from "@/types";
 
 // ============================================
 // ACTIVE USERS MARQUEE COMPONENT
@@ -586,7 +588,7 @@ const Sidebar = () => {
                 Plantiffy
               </span>
               <span className="text-xs text-dark-500 dark:text-dark-400">
-                v2.3.3
+                v2.3.4
               </span>
             </Link>
           )}
@@ -731,6 +733,22 @@ const Header = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
+
+  // State for notification log modal
+  const [showLogModal, setShowLogModal] = useState(false);
+  const [selectedNotification, setSelectedNotification] =
+    useState<Notification | null>(null);
+
+  // Handle notification click to show log modal
+  const handleNotificationClick = (notif: Notification) => {
+    handleMarkAsRead(notif.id);
+    // Only show log modal if notification has related log info
+    if (notif.sheetName && notif.recordId) {
+      setSelectedNotification(notif);
+      setShowLogModal(true);
+      setShowNotifications(false);
+    }
+  };
 
   // Detect if user is on mobile device
   useEffect(() => {
@@ -1032,9 +1050,8 @@ const Header = () => {
                       notifications.slice(0, 10).map((notif) => (
                         <div
                           key={notif.id}
-                          onClick={() => handleMarkAsRead(notif.id)}
                           className={cn(
-                            "px-4 py-3 border-b border-dark-50 dark:border-dark-700 cursor-pointer hover:bg-dark-50 dark:hover:bg-dark-700 transition-colors",
+                            "px-4 py-3 border-b border-dark-50 dark:border-dark-700 hover:bg-dark-50 dark:hover:bg-dark-700 transition-colors",
                             !notif.read &&
                               "bg-primary-50 dark:bg-primary-900/30"
                           )}
@@ -1052,9 +1069,32 @@ const Header = () => {
                               <p className="text-sm text-dark-700 dark:text-dark-200 line-clamp-2">
                                 {notif.message}
                               </p>
-                              <p className="text-xs text-dark-400 mt-1">
-                                {formatDateTime(notif.timestamp)}
-                              </p>
+                              <div className="flex items-center justify-between mt-1">
+                                <p className="text-xs text-dark-400">
+                                  {formatDateTime(notif.timestamp)}
+                                </p>
+                                <div className="flex items-center gap-2">
+                                  {notif.sheetName && notif.recordId && (
+                                    <button
+                                      onClick={() =>
+                                        handleNotificationClick(notif)
+                                      }
+                                      className="flex items-center gap-1 text-xs text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
+                                    >
+                                      <Eye className="h-3 w-3" />
+                                      Lihat Log
+                                    </button>
+                                  )}
+                                  {!notif.read && (
+                                    <button
+                                      onClick={() => handleMarkAsRead(notif.id)}
+                                      className="text-xs text-dark-500 hover:text-dark-700 dark:text-dark-400 dark:hover:text-dark-200"
+                                    >
+                                      Tandai dibaca
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -1120,6 +1160,16 @@ const Header = () => {
           </div>
         </div>
       </div>
+
+      {/* Notification Log Modal */}
+      <NotificationLogModal
+        isVisible={showLogModal}
+        onClose={() => {
+          setShowLogModal(false);
+          setSelectedNotification(null);
+        }}
+        notification={selectedNotification}
+      />
     </header>
   );
 };

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Plus, Edit2, Trash2, Search, Truck, Printer } from "lucide-react";
-import { useSaveShortcut } from "@/hooks";
+import { useSaveShortcut, useDataWithLogging } from "@/hooks";
 import {
   Button,
   Card,
@@ -26,6 +26,7 @@ import {
   isViewOnly,
   getCurrentDate,
 } from "@/lib/utils";
+import { SHEETS } from "@/services/api";
 import type { GatePass, PlantType } from "@/types";
 
 const initialFormState: GatePass = {
@@ -45,6 +46,7 @@ interface GatePassPageProps {
 
 const GatePassPage = ({ plant }: GatePassPageProps) => {
   const { user } = useAuthStore();
+  const { createWithLog, updateWithLog, deleteWithLog } = useDataWithLogging();
   const [data, setData] = useState<GatePass[]>([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -156,13 +158,10 @@ const GatePassPage = ({ plant }: GatePassPageProps) => {
     setLoading(true);
 
     try {
-      const { saveDataByPlant, updateDataByPlant, SHEETS } = await import(
-        "@/services/api"
-      );
-
       if (editingId) {
+        // Update with logging
         const dataToUpdate = { ...form, id: editingId, _plant: currentPlant };
-        const updateResult = await updateDataByPlant<GatePass>(
+        const updateResult = await updateWithLog<GatePass>(
           SHEETS.GATE_PASS,
           dataToUpdate
         );
@@ -178,12 +177,13 @@ const GatePassPage = ({ plant }: GatePassPageProps) => {
           throw new Error(updateResult.error || "Gagal mengupdate data");
         }
       } else {
+        // Create with logging
         const newData = {
           ...form,
           nomorGatePass: form.nomorGatePass || generateGatePassNumber(),
           _plant: currentPlant,
         };
-        const createResult = await saveDataByPlant<GatePass>(
+        const createResult = await createWithLog<GatePass>(
           SHEETS.GATE_PASS,
           newData
         );
@@ -277,10 +277,10 @@ const GatePassPage = ({ plant }: GatePassPageProps) => {
 
     setLoading(true);
     try {
-      const { deleteDataByPlant, SHEETS } = await import("@/services/api");
       const itemToDelete = data.find((item) => item.id === deleteId);
 
-      const deleteResult = await deleteDataByPlant(SHEETS.GATE_PASS, {
+      // Delete with logging
+      const deleteResult = await deleteWithLog(SHEETS.GATE_PASS, {
         id: deleteId,
         _plant: itemToDelete?._plant,
       });

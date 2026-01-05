@@ -7,7 +7,7 @@ import {
   Activity,
   AlertTriangle,
 } from "lucide-react";
-import { useSaveShortcut } from "@/hooks";
+import { useSaveShortcut, useDataWithLogging } from "@/hooks";
 import {
   Button,
   Card,
@@ -35,6 +35,7 @@ import {
   isViewOnly,
   getCurrentDate,
 } from "@/lib/utils";
+import { SHEETS } from "@/services/api";
 import type { Vibrasi, PlantType } from "@/types";
 
 const initialFormState: Vibrasi = {
@@ -53,6 +54,7 @@ interface VibrasiPageProps {
 
 const VibrasiPage = ({ plant }: VibrasiPageProps) => {
   const { user } = useAuthStore();
+  const { createWithLog, updateWithLog, deleteWithLog } = useDataWithLogging();
   const [data, setData] = useState<Vibrasi[]>([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -145,13 +147,10 @@ const VibrasiPage = ({ plant }: VibrasiPageProps) => {
     setLoading(true);
 
     try {
-      const { saveDataByPlant, updateDataByPlant, SHEETS } = await import(
-        "@/services/api"
-      );
-
       if (editingId) {
+        // Update with logging
         const dataToUpdate = { ...form, id: editingId, _plant: currentPlant };
-        const updateResult = await updateDataByPlant<Vibrasi>(
+        const updateResult = await updateWithLog<Vibrasi>(
           SHEETS.VIBRASI,
           dataToUpdate
         );
@@ -167,8 +166,9 @@ const VibrasiPage = ({ plant }: VibrasiPageProps) => {
           throw new Error(updateResult.error || "Gagal mengupdate data");
         }
       } else {
+        // Create with logging
         const newData = { ...form, _plant: currentPlant };
-        const createResult = await saveDataByPlant<Vibrasi>(
+        const createResult = await createWithLog<Vibrasi>(
           SHEETS.VIBRASI,
           newData
         );
@@ -274,10 +274,10 @@ const VibrasiPage = ({ plant }: VibrasiPageProps) => {
 
     setLoading(true);
     try {
-      const { deleteDataByPlant, SHEETS } = await import("@/services/api");
       const itemToDelete = data.find((item) => item.id === deleteId);
 
-      const deleteResult = await deleteDataByPlant(SHEETS.VIBRASI, {
+      // Delete with logging
+      const deleteResult = await deleteWithLog(SHEETS.VIBRASI, {
         id: deleteId,
         _plant: itemToDelete?._plant,
       });
@@ -446,7 +446,9 @@ const VibrasiPage = ({ plant }: VibrasiPageProps) => {
               <AlertTriangle className="h-5 w-5 text-amber-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500 dark:text-dark-400">Warning</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">
+                Warning
+              </p>
               <p className="text-2xl font-bold text-amber-600">
                 {statusCounts.warning}
               </p>
@@ -472,7 +474,9 @@ const VibrasiPage = ({ plant }: VibrasiPageProps) => {
               <Activity className="h-5 w-5 text-dark-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500 dark:text-dark-400">Total Pengukuran</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">
+                Total Pengukuran
+              </p>
               <p className="text-2xl font-bold text-dark-900 dark:text-white">
                 {filteredData.length}
               </p>

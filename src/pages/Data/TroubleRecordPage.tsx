@@ -13,7 +13,7 @@ import {
   FileText,
   CheckCircle,
 } from "lucide-react";
-import { useSaveShortcut } from "@/hooks";
+import { useSaveShortcut, useDataWithLogging } from "@/hooks";
 import {
   Button,
   Card,
@@ -40,6 +40,7 @@ import {
   isViewOnly,
   getCurrentDate,
 } from "@/lib/utils";
+import { SHEETS } from "@/services/api";
 import type { TroubleRecord, PlantType } from "@/types";
 
 const initialFormState: TroubleRecord = {
@@ -65,6 +66,7 @@ interface TroubleRecordPageProps {
 
 const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
   const { user } = useAuthStore();
+  const { createWithLog, updateWithLog, deleteWithLog } = useDataWithLogging();
   const [data, setData] = useState<TroubleRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -162,13 +164,10 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
     setLoading(true);
 
     try {
-      const { saveDataByPlant, updateDataByPlant, SHEETS } = await import(
-        "@/services/api"
-      );
-
       if (editingId) {
+        // Update with logging
         const dataToUpdate = { ...form, id: editingId, _plant: currentPlant };
-        const updateResult = await updateDataByPlant<TroubleRecord>(
+        const updateResult = await updateWithLog<TroubleRecord>(
           SHEETS.TROUBLE_RECORD,
           dataToUpdate
         );
@@ -184,8 +183,9 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
           throw new Error(updateResult.error || "Gagal mengupdate data");
         }
       } else {
+        // Create with logging
         const newData = { ...form, _plant: currentPlant };
-        const createResult = await saveDataByPlant<TroubleRecord>(
+        const createResult = await createWithLog<TroubleRecord>(
           SHEETS.TROUBLE_RECORD,
           newData
         );
@@ -296,10 +296,10 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
 
     setLoading(true);
     try {
-      const { deleteDataByPlant, SHEETS } = await import("@/services/api");
       const itemToDelete = data.find((item) => item.id === deleteId);
 
-      const deleteResult = await deleteDataByPlant(SHEETS.TROUBLE_RECORD, {
+      // Delete with logging
+      const deleteResult = await deleteWithLog(SHEETS.TROUBLE_RECORD, {
         id: deleteId,
         _plant: itemToDelete?._plant,
       });

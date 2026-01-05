@@ -415,6 +415,21 @@ const SHEET_HEADERS = {
     "keterangan",
     "created_at",
   ],
+  // Activity Logs for tracking all changes
+  activity_logs: [
+    "id",
+    "timestamp",
+    "action", // "create" | "update" | "delete"
+    "sheet_name", // which sheet/module
+    "record_id", // ID of affected record
+    "record_preview", // Short preview of data for context
+    "user_id", // username who did action
+    "user_name", // full name of user
+    "user_role", // role of user
+    "plant", // NPK1 | NPK2 | ALL
+    "ip_address", // optional
+    "changes", // JSON of old vs new values for updates
+  ],
 };
 
 // ============================================
@@ -518,6 +533,22 @@ function handleRequest(e) {
             body.data.jumlah,
             body.data.keterangan
           );
+          break;
+        // Activity Log & Notification Actions
+        case "createWithLog":
+          result = createRecordWithLog(body.sheet, body.data, body.userInfo);
+          break;
+        case "updateWithLog":
+          result = updateRecordWithLog(body.sheet, body.data, body.userInfo);
+          break;
+        case "deleteWithLog":
+          result = deleteRecordWithLog(body.sheet, body.data, body.userInfo);
+          break;
+        case "getActivityLogs":
+          result = getActivityLogs(body.filters);
+          break;
+        case "sendNotificationToRoles":
+          result = sendNotificationToRoles(body.data);
           break;
         default:
           result = { success: false, error: "Unknown action" };
@@ -1984,4 +2015,444 @@ function getMaterialTransactions(filters) {
   } catch (error) {
     return { success: false, error: error.toString() };
   }
+}
+
+// ============================================
+// ACTIVITY LOGGING & NOTIFICATION SYSTEM
+// ============================================
+
+/**
+ * Get sheet display name for notifications
+ */
+function getSheetDisplayName(sheetName) {
+  const displayNames = {
+    produksi_npk: "Produksi NPK",
+    produksi_npk_NPK1: "Produksi NPK",
+    produksi_blending: "Produksi Blending",
+    produksi_blending_NPK1: "Produksi Blending",
+    produksi_npk_mini: "Produksi NPK Mini",
+    produksi_npk_mini_NPK1: "Produksi NPK Mini",
+    timesheet_forklift: "Timesheet Forklift",
+    timesheet_forklift_NPK1: "Timesheet Forklift",
+    timesheet_loader: "Timesheet Loader",
+    timesheet_loader_NPK1: "Timesheet Loader",
+    downtime: "Downtime",
+    downtime_NPK1: "Downtime",
+    workrequest: "Work Request",
+    workrequest_NPK1: "Work Request",
+    bahanbaku: "Bahan Baku",
+    bahanbaku_NPK1: "Bahan Baku",
+    vibrasi: "Vibrasi",
+    vibrasi_NPK1: "Vibrasi",
+    gatepass: "Gate Pass",
+    gatepass_NPK1: "Gate Pass",
+    perbaikan_tahunan: "Perbaikan Tahunan",
+    perbaikan_tahunan_NPK1: "Perbaikan Tahunan",
+    trouble_record: "Trouble Record",
+    trouble_record_NPK1: "Trouble Record",
+    dokumentasi_foto: "Dokumentasi Foto",
+    dokumentasi_foto_NPK1: "Dokumentasi Foto",
+    rekap_bbm: "Rekap BBM",
+    rekap_bbm_NPK1: "Rekap BBM",
+    pemantauan_bahan_baku: "Pemantauan Bahan Baku",
+    pemantauan_bahan_baku_NPK1: "Pemantauan Bahan Baku",
+    riksa_timb_portabel: "Riksa Timbangan Portabel",
+    kop: "KOP",
+    kop_NPK1: "KOP",
+    materials: "Inventaris Material",
+    perta: "PERTA",
+    perta_NPK1: "PERTA",
+  };
+  return displayNames[sheetName] || sheetName;
+}
+
+/**
+ * Get plant from sheet name
+ */
+function getPlantFromSheet(sheetName) {
+  if (sheetName.endsWith("_NPK1")) return "NPK1";
+  return "NPK2";
+}
+
+/**
+ * Create a record preview for logs
+ */
+function createRecordPreview(data, sheetName) {
+  if (data.tanggal) {
+    if (data.namaBarang) return `${data.tanggal} - ${data.namaBarang}`;
+    if (data.nomorWR) return `${data.tanggal} - WR ${data.nomorWR}`;
+    if (data.nomorGatePass) return `${data.tanggal} - GP ${data.nomorGatePass}`;
+    if (data.item) return `${data.tanggal} - ${data.item}`;
+    if (data.namaEquipment) return `${data.tanggal} - ${data.namaEquipment}`;
+    if (data.judul) return `${data.tanggal} - ${data.judul}`;
+    if (data.namaAlatBerat) return `${data.tanggal} - ${data.namaAlatBerat}`;
+    if (data.shift) return `${data.tanggal} - Shift ${data.shift}`;
+    return data.tanggal;
+  }
+  if (data.kode_material)
+    return `${data.kode_material} - ${data.nama_material}`;
+  if (data.nama_material) return data.nama_material;
+  return data.id || "Data";
+}
+
+/**
+ * Create activity log entry
+ */
+function createActivityLog(logData) {
+  try {
+    const log = {
+      id: generateId(),
+      timestamp: new Date().toISOString(),
+      action: logData.action,
+      sheet_name: logData.sheet_name,
+      record_id: logData.record_id || "",
+      record_preview: logData.record_preview || "",
+      user_id: logData.user_id || "",
+      user_name: logData.user_name || "",
+      user_role: logData.user_role || "",
+      plant: logData.plant || "",
+      ip_address: logData.ip_address || "",
+      changes: logData.changes ? JSON.stringify(logData.changes) : "",
+    };
+
+    return createRecord("activity_logs", log);
+  } catch (error) {
+    Logger.log("Error creating activity log: " + error.toString());
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Get users by roles for notification targeting
+ * @param {Array} roles - Array of roles to target ['supervisor', 'avp', 'admin']
+ * @param {string} plant - Plant filter ('NPK1', 'NPK2', or 'ALL' for both)
+ */
+function getUsersByRoles(roles, plant) {
+  try {
+    const usersResult = readSheet("users");
+    if (!usersResult.success || !usersResult.data) return [];
+
+    return usersResult.data.filter((user) => {
+      if (!roles.includes(user.role)) return false;
+      if (plant && plant !== "ALL") {
+        if (user.plant === "ALL") return true;
+        return user.plant === plant;
+      }
+      return true;
+    });
+  } catch (error) {
+    Logger.log("Error getting users by roles: " + error.toString());
+    return [];
+  }
+}
+
+/**
+ * Send notifications to specific roles
+ * @param {Object} data - { message, plant, targetRoles, fromUser, fromPlant, relatedLogId, sheetName, recordId }
+ */
+function sendNotificationToRoles(data) {
+  try {
+    const {
+      message,
+      plant,
+      targetRoles,
+      fromUser,
+      fromPlant,
+      relatedLogId,
+      sheetName,
+      recordId,
+    } = data;
+    const roles = targetRoles || ["supervisor", "avp", "admin"];
+
+    const targetUsers = getUsersByRoles(roles, plant);
+
+    if (targetUsers.length === 0) {
+      Logger.log("No target users found for notification");
+      return { success: true, data: { sent: 0 } };
+    }
+
+    let sentCount = 0;
+    const timestamp = new Date().toISOString();
+
+    for (const targetUser of targetUsers) {
+      if (targetUser.username === fromUser) continue;
+
+      const notifData = {
+        id: generateId(),
+        message: message,
+        timestamp: timestamp,
+        read: false,
+        fromUser: fromUser || "",
+        fromPlant: fromPlant || plant || "",
+        toUser: targetUser.username,
+        relatedLogId: relatedLogId || "",
+        sheetName: sheetName || "",
+        recordId: recordId || "",
+      };
+
+      const result = createRecord("notifications", notifData);
+      if (result.success) sentCount++;
+    }
+
+    return { success: true, data: { sent: sentCount } };
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Create record with logging and notifications
+ */
+function createRecordWithLog(sheetName, data, userInfo) {
+  const lock = LockService.getScriptLock();
+
+  try {
+    lock.waitLock(30000);
+
+    const result = createRecord(sheetName, data);
+
+    if (!result.success) return result;
+
+    const plant = getPlantFromSheet(sheetName);
+    const displayName = getSheetDisplayName(sheetName);
+    const preview = createRecordPreview(data, sheetName);
+    const recordId = result.data?.id || data.id || "";
+
+    const logResult = createActivityLog({
+      action: "create",
+      sheet_name: sheetName,
+      record_id: recordId,
+      record_preview: preview,
+      user_id: userInfo?.username || "",
+      user_name: userInfo?.namaLengkap || userInfo?.nama || "",
+      user_role: userInfo?.role || "",
+      plant: plant,
+    });
+
+    const notifMessage = `📝 ${
+      userInfo?.namaLengkap || userInfo?.nama || "User"
+    } menambahkan data baru di ${displayName} (${plant}): ${preview}`;
+
+    sendNotificationToRoles({
+      message: notifMessage,
+      plant: plant,
+      targetRoles: ["supervisor", "avp", "admin"],
+      fromUser: userInfo?.username || "",
+      fromPlant: plant,
+      relatedLogId: logResult.data?.id || "",
+      sheetName: sheetName,
+      recordId: recordId,
+    });
+
+    return result;
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * Update record with logging and notifications
+ */
+function updateRecordWithLog(sheetName, data, userInfo) {
+  const lock = LockService.getScriptLock();
+
+  try {
+    lock.waitLock(30000);
+
+    let oldData = null;
+    if (data.id) {
+      const sheet = getOrCreateSheet(sheetName);
+      const allData = sheet.getDataRange().getValues();
+      const headers = allData[0];
+      const idIndex = headers.indexOf("id");
+
+      for (let i = 1; i < allData.length; i++) {
+        if (allData[i][idIndex] === data.id) {
+          oldData = {};
+          headers.forEach((h, idx) => {
+            oldData[h] = allData[i][idx];
+          });
+          break;
+        }
+      }
+    }
+
+    const result = updateRecord(sheetName, data);
+
+    if (!result.success) return result;
+
+    const plant = getPlantFromSheet(sheetName);
+    const displayName = getSheetDisplayName(sheetName);
+    const preview = createRecordPreview(data, sheetName);
+
+    const changes = {};
+    if (oldData) {
+      Object.keys(data).forEach((key) => {
+        if (key !== "id" && data[key] !== oldData[key]) {
+          changes[key] = { old: oldData[key], new: data[key] };
+        }
+      });
+    }
+
+    const logResult = createActivityLog({
+      action: "update",
+      sheet_name: sheetName,
+      record_id: data.id || "",
+      record_preview: preview,
+      user_id: userInfo?.username || "",
+      user_name: userInfo?.namaLengkap || userInfo?.nama || "",
+      user_role: userInfo?.role || "",
+      plant: plant,
+      changes: changes,
+    });
+
+    const notifMessage = `✏️ ${
+      userInfo?.namaLengkap || userInfo?.nama || "User"
+    } mengubah data di ${displayName} (${plant}): ${preview}`;
+
+    sendNotificationToRoles({
+      message: notifMessage,
+      plant: plant,
+      targetRoles: ["supervisor", "avp", "admin"],
+      fromUser: userInfo?.username || "",
+      fromPlant: plant,
+      relatedLogId: logResult.data?.id || "",
+      sheetName: sheetName,
+      recordId: data.id || "",
+    });
+
+    return result;
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * Delete record with logging and notifications
+ */
+function deleteRecordWithLog(sheetName, data, userInfo) {
+  const lock = LockService.getScriptLock();
+
+  try {
+    lock.waitLock(30000);
+
+    let recordPreview = "";
+    let oldData = null;
+    if (data.id) {
+      const sheet = getOrCreateSheet(sheetName);
+      const allData = sheet.getDataRange().getValues();
+      const headers = allData[0];
+      const idIndex = headers.indexOf("id");
+
+      for (let i = 1; i < allData.length; i++) {
+        if (allData[i][idIndex] === data.id) {
+          oldData = {};
+          headers.forEach((h, idx) => {
+            oldData[h] = allData[i][idx];
+          });
+          recordPreview = createRecordPreview(oldData, sheetName);
+          break;
+        }
+      }
+    }
+
+    const result = deleteRecord(sheetName, data);
+
+    if (!result.success) return result;
+
+    const plant = getPlantFromSheet(sheetName);
+    const displayName = getSheetDisplayName(sheetName);
+
+    const logResult = createActivityLog({
+      action: "delete",
+      sheet_name: sheetName,
+      record_id: data.id || "",
+      record_preview: recordPreview || data.id,
+      user_id: userInfo?.username || "",
+      user_name: userInfo?.namaLengkap || userInfo?.nama || "",
+      user_role: userInfo?.role || "",
+      plant: plant,
+      changes: oldData ? { deleted_data: oldData } : null,
+    });
+
+    const notifMessage = `🗑️ ${
+      userInfo?.namaLengkap || userInfo?.nama || "User"
+    } menghapus data di ${displayName} (${plant}): ${recordPreview}`;
+
+    sendNotificationToRoles({
+      message: notifMessage,
+      plant: plant,
+      targetRoles: ["supervisor", "avp", "admin"],
+      fromUser: userInfo?.username || "",
+      fromPlant: plant,
+      relatedLogId: logResult.data?.id || "",
+      sheetName: sheetName,
+      recordId: data.id || "",
+    });
+
+    return result;
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * Get activity logs with filters
+ * @param {Object} filters - { sheet_name, user_id, plant, start_date, end_date, record_id }
+ */
+function getActivityLogs(filters) {
+  try {
+    const result = readSheet("activity_logs");
+
+    if (!result.success || !result.data) return result;
+
+    let logs = result.data;
+
+    if (filters) {
+      if (filters.sheet_name) {
+        logs = logs.filter(
+          (l) =>
+            l.sheet_name === filters.sheet_name ||
+            l.sheet_name.startsWith(filters.sheet_name)
+        );
+      }
+      if (filters.user_id) {
+        logs = logs.filter((l) => l.user_id === filters.user_id);
+      }
+      if (filters.plant) {
+        logs = logs.filter((l) => l.plant === filters.plant);
+      }
+      if (filters.record_id) {
+        logs = logs.filter((l) => l.record_id === filters.record_id);
+      }
+      if (filters.start_date) {
+        const startDate = new Date(filters.start_date);
+        logs = logs.filter((l) => new Date(l.timestamp) >= startDate);
+      }
+      if (filters.end_date) {
+        const endDate = new Date(filters.end_date);
+        endDate.setHours(23, 59, 59, 999);
+        logs = logs.filter((l) => new Date(l.timestamp) <= endDate);
+      }
+    }
+
+    logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    return { success: true, data: logs };
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Get activity logs for a specific record
+ */
+function getRecordActivityLogs(sheetName, recordId) {
+  return getActivityLogs({ sheet_name: sheetName, record_id: recordId });
 }

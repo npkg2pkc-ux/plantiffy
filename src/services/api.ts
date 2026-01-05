@@ -399,3 +399,140 @@ export async function getMaterialTransactions(
 
   return fetchGET<MaterialTransaction[]>(queryParams);
 }
+
+// ============================================
+// ACTIVITY LOGGING & NOTIFICATION API
+// ============================================
+
+import type { ActivityLog, ActivityLogFilter, User } from "@/types";
+
+// User info type for logging
+export interface UserInfoForLog {
+  username: string;
+  namaLengkap?: string;
+  nama?: string;
+  role: string;
+}
+
+// Create data with activity logging and notification
+export async function createDataWithLog<T extends { _plant?: string }>(
+  baseSheet: string,
+  data: T,
+  userInfo: UserInfoForLog
+): Promise<ApiResponse<T>> {
+  const targetSheet = data._plant === "NPK1" ? `${baseSheet}_NPK1` : baseSheet;
+  return fetchPOST<T>({
+    action: "createWithLog",
+    sheet: targetSheet,
+    data,
+    userInfo,
+  });
+}
+
+// Update data with activity logging and notification
+export async function updateDataWithLog<T extends { _plant?: string }>(
+  baseSheet: string,
+  data: T,
+  userInfo: UserInfoForLog
+): Promise<ApiResponse<T>> {
+  const targetSheet = data._plant === "NPK1" ? `${baseSheet}_NPK1` : baseSheet;
+  return fetchPOST<T>({
+    action: "updateWithLog",
+    sheet: targetSheet,
+    data,
+    userInfo,
+  });
+}
+
+// Delete data with activity logging and notification
+export async function deleteDataWithLog(
+  baseSheet: string,
+  data: { id: string; _plant?: string },
+  userInfo: UserInfoForLog
+): Promise<ApiResponse<boolean>> {
+  const targetSheet = data._plant === "NPK1" ? `${baseSheet}_NPK1` : baseSheet;
+  return fetchPOST<boolean>({
+    action: "deleteWithLog",
+    sheet: targetSheet,
+    data: { id: data.id },
+    userInfo,
+  });
+}
+
+// Get activity logs with filters
+export async function getActivityLogs(
+  filters?: ActivityLogFilter
+): Promise<ApiResponse<ActivityLog[]>> {
+  return fetchPOST<ActivityLog[]>({
+    action: "getActivityLogs",
+    filters,
+  });
+}
+
+// Get activity logs for a specific record
+export async function getRecordActivityLogs(
+  sheetName: string,
+  recordId: string
+): Promise<ApiResponse<ActivityLog[]>> {
+  return fetchPOST<ActivityLog[]>({
+    action: "getActivityLogs",
+    filters: { sheet_name: sheetName, record_id: recordId },
+  });
+}
+
+// Send notification to specific roles
+export async function sendNotificationToRoles(data: {
+  message: string;
+  plant: string;
+  targetRoles?: string[];
+  fromUser: string;
+  fromPlant: string;
+  relatedLogId?: string;
+  sheetName?: string;
+  recordId?: string;
+}): Promise<ApiResponse<{ sent: number }>> {
+  return fetchPOST<{ sent: number }>({
+    action: "sendNotificationToRoles",
+    data,
+  });
+}
+
+// Type for parsing changes JSON
+export interface ActivityLogChanges {
+  [key: string]: {
+    old: unknown;
+    new: unknown;
+  };
+}
+
+// Helper to parse changes from activity log
+export function parseActivityLogChanges(
+  changesJson: string | undefined
+): ActivityLogChanges | null {
+  if (!changesJson) return null;
+  try {
+    return JSON.parse(changesJson) as ActivityLogChanges;
+  } catch {
+    return null;
+  }
+}
+
+// Helper to get action display text
+export function getActionDisplayText(action: ActivityLog["action"]): string {
+  const actionMap: Record<ActivityLog["action"], string> = {
+    create: "Menambahkan",
+    update: "Mengubah",
+    delete: "Menghapus",
+  };
+  return actionMap[action] || action;
+}
+
+// Helper to get action icon
+export function getActionIcon(action: ActivityLog["action"]): string {
+  const iconMap: Record<ActivityLog["action"], string> = {
+    create: "📝",
+    update: "✏️",
+    delete: "🗑️",
+  };
+  return iconMap[action] || "📋";
+}
