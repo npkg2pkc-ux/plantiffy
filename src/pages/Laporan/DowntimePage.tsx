@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Plus, Edit2, Trash2, Printer, Search, History } from "lucide-react";
-import { useSaveShortcut } from "@/hooks";
+import { useSaveShortcut, useDataWithLogging } from "@/hooks";
 import {
   Button,
   Card,
@@ -46,6 +46,7 @@ interface DowntimePageProps {
 
 const DowntimePage = ({ plant }: DowntimePageProps) => {
   const { user } = useAuthStore();
+  const { createWithLog, updateWithLog, deleteWithLog } = useDataWithLogging();
   const [data, setData] = useState<Downtime[]>([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -134,14 +135,10 @@ const DowntimePage = ({ plant }: DowntimePageProps) => {
     setLoading(true);
 
     try {
-      const { createData, updateData, SHEETS, getSheetNameByPlant } =
-        await import("@/services/api");
-      const sheetName = getSheetNameByPlant(SHEETS.DOWNTIME, plant);
-
       if (editingId) {
         const dataToUpdate = { ...form, id: editingId, _plant: plant };
-        const updateResult = await updateData<Downtime>(
-          sheetName,
+        const updateResult = await updateWithLog<Downtime>(
+          "downtime",
           dataToUpdate
         );
         if (updateResult.success) {
@@ -157,7 +154,7 @@ const DowntimePage = ({ plant }: DowntimePageProps) => {
         }
       } else {
         const newData = { ...form, _plant: plant };
-        const createResult = await createData<Downtime>(sheetName, newData);
+        const createResult = await createWithLog<Downtime>("downtime", newData);
         if (createResult.success && createResult.data) {
           const newItem: Downtime = {
             ...createResult.data,
@@ -260,12 +257,10 @@ const DowntimePage = ({ plant }: DowntimePageProps) => {
 
     setLoading(true);
     try {
-      const { deleteData, SHEETS, getSheetNameByPlant } = await import(
-        "@/services/api"
-      );
-      const sheetName = getSheetNameByPlant(SHEETS.DOWNTIME, plant);
-
-      const deleteResult = await deleteData(sheetName, deleteId);
+      const deleteResult = await deleteWithLog("downtime", {
+        id: deleteId,
+        _plant: plant,
+      });
       if (deleteResult.success) {
         setData((prev) => prev.filter((item) => item.id !== deleteId));
         setShowDeleteConfirm(false);

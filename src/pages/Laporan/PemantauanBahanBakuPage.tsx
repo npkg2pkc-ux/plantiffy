@@ -11,7 +11,7 @@ import {
   Filter,
   History,
 } from "lucide-react";
-import { useSaveShortcut } from "@/hooks";
+import { useSaveShortcut, useDataWithLogging } from "@/hooks";
 import {
   Button,
   Card,
@@ -81,6 +81,7 @@ interface PemantauanBahanBakuPageProps {
 
 const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
   const { user } = useAuthStore();
+  const { createWithLog, updateWithLog, deleteWithLog } = useDataWithLogging();
   const [data, setData] = useState<PemantauanBahanBaku[]>([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -215,17 +216,10 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
     setLoading(true);
 
     try {
-      const { createData, updateData, SHEETS, getSheetNameByPlant } =
-        await import("@/services/api");
-      const sheetName = getSheetNameByPlant(
-        SHEETS.PEMANTAUAN_BAHAN_BAKU,
-        plant
-      );
-
       if (editingId) {
         const dataToUpdate = { ...form, id: editingId, _plant: plant };
-        const updateResult = await updateData<PemantauanBahanBaku>(
-          sheetName,
+        const updateResult = await updateWithLog<PemantauanBahanBaku>(
+          "pemantauan_bahan_baku",
           dataToUpdate
         );
         if (updateResult.success) {
@@ -241,8 +235,8 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
         }
       } else {
         const newData = { ...form, _plant: plant };
-        const createResult = await createData<PemantauanBahanBaku>(
-          sheetName,
+        const createResult = await createWithLog<PemantauanBahanBaku>(
+          "pemantauan_bahan_baku",
           newData
         );
         if (createResult.success && createResult.data) {
@@ -311,15 +305,10 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
     setLoading(true);
 
     try {
-      const { deleteData, SHEETS, getSheetNameByPlant } = await import(
-        "@/services/api"
-      );
-      const sheetName = getSheetNameByPlant(
-        SHEETS.PEMANTAUAN_BAHAN_BAKU,
-        plant
-      );
-
-      const deleteResult = await deleteData(sheetName, deleteId);
+      const deleteResult = await deleteWithLog("pemantauan_bahan_baku", {
+        id: deleteId,
+        _plant: plant,
+      });
       if (deleteResult.success) {
         setData((prev) => prev.filter((item) => item.id !== deleteId));
       } else {

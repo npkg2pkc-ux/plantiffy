@@ -19,7 +19,7 @@ import {
   Droplets,
   History,
 } from "lucide-react";
-import { useSaveShortcut } from "@/hooks";
+import { useSaveShortcut, useDataWithLogging } from "@/hooks";
 import {
   Button,
   Card,
@@ -369,6 +369,7 @@ interface KOPPageProps {
 
 const KOPPage = ({ plant }: KOPPageProps) => {
   const { user } = useAuthStore();
+  const { createWithLog, updateWithLog, deleteWithLog } = useDataWithLogging();
   const [data, setData] = useState<KOPEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -624,10 +625,6 @@ const KOPPage = ({ plant }: KOPPageProps) => {
     setLoading(true);
 
     try {
-      const { createData, updateData, SHEETS, getSheetNameByPlant } =
-        await import("@/services/api");
-      const sheetName = getSheetNameByPlant(SHEETS.KOP, plant);
-
       if (editingId) {
         // Serialize data sebelum update
         const dataToUpdate = serializeKOPData({
@@ -635,8 +632,8 @@ const KOPPage = ({ plant }: KOPPageProps) => {
           id: editingId,
           _plant: plant,
         });
-        const updateResult = await updateData<KOPEntry>(
-          sheetName,
+        const updateResult = await updateWithLog<KOPEntry>(
+          "kop",
           dataToUpdate as unknown as KOPEntry
         );
         if (updateResult.success) {
@@ -653,8 +650,8 @@ const KOPPage = ({ plant }: KOPPageProps) => {
       } else {
         // Serialize data sebelum create
         const newData = serializeKOPData({ ...form, _plant: plant });
-        const createResult = await createData<KOPEntry>(
-          sheetName,
+        const createResult = await createWithLog<KOPEntry>(
+          "kop",
           newData as unknown as KOPEntry
         );
         if (createResult.success && createResult.data) {
@@ -720,11 +717,10 @@ const KOPPage = ({ plant }: KOPPageProps) => {
     if (!deleteId) return;
     setLoading(true);
     try {
-      const { deleteData, SHEETS, getSheetNameByPlant } = await import(
-        "@/services/api"
-      );
-      const sheetName = getSheetNameByPlant(SHEETS.KOP, plant);
-      const deleteResult = await deleteData(sheetName, deleteId);
+      const deleteResult = await deleteWithLog("kop", {
+        id: deleteId,
+        _plant: plant,
+      });
       if (deleteResult.success) {
         setData((prev) => prev.filter((item) => item.id !== deleteId));
         setShowDeleteConfirm(false);

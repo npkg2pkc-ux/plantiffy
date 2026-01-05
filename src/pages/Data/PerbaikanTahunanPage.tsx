@@ -14,7 +14,7 @@ import {
   CheckCircle,
   History,
 } from "lucide-react";
-import { useSaveShortcut } from "@/hooks";
+import { useSaveShortcut, useDataWithLogging } from "@/hooks";
 import {
   Button,
   Card,
@@ -60,6 +60,7 @@ interface PerbaikanTahunanPageProps {
 
 const PerbaikanTahunanPage = ({ plant }: PerbaikanTahunanPageProps) => {
   const { user } = useAuthStore();
+  const { createWithLog, updateWithLog, deleteWithLog } = useDataWithLogging();
   const [data, setData] = useState<PerbaikanTahunan[]>([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -175,10 +176,6 @@ const PerbaikanTahunanPage = ({ plant }: PerbaikanTahunanPageProps) => {
     setLoading(true);
 
     try {
-      const { saveDataByPlant, updateDataByPlant, SHEETS } = await import(
-        "@/services/api"
-      );
-
       // Stringify items for storage
       const dataToSave = {
         ...form,
@@ -191,8 +188,8 @@ const PerbaikanTahunanPage = ({ plant }: PerbaikanTahunanPageProps) => {
           id: editingId,
           _plant: currentPlant,
         };
-        const updateResult = await updateDataByPlant<PerbaikanTahunan>(
-          SHEETS.PERBAIKAN_TAHUNAN,
+        const updateResult = await updateWithLog<PerbaikanTahunan>(
+          "perbaikan_tahunan",
           dataToUpdate as unknown as PerbaikanTahunan
         );
         if (updateResult.success) {
@@ -208,8 +205,8 @@ const PerbaikanTahunanPage = ({ plant }: PerbaikanTahunanPageProps) => {
         }
       } else {
         const newData = { ...dataToSave, _plant: currentPlant };
-        const createResult = await saveDataByPlant<PerbaikanTahunan>(
-          SHEETS.PERBAIKAN_TAHUNAN,
+        const createResult = await createWithLog<PerbaikanTahunan>(
+          "perbaikan_tahunan",
           newData as unknown as PerbaikanTahunan
         );
         if (createResult.success && createResult.data) {
@@ -313,10 +310,9 @@ const PerbaikanTahunanPage = ({ plant }: PerbaikanTahunanPageProps) => {
 
     setLoading(true);
     try {
-      const { deleteDataByPlant, SHEETS } = await import("@/services/api");
       const itemToDelete = data.find((item) => item.id === deleteId);
 
-      const deleteResult = await deleteDataByPlant(SHEETS.PERBAIKAN_TAHUNAN, {
+      const deleteResult = await deleteWithLog("perbaikan_tahunan", {
         id: deleteId,
         _plant: itemToDelete?._plant,
       });

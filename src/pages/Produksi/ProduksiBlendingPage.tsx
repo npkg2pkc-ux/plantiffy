@@ -21,7 +21,7 @@ import {
   ArrowDownRight,
   History,
 } from "lucide-react";
-import { useSaveShortcut } from "@/hooks";
+import { useSaveShortcut, useDataWithLogging } from "@/hooks";
 import {
   Button,
   Card,
@@ -66,6 +66,7 @@ interface ProduksiBlendingPageProps {
 
 const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
   const { user } = useAuthStore();
+  const { createWithLog, updateWithLog, deleteWithLog } = useDataWithLogging();
   const [data, setData] = useState<ProduksiBlending[]>([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -561,14 +562,11 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
     setLoading(true);
 
     try {
-      const { createData, updateData, SHEETS, getSheetNameByPlant } =
-        await import("@/services/api");
-      const sheetName = getSheetNameByPlant(SHEETS.PRODUKSI_BLENDING, plant);
-
       if (editingId) {
-        const updateResult = await updateData<ProduksiBlending>(sheetName, {
+        const updateResult = await updateWithLog<ProduksiBlending>("produksi_blending", {
           ...form,
           id: editingId,
+          _plant: plant,
         });
         if (updateResult.success) {
           setData((prev) =>
@@ -583,8 +581,8 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
         }
       } else {
         const newData = { ...form, _plant: plant };
-        const createResult = await createData<ProduksiBlending>(
-          sheetName,
+        const createResult = await createWithLog<ProduksiBlending>(
+          "produksi_blending",
           newData
         );
         if (createResult.success && createResult.data) {
@@ -698,12 +696,7 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
 
     setLoading(true);
     try {
-      const { deleteData, SHEETS, getSheetNameByPlant } = await import(
-        "@/services/api"
-      );
-      const sheetName = getSheetNameByPlant(SHEETS.PRODUKSI_BLENDING, plant);
-
-      const deleteResult = await deleteData(sheetName, deleteId);
+      const deleteResult = await deleteWithLog("produksi_blending", { id: deleteId, _plant: plant });
       if (deleteResult.success) {
         setData((prev) => prev.filter((item) => item.id !== deleteId));
         setShowDeleteConfirm(false);

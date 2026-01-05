@@ -8,7 +8,7 @@ import {
   CalendarDays,
   History,
 } from "lucide-react";
-import { useSaveShortcut } from "@/hooks";
+import { useSaveShortcut, useDataWithLogging } from "@/hooks";
 import {
   Button,
   Card,
@@ -60,6 +60,7 @@ interface ProduksiNPKPageProps {
 
 const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
   const { user } = useAuthStore();
+  const { createWithLog, updateWithLog, deleteWithLog } = useDataWithLogging();
   const [data, setData] = useState<ProduksiNPK[]>([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -242,15 +243,12 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
     setLoading(true);
 
     try {
-      const { createData, updateData, SHEETS, getSheetNameByPlant } =
-        await import("@/services/api");
-      const sheetName = getSheetNameByPlant(SHEETS.PRODUKSI_NPK, plant);
-
       if (editingId) {
         // Update existing
-        const updateResult = await updateData<ProduksiNPK>(sheetName, {
+        const updateResult = await updateWithLog<ProduksiNPK>("produksi_npk", {
           ...form,
           id: editingId,
+          _plant: plant,
         });
         if (updateResult.success) {
           setData((prev) =>
@@ -260,35 +258,19 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
                 : item
             )
           );
-          // Send notification (user who updates won't receive)
-          sendNotification({
-            message: `Data Produksi NPK (${plant}) tanggal ${formatDate(
-              form.tanggal
-            )} telah diupdate oleh ${user?.namaLengkap || user?.nama}`,
-            fromUser: user?.username || "",
-            fromPlant: plant,
-          });
         } else {
           throw new Error(updateResult.error || "Gagal mengupdate data");
         }
       } else {
         // Add new
         const newData = { ...form, _plant: plant };
-        const createResult = await createData<ProduksiNPK>(sheetName, newData);
+        const createResult = await createWithLog<ProduksiNPK>("produksi_npk", newData);
         if (createResult.success && createResult.data) {
           const newItem: ProduksiNPK = {
             ...createResult.data,
             _plant: plant,
           };
           setData((prev) => [newItem, ...prev]);
-          // Send notification (user who creates won't receive)
-          sendNotification({
-            message: `Data Produksi NPK (${plant}) baru ditambahkan oleh ${
-              user?.namaLengkap || user?.nama
-            } - Total: ${formatNumber(form.total)} ton`,
-            fromUser: user?.username || "",
-            fromPlant: plant,
-          });
         } else {
           throw new Error(createResult.error || "Gagal menyimpan data");
         }
@@ -385,29 +367,13 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
 
     setLoading(true);
     try {
-      const { deleteData, SHEETS, getSheetNameByPlant } = await import(
-        "@/services/api"
-      );
-      const sheetName = getSheetNameByPlant(SHEETS.PRODUKSI_NPK, plant);
-      const deletedItem = data.find((item) => item.id === deleteId);
-
-      const deleteResult = await deleteData(sheetName, deleteId);
+      const deleteResult = await deleteWithLog("produksi_npk", { id: deleteId, _plant: plant });
       if (deleteResult.success) {
         setData((prev) => prev.filter((item) => item.id !== deleteId));
         setShowDeleteConfirm(false);
         setDeleteId(null);
         setShowSuccess(true);
         setTimeout(() => setShowSuccess(false), 2000);
-        // Send notification (user who deletes won't receive)
-        if (deletedItem) {
-          sendNotification({
-            message: `Data Produksi NPK (${plant}) tanggal ${formatDate(
-              deletedItem.tanggal
-            )} telah dihapus oleh ${user?.namaLengkap || user?.nama}`,
-            fromUser: user?.username || "",
-            fromPlant: plant,
-          });
-        }
       } else {
         throw new Error(deleteResult.error || "Gagal menghapus data");
       }

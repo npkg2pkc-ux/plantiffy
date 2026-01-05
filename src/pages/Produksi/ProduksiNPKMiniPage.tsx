@@ -8,7 +8,7 @@ import {
   CalendarDays,
   History,
 } from "lucide-react";
-import { useSaveShortcut } from "@/hooks";
+import { useSaveShortcut, useDataWithLogging } from "@/hooks";
 import {
   Button,
   Card,
@@ -48,6 +48,7 @@ const initialFormState: ProduksiNPKMini = {
 
 const ProduksiNPKMiniPage = () => {
   const { user } = useAuthStore();
+  const { createWithLog, updateWithLog, deleteWithLog } = useDataWithLogging();
   const [data, setData] = useState<ProduksiNPKMini[]>([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -205,13 +206,11 @@ const ProduksiNPKMiniPage = () => {
     setLoading(true);
 
     try {
-      const { createData, updateData, SHEETS } = await import("@/services/api");
-      const sheetName = SHEETS.PRODUKSI_NPK_MINI;
-
       if (editingId) {
-        const updateResult = await updateData<ProduksiNPKMini>(sheetName, {
+        const updateResult = await updateWithLog<ProduksiNPKMini>("produksi_npk_mini", {
           ...form,
           id: editingId,
+          _plant: "NPK2",
         });
         if (updateResult.success) {
           setData((prev) =>
@@ -225,9 +224,9 @@ const ProduksiNPKMiniPage = () => {
           throw new Error(updateResult.error || "Gagal mengupdate data");
         }
       } else {
-        const newData = { ...form, _plant: "NPK2" };
-        const createResult = await createData<ProduksiNPKMini>(
-          sheetName,
+        const newData = { ...form, _plant: "NPK2" as const };
+        const createResult = await createWithLog<ProduksiNPKMini>(
+          "produksi_npk_mini",
           newData
         );
         if (createResult.success && createResult.data) {
@@ -340,10 +339,7 @@ const ProduksiNPKMiniPage = () => {
 
     setLoading(true);
     try {
-      const { deleteData, SHEETS } = await import("@/services/api");
-      const sheetName = SHEETS.PRODUKSI_NPK_MINI;
-
-      const deleteResult = await deleteData(sheetName, deleteId);
+      const deleteResult = await deleteWithLog("produksi_npk_mini", { id: deleteId, _plant: "NPK2" });
       if (deleteResult.success) {
         setData((prev) => prev.filter((item) => item.id !== deleteId));
         setShowDeleteConfirm(false);

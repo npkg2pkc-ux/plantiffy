@@ -10,7 +10,7 @@ import {
   Printer,
   History,
 } from "lucide-react";
-import { useSaveShortcut } from "@/hooks";
+import { useSaveShortcut, useDataWithLogging } from "@/hooks";
 import {
   Button,
   Card,
@@ -97,6 +97,7 @@ interface RekapBBMPageProps {
 
 const RekapBBMPage = ({ plant }: RekapBBMPageProps) => {
   const { user } = useAuthStore();
+  const { createWithLog, updateWithLog, deleteWithLog } = useDataWithLogging();
   const [data, setData] = useState<RekapBBM[]>([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -177,14 +178,10 @@ const RekapBBMPage = ({ plant }: RekapBBMPageProps) => {
     setLoading(true);
 
     try {
-      const { saveDataByPlant, updateDataByPlant, SHEETS } = await import(
-        "@/services/api"
-      );
-
       if (editingId) {
         const dataToUpdate = { ...form, id: editingId, _plant: currentPlant };
-        const updateResult = await updateDataByPlant<RekapBBM>(
-          SHEETS.REKAP_BBM,
+        const updateResult = await updateWithLog<RekapBBM>(
+          "rekap_bbm",
           dataToUpdate
         );
         if (updateResult.success) {
@@ -196,8 +193,8 @@ const RekapBBMPage = ({ plant }: RekapBBMPageProps) => {
         }
       } else {
         const dataToSave = { ...form, _plant: currentPlant };
-        const saveResult = await saveDataByPlant<RekapBBM>(
-          SHEETS.REKAP_BBM,
+        const saveResult = await createWithLog<RekapBBM>(
+          "rekap_bbm",
           dataToSave
         );
         if (saveResult.success && saveResult.data) {
@@ -251,9 +248,8 @@ const RekapBBMPage = ({ plant }: RekapBBMPageProps) => {
     setLoading(true);
 
     try {
-      const { deleteDataByPlant, SHEETS } = await import("@/services/api");
       const itemToDelete = data.find((d) => d.id === deleteId);
-      const result = await deleteDataByPlant(SHEETS.REKAP_BBM, {
+      const result = await deleteWithLog("rekap_bbm", {
         id: deleteId,
         _plant: itemToDelete?._plant,
       });

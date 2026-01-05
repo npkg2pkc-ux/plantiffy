@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Plus, Edit2, Trash2, Printer, Search, History } from "lucide-react";
-import { useSaveShortcut } from "@/hooks";
+import { useSaveShortcut, useDataWithLogging } from "@/hooks";
 import {
   Button,
   Card,
@@ -49,6 +49,7 @@ interface TimesheetForkliftPageProps {
 
 const TimesheetForkliftPage = ({ plant }: TimesheetForkliftPageProps) => {
   const { user } = useAuthStore();
+  const { createWithLog, updateWithLog, deleteWithLog } = useDataWithLogging();
   const [data, setData] = useState<TimesheetForklift[]>([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -164,8 +165,9 @@ const TimesheetForkliftPage = ({ plant }: TimesheetForkliftPageProps) => {
     setLoading(true);
 
     try {
-      const { createData, updateData, SHEETS, getSheetNameByPlant } =
-        await import("@/services/api");
+      const { readData, SHEETS, getSheetNameByPlant } = await import(
+        "@/services/api"
+      );
       const sheetName = getSheetNameByPlant(SHEETS.TIMESHEET_FORKLIFT, plant);
 
       // Jika pilih ALL, buat entry untuk semua forklift berdasarkan plant
@@ -176,10 +178,9 @@ const TimesheetForkliftPage = ({ plant }: TimesheetForkliftPageProps) => {
             : ["F19", "F20", "F21", "F22", "F23"];
         for (const fl of forklifts) {
           const newData = { ...form, forklift: fl, _plant: plant };
-          await createData<TimesheetForklift>(sheetName, newData);
+          await createWithLog<TimesheetForklift>("timesheet_forklift", newData);
         }
         // Refresh data from API
-        const { readData } = await import("@/services/api");
         const result = await readData<TimesheetForklift>(sheetName);
         if (result.success && result.data) {
           const sortedData = result.data
@@ -192,8 +193,8 @@ const TimesheetForkliftPage = ({ plant }: TimesheetForkliftPageProps) => {
         }
       } else if (editingId) {
         const dataToUpdate = { ...form, id: editingId, _plant: plant };
-        const updateResult = await updateData<TimesheetForklift>(
-          sheetName,
+        const updateResult = await updateWithLog<TimesheetForklift>(
+          "timesheet_forklift",
           dataToUpdate
         );
         if (updateResult.success) {
@@ -209,8 +210,8 @@ const TimesheetForkliftPage = ({ plant }: TimesheetForkliftPageProps) => {
         }
       } else {
         const newData = { ...form, _plant: plant };
-        const createResult = await createData<TimesheetForklift>(
-          sheetName,
+        const createResult = await createWithLog<TimesheetForklift>(
+          "timesheet_forklift",
           newData
         );
         if (createResult.success && createResult.data) {
@@ -315,12 +316,10 @@ const TimesheetForkliftPage = ({ plant }: TimesheetForkliftPageProps) => {
 
     setLoading(true);
     try {
-      const { deleteData, SHEETS, getSheetNameByPlant } = await import(
-        "@/services/api"
-      );
-      const sheetName = getSheetNameByPlant(SHEETS.TIMESHEET_FORKLIFT, plant);
-
-      const deleteResult = await deleteData(sheetName, deleteId);
+      const deleteResult = await deleteWithLog("timesheet_forklift", {
+        id: deleteId,
+        _plant: plant,
+      });
       if (deleteResult.success) {
         setData((prev) => prev.filter((item) => item.id !== deleteId));
         setShowDeleteConfirm(false);

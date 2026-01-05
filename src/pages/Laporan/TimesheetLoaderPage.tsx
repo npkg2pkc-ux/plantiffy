@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Plus, Edit2, Trash2, Printer, Search, History } from "lucide-react";
-import { useSaveShortcut } from "@/hooks";
+import { useSaveShortcut, useDataWithLogging } from "@/hooks";
 import {
   Button,
   Card,
@@ -63,6 +63,7 @@ const getShiftHours = (shift: string): number => {
 
 const TimesheetLoaderPage = ({ plant }: TimesheetLoaderPageProps) => {
   const { user } = useAuthStore();
+  const { createWithLog, updateWithLog, deleteWithLog } = useDataWithLogging();
   const [data, setData] = useState<TimesheetLoader[]>([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -163,8 +164,9 @@ const TimesheetLoaderPage = ({ plant }: TimesheetLoaderPageProps) => {
     setLoading(true);
 
     try {
-      const { createData, updateData, SHEETS, getSheetNameByPlant } =
-        await import("@/services/api");
+      const { readData, SHEETS, getSheetNameByPlant } = await import(
+        "@/services/api"
+      );
       const sheetName = getSheetNameByPlant(SHEETS.TIMESHEET_LOADER, plant);
 
       // Jika pilih ALL, buat entry untuk semua shift
@@ -183,10 +185,9 @@ const TimesheetLoaderPage = ({ plant }: TimesheetLoaderPageProps) => {
             keterangan: keterangan,
             _plant: plant,
           };
-          await createData<TimesheetLoader>(sheetName, newData);
+          await createWithLog<TimesheetLoader>("timesheet_loader", newData);
         }
         // Refresh data from API
-        const { readData } = await import("@/services/api");
         const result = await readData<TimesheetLoader>(sheetName);
         if (result.success && result.data) {
           const sortedData = result.data
@@ -199,8 +200,8 @@ const TimesheetLoaderPage = ({ plant }: TimesheetLoaderPageProps) => {
         }
       } else if (editingId) {
         const dataToUpdate = { ...form, id: editingId, _plant: plant };
-        const updateResult = await updateData<TimesheetLoader>(
-          sheetName,
+        const updateResult = await updateWithLog<TimesheetLoader>(
+          "timesheet_loader",
           dataToUpdate
         );
         if (updateResult.success) {
@@ -216,8 +217,8 @@ const TimesheetLoaderPage = ({ plant }: TimesheetLoaderPageProps) => {
         }
       } else {
         const newData = { ...form, _plant: plant };
-        const createResult = await createData<TimesheetLoader>(
-          sheetName,
+        const createResult = await createWithLog<TimesheetLoader>(
+          "timesheet_loader",
           newData
         );
         if (createResult.success && createResult.data) {
@@ -322,12 +323,10 @@ const TimesheetLoaderPage = ({ plant }: TimesheetLoaderPageProps) => {
 
     setLoading(true);
     try {
-      const { deleteData, SHEETS, getSheetNameByPlant } = await import(
-        "@/services/api"
-      );
-      const sheetName = getSheetNameByPlant(SHEETS.TIMESHEET_LOADER, plant);
-
-      const deleteResult = await deleteData(sheetName, deleteId);
+      const deleteResult = await deleteWithLog("timesheet_loader", {
+        id: deleteId,
+        _plant: plant,
+      });
       if (deleteResult.success) {
         setData((prev) => prev.filter((item) => item.id !== deleteId));
         setShowDeleteConfirm(false);

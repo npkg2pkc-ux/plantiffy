@@ -12,7 +12,7 @@ import {
   TrendingDown,
   History,
 } from "lucide-react";
-import { useSaveShortcut } from "@/hooks";
+import { useSaveShortcut, useDataWithLogging } from "@/hooks";
 import {
   Button,
   Card,
@@ -105,6 +105,7 @@ const initialInputState = {
 
 const RiksaTimbPortabelPage = () => {
   const { user } = useAuthStore();
+  const { createWithLog, updateWithLog, deleteWithLog } = useDataWithLogging();
   const [data, setData] = useState<RiksaTimbPortabel[]>([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -289,8 +290,6 @@ const RiksaTimbPortabelPage = () => {
     setLoading(true);
 
     try {
-      const { createData, updateData, SHEETS } = await import("@/services/api");
-
       // Get final values from input strings
       const weightValues = getFormValuesFromInputs();
       const formData = { ...form, ...weightValues };
@@ -300,8 +299,8 @@ const RiksaTimbPortabelPage = () => {
 
       if (editingId) {
         const dataToUpdate = { ...dataToSave, id: editingId };
-        const updateResult = await updateData<RiksaTimbPortabel>(
-          SHEETS.RIKSA_TIMB_PORTABEL,
+        const updateResult = await updateWithLog<RiksaTimbPortabel>(
+          "riksa_timb_portabel",
           dataToUpdate
         );
         if (updateResult.success) {
@@ -314,8 +313,8 @@ const RiksaTimbPortabelPage = () => {
           throw new Error(updateResult.error || "Gagal mengupdate data");
         }
       } else {
-        const createResult = await createData<RiksaTimbPortabel>(
-          SHEETS.RIKSA_TIMB_PORTABEL,
+        const createResult = await createWithLog<RiksaTimbPortabel>(
+          "riksa_timb_portabel",
           dataToSave
         );
         if (createResult.success && createResult.data) {
@@ -391,8 +390,7 @@ const RiksaTimbPortabelPage = () => {
     setLoading(true);
 
     try {
-      const { deleteData, SHEETS } = await import("@/services/api");
-      const result = await deleteData(SHEETS.RIKSA_TIMB_PORTABEL, deleteId);
+      const result = await deleteWithLog("riksa_timb_portabel", { id: deleteId });
 
       if (result.success) {
         setData((prev) => prev.filter((item) => item.id !== deleteId));

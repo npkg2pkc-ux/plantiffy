@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Plus, Edit2, Trash2, Search, Droplets } from "lucide-react";
-import { useSaveShortcut } from "@/hooks";
+import { useSaveShortcut, useDataWithLogging } from "@/hooks";
 import {
   Button,
   Card,
@@ -46,6 +46,7 @@ const initialFormState: Perta = {
 
 const PertaPage = () => {
   const { user } = useAuthStore();
+  const { createWithLog, updateWithLog, deleteWithLog } = useDataWithLogging();
   const [data, setData] = useState<Perta[]>([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -135,15 +136,12 @@ const PertaPage = () => {
     setLoading(true);
 
     try {
-      const { saveDataByPlant, updateDataByPlant, SHEETS } = await import(
-        "@/services/api"
-      );
       const plant = user?.plant === "ALL" ? "NPK2" : user?.plant;
 
       if (editingId) {
         const dataToUpdate = { ...form, id: editingId, _plant: plant };
-        const updateResult = await updateDataByPlant<Perta>(
-          SHEETS.PERTA,
+        const updateResult = await updateWithLog<Perta>(
+          "perta",
           dataToUpdate
         );
         if (updateResult.success) {
@@ -159,8 +157,8 @@ const PertaPage = () => {
         }
       } else {
         const newData = { ...form, _plant: plant };
-        const createResult = await saveDataByPlant<Perta>(
-          SHEETS.PERTA,
+        const createResult = await createWithLog<Perta>(
+          "perta",
           newData
         );
         if (createResult.success && createResult.data) {
@@ -253,10 +251,9 @@ const PertaPage = () => {
 
     setLoading(true);
     try {
-      const { deleteDataByPlant, SHEETS } = await import("@/services/api");
       const itemToDelete = data.find((item) => item.id === deleteId);
 
-      const deleteResult = await deleteDataByPlant(SHEETS.PERTA, {
+      const deleteResult = await deleteWithLog("perta", {
         id: deleteId,
         _plant: itemToDelete?._plant,
       });
