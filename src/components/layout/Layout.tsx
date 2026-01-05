@@ -356,6 +356,7 @@ const navItems: NavItemProps[] = [
     path: "/data",
     icon: <Database className="h-5 w-5" />,
     children: [
+      { name: "Inventaris Material", path: "/data/inventaris" },
       { name: "Work Request NPK1", path: "/data/work-request-npk1" },
       { name: "Work Request NPK2", path: "/data/work-request-npk2" },
       { name: "Bahan Baku NPK1", path: "/data/bahan-baku-npk1" },
@@ -505,16 +506,18 @@ const Sidebar = () => {
           let filteredChildren = item.children;
 
           if (userPlant === "NPK1") {
-            // NPK1: Only show NPK1 data forms (exclude Riksa Timb Portabel)
-            filteredChildren = item.children.filter((child) =>
-              child.path.includes("npk1")
+            // NPK1: Only show NPK1 data forms (exclude Riksa Timb Portabel) + Inventaris Material
+            filteredChildren = item.children.filter(
+              (child) =>
+                child.path.includes("npk1") || child.path === "/data/inventaris"
             );
           } else if (userPlant === "NPK2") {
-            // NPK2: Show NPK2 data forms AND Riksa Timb Portabel
+            // NPK2: Show NPK2 data forms AND Riksa Timb Portabel + Inventaris Material
             filteredChildren = item.children.filter(
               (child) =>
                 child.path.includes("npk2") ||
-                child.path === "/data/riksa-timb-portabel"
+                child.path === "/data/riksa-timb-portabel" ||
+                child.path === "/data/inventaris"
             );
           }
           // Admin (ALL) sees all
@@ -584,7 +587,7 @@ const Sidebar = () => {
                 Plantiffy
               </span>
               <span className="text-xs text-dark-500 dark:text-dark-400">
-                v2.3.2
+                v2.3.3
               </span>
             </Link>
           )}

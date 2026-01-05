@@ -437,6 +437,51 @@ export interface FormField {
   disabled?: boolean;
 }
 
+// ============================================
+// INVENTARIS STOK MATERIAL CONSUMABLE
+// ============================================
+
+// Material Interface
+export interface Material {
+  id?: string;
+  kode_material: string;
+  nama_material: string;
+  satuan: string;
+  stok: number;
+  stok_minimum: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// Material Transaction Interface
+export interface MaterialTransaction {
+  id?: string;
+  material_id: string;
+  tipe_transaksi: "masuk" | "keluar";
+  jumlah: number;
+  keterangan: string;
+  created_at?: string;
+  // Populated field for display
+  material_nama?: string;
+  material_kode?: string;
+}
+
+// Material Transaction Filter Interface
+export interface MaterialTransactionFilter {
+  material_id?: string;
+  start_date?: string;
+  end_date?: string;
+}
+
+// Stock Update Response
+export interface StockUpdateResponse {
+  material_id: string;
+  stok_lama: number;
+  jumlah_ditambah?: number;
+  jumlah_dikurangi?: number;
+  stok_baru: number;
+}
+
 // API Response
 export interface ApiResponse<T> {
   success: boolean;

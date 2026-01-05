@@ -8,3 +8,4 @@ export { default as TroubleRecordPage } from "./TroubleRecordPage";
 export { default as DokumentasiFotoPage } from "./DokumentasiFotoPage";
 export { default as RekapBBMPage } from "./RekapBBMPage";
 export { default as RiksaTimbPortabelPage } from "./RiksaTimbPortabelPage";
+export { default as InventarisPage } from "./InventarisPage";

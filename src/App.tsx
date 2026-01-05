@@ -39,6 +39,7 @@ import {
   DokumentasiFotoPage,
   RekapBBMPage,
   RiksaTimbPortabelPage,
+  InventarisPage,
 } from "@/pages/Data";
 import { AkunPage, RKAPPage, UsersPage, ApprovalPage } from "@/pages/Settings";
 
@@ -184,6 +185,7 @@ function App() {
 
           {/* Data Routes */}
           <Route path="data">
+            <Route path="inventaris" element={<InventarisPage />} />
             <Route
               path="work-request-npk1"
               element={<WorkRequestPage plant="NPK1" />}

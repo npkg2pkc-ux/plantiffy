@@ -253,6 +253,10 @@ export const SHEETS = {
   RKAP: "rkap",
   DOKUMENTASI_FOTO: "dokumentasi_foto",
   ACTIVE_USERS: "active_users",
+
+  // Inventaris Material Consumable
+  MATERIALS: "materials",
+  MATERIAL_TRANSACTIONS: "material_transactions",
 } as const;
 
 // ============================================
@@ -303,4 +307,95 @@ export async function getExchangeRate(): Promise<
   ApiResponse<ExchangeRateData>
 > {
   return fetchGET<ExchangeRateData>(`?action=getExchangeRate`);
+}
+
+// ============================================
+// INVENTARIS STOK MATERIAL CONSUMABLE API
+// ============================================
+
+import type {
+  Material,
+  MaterialTransaction,
+  MaterialTransactionFilter,
+  StockUpdateResponse,
+} from "@/types";
+
+// Get all materials
+export async function getMaterials(): Promise<ApiResponse<Material[]>> {
+  return fetchGET<Material[]>(`?action=getMaterials`);
+}
+
+// Add new material
+export async function addMaterial(
+  data: Omit<Material, "id" | "created_at" | "updated_at">
+): Promise<ApiResponse<Material>> {
+  return fetchPOST<Material>({
+    action: "addMaterial",
+    data,
+  });
+}
+
+// Update material info (not stock)
+export async function updateMaterial(
+  data: Partial<Material> & { id: string }
+): Promise<ApiResponse<Material>> {
+  return fetchPOST<Material>({
+    action: "updateMaterial",
+    data,
+  });
+}
+
+// Delete material
+export async function deleteMaterial(
+  materialId: string
+): Promise<ApiResponse<boolean>> {
+  return fetchPOST<boolean>({
+    action: "deleteMaterial",
+    data: { id: materialId },
+  });
+}
+
+// Update stock - MASUK (add stock)
+export async function updateStockMasuk(
+  materialId: string,
+  jumlah: number,
+  keterangan: string
+): Promise<ApiResponse<StockUpdateResponse>> {
+  return fetchPOST<StockUpdateResponse>({
+    action: "updateStockMasuk",
+    data: { materialId, jumlah, keterangan },
+  });
+}
+
+// Update stock - KELUAR (reduce stock)
+export async function updateStockKeluar(
+  materialId: string,
+  jumlah: number,
+  keterangan: string
+): Promise<ApiResponse<StockUpdateResponse>> {
+  return fetchPOST<StockUpdateResponse>({
+    action: "updateStockKeluar",
+    data: { materialId, jumlah, keterangan },
+  });
+}
+
+// Get material transactions with optional filters
+export async function getMaterialTransactions(
+  filters?: MaterialTransactionFilter
+): Promise<ApiResponse<MaterialTransaction[]>> {
+  let queryParams = "?action=getMaterialTransactions";
+
+  if (filters) {
+    if (filters.material_id) {
+      queryParams += `&material_id=${encodeURIComponent(filters.material_id)}`;
+    }
+    if (filters.start_date) {
+      queryParams += `&start_date=${encodeURIComponent(filters.start_date)}`;
+    }
+    if (filters.end_date) {
+      queryParams += `&end_date=${encodeURIComponent(filters.end_date)}`;
+    }
+  }
+
+  return fetchGET<MaterialTransaction[]>(queryParams);
 }

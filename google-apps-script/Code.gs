@@ -396,6 +396,25 @@ const SHEET_HEADERS = {
     "produkTimbangan",
     "produkTonase",
   ],
+  // Inventaris Material Consumable
+  materials: [
+    "id",
+    "kode_material",
+    "nama_material",
+    "satuan",
+    "stok",
+    "stok_minimum",
+    "created_at",
+    "updated_at",
+  ],
+  material_transactions: [
+    "id",
+    "material_id",
+    "tipe_transaksi",
+    "jumlah",
+    "keterangan",
+    "created_at",
+  ],
 };
 
 // ============================================
@@ -432,6 +451,16 @@ function handleRequest(e) {
         case "getExchangeRate":
           result = getExchangeRate();
           break;
+        case "getMaterials":
+          result = getMaterials();
+          break;
+        case "getMaterialTransactions":
+          result = getMaterialTransactions({
+            material_id: e.parameter.material_id,
+            start_date: e.parameter.start_date,
+            end_date: e.parameter.end_date,
+          });
+          break;
         default:
           result = { success: false, error: "Unknown action" };
       }
@@ -465,6 +494,30 @@ function handleRequest(e) {
           break;
         case "deletePhoto":
           result = deletePhotoFromGoogleDrive(body.data);
+          break;
+        // Material Consumable Actions
+        case "addMaterial":
+          result = addMaterial(body.data);
+          break;
+        case "updateMaterial":
+          result = updateMaterial(body.data);
+          break;
+        case "deleteMaterial":
+          result = deleteMaterial(body.data.id);
+          break;
+        case "updateStockMasuk":
+          result = updateStockMasuk(
+            body.data.materialId,
+            body.data.jumlah,
+            body.data.keterangan
+          );
+          break;
+        case "updateStockKeluar":
+          result = updateStockKeluar(
+            body.data.materialId,
+            body.data.jumlah,
+            body.data.keterangan
+          );
           break;
         default:
           result = { success: false, error: "Unknown action" };
@@ -1626,4 +1679,309 @@ function fillEmptyIdsPemantauanBB() {
     "✅ Selesai",
     5
   );
+}
+
+// ============================================
+// INVENTARIS STOK MATERIAL CONSUMABLE
+// ============================================
+
+/**
+ * Get all materials from the materials sheet
+ */
+function getMaterials() {
+  try {
+    const sheet = getOrCreateSheet("materials");
+    return readSheet("materials");
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Add a new material
+ * @param {Object} data - { kode_material, nama_material, satuan, stok, stok_minimum }
+ */
+function addMaterial(data) {
+  try {
+    const materialData = {
+      id: generateId(),
+      kode_material: data.kode_material || "",
+      nama_material: data.nama_material || "",
+      satuan: data.satuan || "pcs",
+      stok: parseFloat(data.stok) || 0,
+      stok_minimum: parseFloat(data.stok_minimum) || 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    return createRecord("materials", materialData);
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Update material data (for editing material info, not stock)
+ * @param {Object} data - { id, kode_material, nama_material, satuan, stok_minimum }
+ */
+function updateMaterial(data) {
+  try {
+    if (!data.id) {
+      return { success: false, error: "ID material diperlukan" };
+    }
+
+    const updateData = {
+      id: data.id,
+      kode_material: data.kode_material,
+      nama_material: data.nama_material,
+      satuan: data.satuan,
+      stok_minimum: parseFloat(data.stok_minimum) || 0,
+      updated_at: new Date().toISOString(),
+    };
+
+    return updateRecord("materials", updateData);
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Delete a material
+ * @param {string} materialId - The ID of material to delete
+ */
+function deleteMaterial(materialId) {
+  try {
+    if (!materialId) {
+      return { success: false, error: "ID material diperlukan" };
+    }
+
+    return deleteRecord("materials", { id: materialId });
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Update stock - MASUK (add stock)
+ * Uses LockService to prevent race condition
+ * @param {string} materialId - The ID of material
+ * @param {number} jumlah - Amount to add
+ * @param {string} keterangan - Description/notes
+ */
+function updateStockMasuk(materialId, jumlah, keterangan) {
+  const lock = LockService.getScriptLock();
+
+  try {
+    // Try to acquire lock for 30 seconds
+    lock.waitLock(30000);
+
+    if (!materialId || !jumlah) {
+      return { success: false, error: "Material ID dan jumlah diperlukan" };
+    }
+
+    const amount = parseFloat(jumlah);
+    if (isNaN(amount) || amount <= 0) {
+      return { success: false, error: "Jumlah harus lebih dari 0" };
+    }
+
+    // Get current material data
+    const materialsSheet = getOrCreateSheet("materials");
+    const allData = materialsSheet.getDataRange().getValues();
+    const headers = allData[0];
+    const idIndex = headers.indexOf("id");
+    const stokIndex = headers.indexOf("stok");
+    const updatedAtIndex = headers.indexOf("updated_at");
+
+    // Find material row
+    let materialRow = -1;
+    let currentStok = 0;
+    for (let i = 1; i < allData.length; i++) {
+      if (allData[i][idIndex] === materialId) {
+        materialRow = i + 1;
+        currentStok = parseFloat(allData[i][stokIndex]) || 0;
+        break;
+      }
+    }
+
+    if (materialRow === -1) {
+      return { success: false, error: "Material tidak ditemukan" };
+    }
+
+    // Calculate new stock
+    const newStok = currentStok + amount;
+
+    // Update material stock
+    materialsSheet.getRange(materialRow, stokIndex + 1).setValue(newStok);
+    materialsSheet
+      .getRange(materialRow, updatedAtIndex + 1)
+      .setValue(new Date().toISOString());
+
+    // Create transaction record
+    const transactionData = {
+      id: generateId(),
+      material_id: materialId,
+      tipe_transaksi: "masuk",
+      jumlah: amount,
+      keterangan: keterangan || "",
+      created_at: new Date().toISOString(),
+    };
+
+    createRecord("material_transactions", transactionData);
+
+    return {
+      success: true,
+      data: {
+        material_id: materialId,
+        stok_lama: currentStok,
+        jumlah_ditambah: amount,
+        stok_baru: newStok,
+      },
+    };
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * Update stock - KELUAR (reduce stock)
+ * Uses LockService to prevent race condition
+ * Validates stock cannot go negative
+ * @param {string} materialId - The ID of material
+ * @param {number} jumlah - Amount to reduce
+ * @param {string} keterangan - Description/notes
+ */
+function updateStockKeluar(materialId, jumlah, keterangan) {
+  const lock = LockService.getScriptLock();
+
+  try {
+    // Try to acquire lock for 30 seconds
+    lock.waitLock(30000);
+
+    if (!materialId || !jumlah) {
+      return { success: false, error: "Material ID dan jumlah diperlukan" };
+    }
+
+    const amount = parseFloat(jumlah);
+    if (isNaN(amount) || amount <= 0) {
+      return { success: false, error: "Jumlah harus lebih dari 0" };
+    }
+
+    // Get current material data
+    const materialsSheet = getOrCreateSheet("materials");
+    const allData = materialsSheet.getDataRange().getValues();
+    const headers = allData[0];
+    const idIndex = headers.indexOf("id");
+    const stokIndex = headers.indexOf("stok");
+    const namaIndex = headers.indexOf("nama_material");
+    const updatedAtIndex = headers.indexOf("updated_at");
+
+    // Find material row
+    let materialRow = -1;
+    let currentStok = 0;
+    let namaMaterial = "";
+    for (let i = 1; i < allData.length; i++) {
+      if (allData[i][idIndex] === materialId) {
+        materialRow = i + 1;
+        currentStok = parseFloat(allData[i][stokIndex]) || 0;
+        namaMaterial = allData[i][namaIndex] || "";
+        break;
+      }
+    }
+
+    if (materialRow === -1) {
+      return { success: false, error: "Material tidak ditemukan" };
+    }
+
+    // Validate stock won't go negative
+    if (currentStok < amount) {
+      return {
+        success: false,
+        error: `Stok tidak cukup! Stok ${namaMaterial} saat ini: ${currentStok}`,
+      };
+    }
+
+    // Calculate new stock
+    const newStok = currentStok - amount;
+
+    // Update material stock
+    materialsSheet.getRange(materialRow, stokIndex + 1).setValue(newStok);
+    materialsSheet
+      .getRange(materialRow, updatedAtIndex + 1)
+      .setValue(new Date().toISOString());
+
+    // Create transaction record
+    const transactionData = {
+      id: generateId(),
+      material_id: materialId,
+      tipe_transaksi: "keluar",
+      jumlah: amount,
+      keterangan: keterangan || "",
+      created_at: new Date().toISOString(),
+    };
+
+    createRecord("material_transactions", transactionData);
+
+    return {
+      success: true,
+      data: {
+        material_id: materialId,
+        stok_lama: currentStok,
+        jumlah_dikurangi: amount,
+        stok_baru: newStok,
+      },
+    };
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * Get all material transactions
+ * Optional: filter by material_id and date range
+ */
+function getMaterialTransactions(filters) {
+  try {
+    const result = readSheet("material_transactions");
+
+    if (!result.success || !result.data) {
+      return result;
+    }
+
+    let transactions = result.data;
+
+    // Apply filters if provided
+    if (filters) {
+      if (filters.material_id) {
+        transactions = transactions.filter(
+          (t) => t.material_id === filters.material_id
+        );
+      }
+      if (filters.start_date) {
+        const startDate = new Date(filters.start_date);
+        transactions = transactions.filter(
+          (t) => new Date(t.created_at) >= startDate
+        );
+      }
+      if (filters.end_date) {
+        const endDate = new Date(filters.end_date);
+        endDate.setHours(23, 59, 59, 999);
+        transactions = transactions.filter(
+          (t) => new Date(t.created_at) <= endDate
+        );
+      }
+    }
+
+    // Sort by created_at descending (newest first)
+    transactions.sort(
+      (a, b) => new Date(b.created_at) - new Date(a.created_at)
+    );
+
+    return { success: true, data: transactions };
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
 }
