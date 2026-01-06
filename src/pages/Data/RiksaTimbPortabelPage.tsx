@@ -41,6 +41,16 @@ import {
 } from "@/lib/utils";
 import type { PlantType } from "@/types";
 
+// Generate year options from 2023 to current year + 1
+const currentYear = new Date().getFullYear();
+const YEAR_OPTIONS = [
+  ...Array.from({ length: currentYear - 2022 }, (_, i) => ({
+    value: String(2023 + i),
+    label: String(2023 + i),
+  })),
+  { value: String(currentYear + 1), label: String(currentYear + 1) },
+];
+
 // Type definition for Riksa Timbangan Portabel
 export interface RiksaTimbPortabel {
   id?: string;
@@ -129,6 +139,9 @@ const RiksaTimbPortabelPage = () => {
   const [form, setForm] = useState<RiksaTimbPortabel>(initialFormState);
   const [inputValues, setInputValues] = useState(initialInputState);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedYear, setSelectedYear] = useState<string>(
+    String(new Date().getFullYear())
+  );
 
   // Approval states
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
@@ -456,11 +469,17 @@ const RiksaTimbPortabelPage = () => {
     setShowViewModal(true);
   };
 
-  const filteredData = data.filter(
-    (item) =>
+  const filteredData = data.filter((item) => {
+    const matchesSearch =
       item.area.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.tanggal.includes(searchTerm)
-  );
+      item.tanggal.includes(searchTerm);
+
+    // Filter by year
+    const itemYear = new Date(item.tanggal).getFullYear();
+    const matchesYear = itemYear === parseInt(selectedYear);
+
+    return matchesSearch && matchesYear;
+  });
 
   const columns = [
     {
@@ -857,13 +876,21 @@ const RiksaTimbPortabelPage = () => {
               <Scale className="h-6 w-6 text-white" />
             </div>
             <div>
-              <CardTitle>Riksa Timbangan Portabel</CardTitle>
+              <CardTitle>
+                Riksa Timbangan Portabel - Tahun {selectedYear}
+              </CardTitle>
               <p className="text-sm text-gray-500 mt-1">
                 Data pengujian kalibrasi timbangan portabel
               </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <Select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              options={YEAR_OPTIONS}
+              className="w-32"
+            />
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input

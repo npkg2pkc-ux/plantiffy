@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
   Input,
+  Select,
   Modal,
   ConfirmDialog,
   Badge,
@@ -30,6 +31,16 @@ import {
   calculateDowntime,
 } from "@/lib/utils";
 import type { Downtime } from "@/types";
+
+// Generate year options from 2023 to current year + 1
+const currentYear = new Date().getFullYear();
+const YEAR_OPTIONS = [
+  ...Array.from({ length: currentYear - 2022 }, (_, i) => ({
+    value: String(2023 + i),
+    label: String(2023 + i),
+  })),
+  { value: String(currentYear + 1), label: String(currentYear + 1) },
+];
 
 const initialFormState: Downtime = {
   tanggal: getCurrentDate(),
@@ -56,6 +67,9 @@ const DowntimePage = ({ plant }: DowntimePageProps) => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState<Downtime>(initialFormState);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedYear, setSelectedYear] = useState<string>(
+    String(new Date().getFullYear())
+  );
 
   // Approval states
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
@@ -294,7 +308,11 @@ const DowntimePage = ({ plant }: DowntimePageProps) => {
       item.item?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.deskripsi?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    return matchesSearch;
+    // Filter by year
+    const itemYear = new Date(item.tanggal).getFullYear();
+    const matchesYear = itemYear === parseInt(selectedYear);
+
+    return matchesSearch && matchesYear;
   });
 
   const totalDowntime = filteredData.reduce(
@@ -420,16 +438,24 @@ const DowntimePage = ({ plant }: DowntimePageProps) => {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Data Downtime</CardTitle>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-400" />
-              <Input
-                type="text"
-                placeholder="Cari..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 w-64"
+            <CardTitle>Data Downtime - Tahun {selectedYear}</CardTitle>
+            <div className="flex items-center gap-3">
+              <Select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(e.target.value)}
+                options={YEAR_OPTIONS}
+                className="w-32"
               />
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-400" />
+                <Input
+                  type="text"
+                  placeholder="Cari..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9 w-64"
+                />
+              </div>
             </div>
           </div>
         </CardHeader>

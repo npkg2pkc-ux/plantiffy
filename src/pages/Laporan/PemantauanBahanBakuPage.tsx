@@ -39,6 +39,16 @@ import {
 } from "@/lib/utils";
 import type { PemantauanBahanBaku } from "@/types";
 
+// Generate year options from 2023 to current year + 1
+const currentYear = new Date().getFullYear();
+const YEAR_OPTIONS = [
+  ...Array.from({ length: currentYear - 2022 }, (_, i) => ({
+    value: String(2023 + i),
+    label: String(2023 + i),
+  })),
+  { value: String(currentYear + 1), label: String(currentYear + 1) },
+];
+
 // Format angka dengan 2 desimal (menggunakan titik sebagai pemisah desimal)
 const formatDecimal = (num: number | undefined | null): string => {
   if (num === undefined || num === null) return "0.00";
@@ -92,6 +102,9 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
   const [form, setForm] = useState<PemantauanBahanBaku>(initialFormState);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterBahanBaku, setFilterBahanBaku] = useState("Urea"); // Default ke Urea
+  const [selectedYear, setSelectedYear] = useState<string>(
+    String(new Date().getFullYear())
+  );
 
   // State untuk input string (agar bisa mengetik desimal dengan benar)
   const [inputValues, setInputValues] = useState({
@@ -413,7 +426,12 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
     const matchesSearch =
       item.bahanBaku?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.tanggal?.includes(searchTerm);
-    return matchesFilter && matchesSearch;
+
+    // Filter by year
+    const itemYear = new Date(item.tanggal).getFullYear();
+    const matchesYear = itemYear === parseInt(selectedYear);
+
+    return matchesFilter && matchesSearch && matchesYear;
   });
 
   // Get stats for filtered bahan baku
@@ -649,6 +667,13 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <CardTitle>Data Pemantauan Bahan Baku</CardTitle>
             <div className="flex flex-col sm:flex-row gap-3">
+              {/* Filter Tahun */}
+              <Select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(e.target.value)}
+                options={YEAR_OPTIONS}
+                className="w-full sm:w-28"
+              />
               {/* Filter Bahan Baku */}
               <div className="flex items-center gap-2">
                 <Filter className="h-4 w-4 text-gray-500" />
@@ -914,7 +939,9 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
           setLogRecordId("");
         }}
         sheetName={
-          plant === "NPK1" ? "pemantauan_bahan_baku_NPK1" : "pemantauan_bahan_baku"
+          plant === "NPK1"
+            ? "pemantauan_bahan_baku_NPK1"
+            : "pemantauan_bahan_baku"
         }
         recordId={logRecordId}
         title="Log Aktivitas Pemantauan Bahan Baku"

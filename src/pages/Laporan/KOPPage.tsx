@@ -135,6 +135,16 @@ const initialFormState: KOPEntry = {
   produkTonase: { ...emptyParameterValue },
 };
 
+// Generate year options from 2023 to current year + 1
+const currentYearConst = new Date().getFullYear();
+const YEAR_OPTIONS = [
+  ...Array.from({ length: currentYearConst - 2022 }, (_, i) => ({
+    value: String(2023 + i),
+    label: String(2023 + i),
+  })),
+  { value: String(currentYearConst + 1), label: String(currentYearConst + 1) },
+];
+
 // ============================================
 // FUNGSI SERIALIZE/DESERIALIZE UNTUK GOOGLE SHEETS
 // ============================================
@@ -382,6 +392,9 @@ const KOPPage = ({ plant }: KOPPageProps) => {
   const [form, setForm] = useState<KOPEntry>(initialFormState);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterMonth, setFilterMonth] = useState("");
+  const [selectedYear, setSelectedYear] = useState<string>(
+    String(new Date().getFullYear())
+  );
 
   // View states
   const [showViewModal, setShowViewModal] = useState(false);
@@ -1566,7 +1579,12 @@ const KOPPage = ({ plant }: KOPPageProps) => {
     const matchesMonth = filterMonth
       ? item.tanggal?.startsWith(filterMonth)
       : true;
-    return matchesSearch && matchesMonth;
+
+    // Filter by year
+    const itemYear = new Date(item.tanggal).getFullYear();
+    const matchesYear = itemYear === parseInt(selectedYear);
+
+    return matchesSearch && matchesMonth && matchesYear;
   });
 
   return (
@@ -1617,6 +1635,13 @@ const KOPPage = ({ plant }: KOPPageProps) => {
                 className="pl-10"
               />
             </div>
+          </div>
+          <div className="w-full md:w-32">
+            <Select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              options={YEAR_OPTIONS}
+            />
           </div>
           <div className="w-full md:w-48">
             <Input

@@ -45,6 +45,16 @@ import {
 import { SHEETS } from "@/services/api";
 import type { TroubleRecord, PlantType } from "@/types";
 
+// Generate year options from 2023 to current year + 1
+const currentYear = new Date().getFullYear();
+const YEAR_OPTIONS = [
+  ...Array.from({ length: currentYear - 2022 }, (_, i) => ({
+    value: String(2023 + i),
+    label: String(2023 + i),
+  })),
+  { value: String(currentYear + 1), label: String(currentYear + 1) },
+];
+
 const initialFormState: TroubleRecord = {
   nomorBerkas: "",
   tanggal: getCurrentDate(),
@@ -78,6 +88,9 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState<TroubleRecord>(initialFormState);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedYear, setSelectedYear] = useState<string>(
+    String(new Date().getFullYear())
+  );
   // Plant is now set from prop
   const currentPlant = plant;
 
@@ -351,7 +364,11 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
 
     const matchesPlant = item._plant === currentPlant;
 
-    return matchesSearch && matchesPlant;
+    // Filter by year
+    const itemYear = new Date(item.tanggal).getFullYear();
+    const matchesYear = itemYear === parseInt(selectedYear);
+
+    return matchesSearch && matchesPlant && matchesYear;
   });
 
   const statusCounts = {
@@ -516,16 +533,24 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Data Trouble Record</CardTitle>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-400" />
-              <Input
-                type="text"
-                placeholder="Cari..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 w-64"
+            <CardTitle>Data Trouble Record - Tahun {selectedYear}</CardTitle>
+            <div className="flex items-center gap-3">
+              <Select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(e.target.value)}
+                options={YEAR_OPTIONS}
+                className="w-32"
               />
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-400" />
+                <Input
+                  type="text"
+                  placeholder="Cari..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9 w-64"
+                />
+              </div>
             </div>
           </div>
         </CardHeader>
