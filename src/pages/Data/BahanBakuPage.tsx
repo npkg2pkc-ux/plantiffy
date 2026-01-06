@@ -374,7 +374,7 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
             Data Bahan Baku {currentPlant === "NPK1" ? "NPK 1" : "NPK 2"}
           </h1>
           <p className="text-dark-500 dark:text-dark-400 mt-1">
-            Kelola data pemakaian bahan baku
+            Kelola data pengiriman bahan baku
           </p>
         </div>
 
