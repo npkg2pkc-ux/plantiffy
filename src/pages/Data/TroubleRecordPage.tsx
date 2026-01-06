@@ -985,7 +985,7 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
           setLogRecordId("");
         }}
         sheetName={
-          currentPlant === "NPK1" ? "troublerecord_NPK1" : "troublerecord"
+          currentPlant === "NPK1" ? "trouble_record_NPK1" : "trouble_record"
         }
         recordId={logRecordId}
         title="Log Aktivitas Trouble Record"
