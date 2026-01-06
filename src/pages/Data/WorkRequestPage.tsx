@@ -427,6 +427,7 @@ const WorkRequestPage = ({ plant }: WorkRequestPageProps) => {
                 />
               </div>
             </div>
+          </div>
         </CardHeader>
         <DataTable
           data={filteredData}
