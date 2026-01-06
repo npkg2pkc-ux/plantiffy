@@ -147,6 +147,8 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
     { value: "Belt Conveyor", label: "Belt Conveyor" },
     { value: "Bucket Elevator", label: "Bucket Elevator" },
     { value: "Control Room", label: "Control Room" },
+    { value: "Furnace", label: "Furnace" },
+    { value: "Scrubbing System", label: "Scrubbing System" },
     { value: "Lainnya", label: "Lainnya" },
   ];
 
