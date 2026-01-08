@@ -784,14 +784,14 @@ const TimesheetForkliftPage = ({ plant }: TimesheetForkliftPageProps) => {
           {
             key: "jamGrounded",
             header: "Grounded",
-            render: (v) => formatNumber(parseNumber(v)),
+            render: (v) => formatNumber(parseNumber(v as number)),
             align: "right",
             width: "50px",
           },
           {
             key: "jamOperasi",
             header: "Operasi",
-            render: (v) => formatNumber(parseNumber(v)),
+            render: (v) => formatNumber(parseNumber(v as number)),
             align: "right",
             width: "45px",
           },
@@ -809,14 +809,14 @@ const TimesheetForkliftPage = ({ plant }: TimesheetForkliftPageProps) => {
             label: "Total Jam Grounded:",
             getValue: (d) =>
               formatNumber(
-                d.reduce((s, i) => s + parseNumber(i.jamGrounded), 0)
+                d.reduce((s, i) => s + parseNumber(i.jamGrounded as number), 0)
               ) + " Jam",
           },
           {
             label: "Total Jam Operasi:",
             getValue: (d) =>
               formatNumber(
-                d.reduce((s, i) => s + parseNumber(i.jamOperasi), 0)
+                d.reduce((s, i) => s + parseNumber(i.jamOperasi as number), 0)
               ) + " Jam",
           },
         ]}

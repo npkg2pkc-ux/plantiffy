@@ -30,7 +30,6 @@ import {
 import { useAuthStore } from "@/stores";
 import {
   formatDate,
-  formatNumber,
   canAdd,
   needsApprovalForEdit,
   needsApprovalForDelete,

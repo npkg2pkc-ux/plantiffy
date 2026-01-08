@@ -405,7 +405,7 @@ export async function getMaterialTransactions(
 // ACTIVITY LOGGING & NOTIFICATION API
 // ============================================
 
-import type { ActivityLog, ActivityLogFilter, User } from "@/types";
+import type { ActivityLog, ActivityLogFilter, User as _User } from "@/types";
 
 // User info type for logging
 export interface UserInfoForLog {

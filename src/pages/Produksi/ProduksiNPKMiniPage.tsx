@@ -31,8 +31,6 @@ import {
   formatNumber,
   parseNumber,
   canAdd,
-  canEditDirect,
-  canDeleteDirect,
   needsApprovalForEdit,
   needsApprovalForDelete,
   isViewOnly,
@@ -99,8 +97,6 @@ const ProduksiNPKMiniPage = () => {
   }, [showForm, loading]);
   useSaveShortcut(triggerSave, showForm);
 
-  const userCanEditDirect = canEditDirect(userRole);
-  const userCanDeleteDirect = canDeleteDirect(userRole);
   const userNeedsApprovalEdit = needsApprovalForEdit(userRole);
   const userNeedsApprovalDelete = needsApprovalForDelete(userRole);
   const userIsViewOnly = isViewOnly(userRole);
@@ -187,7 +183,7 @@ const ProduksiNPKMiniPage = () => {
     });
 
     const total = thisMonthData.reduce(
-      (sum, item) => sum + parseNumber(item.tonase || item.total),
+      (sum, item) => sum + parseNumber(item.tonase),
       0
     );
     const formulasiCount = new Set(thisMonthData.map((i) => i.formulasi)).size;
@@ -325,6 +321,7 @@ const ProduksiNPKMiniPage = () => {
         body: JSON.stringify(approvalData),
         mode: "no-cors",
       });
+      console.log("Approval response:", response.status);
 
       alert("Permintaan approval telah dikirim ke AVP/Supervisor/Admin");
       setShowApprovalDialog(false);
@@ -388,7 +385,7 @@ const ProduksiNPKMiniPage = () => {
       header: "Tonase",
       render: (value: unknown) => (
         <span className="font-semibold text-primary-600">
-          {formatNumber(parseNumber(value))} Ton
+          {formatNumber(parseNumber(value as number))} Ton
         </span>
       ),
     },
@@ -711,8 +708,9 @@ const ProduksiNPKMiniPage = () => {
           setPendingEditItem(null);
         }}
         onSubmit={handleApprovalSubmit}
-        actionType={approvalAction}
-        isLoading={loading}
+        action={approvalAction}
+        itemName="data produksi NPK Mini"
+        loading={loading}
       />
 
       <SuccessOverlay
@@ -739,7 +737,7 @@ const ProduksiNPKMiniPage = () => {
           {
             key: "tonase",
             header: "Tonase (Ton)",
-            render: (v) => formatNumber(parseNumber(v)),
+            render: (v) => formatNumber(parseNumber(v as number)),
             align: "right",
             width: "100px",
           },
@@ -752,8 +750,16 @@ const ProduksiNPKMiniPage = () => {
           {
             label: "Total Tonase:",
             getValue: (d) =>
-              formatNumber(d.reduce((s, i) => s + parseNumber(i.tonase), 0)) +
-              " Ton",
+              formatNumber(
+                d.reduce(
+                  (s, i) =>
+                    s +
+                    parseNumber(
+                      (i as Record<string, unknown>).tonase as number
+                    ),
+                  0
+                )
+              ) + " Ton",
           },
         ]}
       />

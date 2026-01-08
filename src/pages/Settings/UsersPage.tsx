@@ -214,7 +214,8 @@ const UsersPage = () => {
 
     try {
       const { updateData, SHEETS } = await import("@/services/api");
-      const newStatus = item.status === "active" ? "inactive" : "active";
+      const newStatus: "active" | "inactive" =
+        item.status === "active" ? "inactive" : "active";
       const dataToUpdate = { ...item, status: newStatus };
       const updateResult = await updateData<User>(SHEETS.USERS, dataToUpdate);
       if (updateResult.success) {
@@ -273,7 +274,7 @@ const UsersPage = () => {
     {
       key: "nama",
       header: "User",
-      render: (value: unknown, row: User) => (
+      render: (_value: unknown, row: User) => (
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-semibold">
             {(row.namaLengkap || row.nama || row.username || "U")

@@ -30,8 +30,6 @@ import {
   formatNumber,
   parseNumber,
   canAdd,
-  canEditDirect,
-  canDeleteDirect,
   needsApprovalForEdit,
   needsApprovalForDelete,
   isViewOnly,
@@ -112,8 +110,6 @@ const VibrasiPage = ({ plant }: VibrasiPageProps) => {
   }, [showForm, loading]);
   useSaveShortcut(triggerSave, showForm);
 
-  const userCanEditDirect = canEditDirect(userRole);
-  const userCanDeleteDirect = canDeleteDirect(userRole);
   const userNeedsApprovalEdit = needsApprovalForEdit(userRole);
   const userNeedsApprovalDelete = needsApprovalForDelete(userRole);
   const userIsViewOnly = isViewOnly(userRole);
@@ -276,7 +272,7 @@ const VibrasiPage = ({ plant }: VibrasiPageProps) => {
         },
       };
 
-      const response = await fetch(API_URL, {
+      await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(approvalData),
@@ -403,7 +399,7 @@ const VibrasiPage = ({ plant }: VibrasiPageProps) => {
       key: "nilaiVibrasi",
       header: "Vibrasi (mm/s)",
       render: (value: unknown) => {
-        const numValue = parseNumber(value);
+        const numValue = parseNumber(value as number);
         return (
           <span
             className={`font-bold ${
@@ -774,8 +770,9 @@ const VibrasiPage = ({ plant }: VibrasiPageProps) => {
           setPendingEditItem(null);
         }}
         onSubmit={handleApprovalSubmit}
-        actionType={approvalAction}
-        isLoading={loading}
+        action={approvalAction}
+        itemName="data vibrasi"
+        loading={loading}
       />
 
       <SuccessOverlay

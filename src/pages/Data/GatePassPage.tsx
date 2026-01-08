@@ -28,8 +28,6 @@ import { useAuthStore } from "@/stores";
 import {
   formatDate,
   canAdd,
-  canEditDirect,
-  canDeleteDirect,
   needsApprovalForEdit,
   needsApprovalForDelete,
   isViewOnly,
@@ -113,8 +111,6 @@ const GatePassPage = ({ plant }: GatePassPageProps) => {
   }, [showForm, loading]);
   useSaveShortcut(triggerSave, showForm);
 
-  const userCanEditDirect = canEditDirect(user?.role || "");
-  const userCanDeleteDirect = canDeleteDirect(user?.role || "");
   const userNeedsApprovalEdit = needsApprovalForEdit(user?.role || "");
   const userNeedsApprovalDelete = needsApprovalForDelete(user?.role || "");
 

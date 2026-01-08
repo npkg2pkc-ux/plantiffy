@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   BarChart,
   Bar,
@@ -131,77 +131,6 @@ interface DashboardData {
   rkap: RKAP[];
   rekapBBM: RekapBBM[];
 }
-
-const MetricCard = ({
-  title,
-  value,
-  subtitle,
-  trend,
-  trendValue,
-  icon: Icon,
-  color = "primary",
-}: {
-  title: string;
-  value: string | number;
-  subtitle?: string;
-  trend?: "up" | "down" | "neutral";
-  trendValue?: string;
-  icon: React.ComponentType<{ className?: string }>;
-  color?: "primary" | "success" | "warning" | "danger" | "info";
-}) => {
-  const colorClasses = {
-    primary: "from-primary-500 to-primary-600",
-    success: "from-secondary-500 to-secondary-600",
-    warning: "from-amber-500 to-amber-600",
-    danger: "from-red-500 to-red-600",
-    info: "from-cyan-500 to-cyan-600",
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="card p-6 hover:shadow-lg transition-all duration-300"
-    >
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm font-medium text-dark-500 dark:text-dark-400">
-            {title}
-          </p>
-          <p className="text-2xl font-bold text-dark-900 dark:text-white mt-1">
-            {value}
-          </p>
-          {subtitle && <p className="text-sm text-dark-400 mt-1">{subtitle}</p>}
-          {trend && trendValue && (
-            <div className="flex items-center gap-1 mt-2">
-              {trend === "up" ? (
-                <TrendingUp className="h-4 w-4 text-secondary-500" />
-              ) : trend === "down" ? (
-                <TrendingDown className="h-4 w-4 text-red-500" />
-              ) : null}
-              <span
-                className={`text-sm font-medium ${
-                  trend === "up"
-                    ? "text-secondary-600"
-                    : trend === "down"
-                    ? "text-red-600"
-                    : "text-dark-500 dark:text-dark-400"
-                }`}
-              >
-                {trendValue}
-              </span>
-            </div>
-          )}
-        </div>
-        <div
-          className={`h-12 w-12 rounded-xl bg-gradient-to-br ${colorClasses[color]} flex items-center justify-center`}
-        >
-          <Icon className="h-6 w-6 text-white" />
-        </div>
-      </div>
-    </motion.div>
-  );
-};
 
 // ============================================
 // MONTHLY DOWNTIME DETAIL MODAL
@@ -530,7 +459,7 @@ const MonthlyDowntimeModal = ({
                       </td>
                       <td className="px-4 py-3">
                         <Badge
-                          variant={index === 0 ? "danger" : "secondary"}
+                          variant={index === 0 ? "danger" : "default"}
                           size="sm"
                         >
                           {detail.item}
@@ -999,15 +928,6 @@ const DashboardPage = () => {
 
   const navigate = useNavigate();
 
-  // Helper function to get plant-specific route
-  const getPlantRoute = (basePath: string) => {
-    const plant =
-      effectivePlantFilter === "ALL"
-        ? "npk2"
-        : effectivePlantFilter.toLowerCase();
-    return `${basePath}-${plant}`;
-  };
-
   const [loading, setLoading] = useState(true);
 
   // Production card filter (month filter for "Produksi Bulan" card)
@@ -1258,8 +1178,7 @@ const DashboardPage = () => {
     const totalProduksiNPK = filteredData.produksiNPK.reduce((sum, item) => {
       // Check if total field exists and is a valid value (not undefined/null)
       // If total is 0, it's still valid and should be used
-      const hasTotal =
-        item.total !== undefined && item.total !== null && item.total !== "";
+      const hasTotal = item.total !== undefined && item.total !== null;
       const total = hasTotal
         ? parseNumber(item.total)
         : parseNumber(item.shiftMalamOnspek) +
@@ -1273,9 +1192,7 @@ const DashboardPage = () => {
 
     const totalOnspek = filteredData.produksiNPK.reduce((sum, item) => {
       const hasTotal =
-        item.totalOnspek !== undefined &&
-        item.totalOnspek !== null &&
-        item.totalOnspek !== "";
+        item.totalOnspek !== undefined && item.totalOnspek !== null;
       return (
         sum +
         (hasTotal
@@ -1288,9 +1205,7 @@ const DashboardPage = () => {
 
     const totalOffspek = filteredData.produksiNPK.reduce((sum, item) => {
       const hasTotal =
-        item.totalOffspek !== undefined &&
-        item.totalOffspek !== null &&
-        item.totalOffspek !== "";
+        item.totalOffspek !== undefined && item.totalOffspek !== null;
       return (
         sum +
         (hasTotal
@@ -1315,10 +1230,7 @@ const DashboardPage = () => {
 
     // Total RKAP target - sum all monthly targets from all matching RKAP records
     const totalRKAP = filteredData.rkap.reduce((total, rkapItem) => {
-      const hasTotal =
-        rkapItem.total !== undefined &&
-        rkapItem.total !== null &&
-        rkapItem.total !== "";
+      const hasTotal = rkapItem.total !== undefined && rkapItem.total !== null;
       const rkapTotal = hasTotal
         ? parseNumber(rkapItem.total)
         : MONTH_KEY.reduce(
@@ -1419,8 +1331,7 @@ const DashboardPage = () => {
       });
 
       const produksi = monthProduksi.reduce((sum, item) => {
-        const hasTotal =
-          item.total !== undefined && item.total !== null && item.total !== "";
+        const hasTotal = item.total !== undefined && item.total !== null;
         return (
           sum +
           (hasTotal
@@ -1436,9 +1347,7 @@ const DashboardPage = () => {
 
       const onspek = monthProduksi.reduce((sum, item) => {
         const hasTotal =
-          item.totalOnspek !== undefined &&
-          item.totalOnspek !== null &&
-          item.totalOnspek !== "";
+          item.totalOnspek !== undefined && item.totalOnspek !== null;
         return (
           sum +
           (hasTotal
@@ -1451,9 +1360,7 @@ const DashboardPage = () => {
 
       const offspek = monthProduksi.reduce((sum, item) => {
         const hasTotal =
-          item.totalOffspek !== undefined &&
-          item.totalOffspek !== null &&
-          item.totalOffspek !== "";
+          item.totalOffspek !== undefined && item.totalOffspek !== null;
         return (
           sum +
           (hasTotal
@@ -1489,8 +1396,7 @@ const DashboardPage = () => {
     });
 
     const npkProduksi = npkThisMonth.reduce((sum, item) => {
-      const hasTotal =
-        item.total !== undefined && item.total !== null && item.total !== "";
+      const hasTotal = item.total !== undefined && item.total !== null;
       return (
         sum +
         (hasTotal
@@ -1506,9 +1412,7 @@ const DashboardPage = () => {
 
     const npkOnspek = npkThisMonth.reduce((sum, item) => {
       const hasTotal =
-        item.totalOnspek !== undefined &&
-        item.totalOnspek !== null &&
-        item.totalOnspek !== "";
+        item.totalOnspek !== undefined && item.totalOnspek !== null;
       return (
         sum +
         (hasTotal
@@ -1521,9 +1425,7 @@ const DashboardPage = () => {
 
     const npkOffspek = npkThisMonth.reduce((sum, item) => {
       const hasTotal =
-        item.totalOffspek !== undefined &&
-        item.totalOffspek !== null &&
-        item.totalOffspek !== "";
+        item.totalOffspek !== undefined && item.totalOffspek !== null;
       return (
         sum +
         (hasTotal

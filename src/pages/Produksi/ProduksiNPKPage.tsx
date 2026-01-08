@@ -30,13 +30,10 @@ import {
   formatNumber,
   parseNumber,
   canAdd,
-  canEditDirect,
-  canDeleteDirect,
   needsApprovalForEdit,
   needsApprovalForDelete,
   isViewOnly,
   getCurrentDate,
-  sendNotification,
 } from "@/lib/utils";
 import type { ProduksiNPK } from "@/types";
 
@@ -109,8 +106,6 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
     }
   }, [showForm, loading]);
   useSaveShortcut(triggerSave, showForm);
-  const userCanEditDirect = canEditDirect(userRole);
-  const userCanDeleteDirect = canDeleteDirect(userRole);
   const userNeedsApprovalEdit = needsApprovalForEdit(userRole);
   const userNeedsApprovalDelete = needsApprovalForDelete(userRole);
   const userIsViewOnly = isViewOnly(userRole);
@@ -347,7 +342,7 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
         },
       };
 
-      const response = await fetch(API_URL, {
+      await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(approvalData),
@@ -411,39 +406,39 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
     {
       key: "shiftMalamOnspek",
       header: "Malam Onspek",
-      render: (value: unknown) => formatNumber(parseNumber(value)),
+      render: (value: unknown) => formatNumber(parseNumber(value as number)),
     },
     {
       key: "shiftMalamOffspek",
       header: "Malam Offspek",
-      render: (value: unknown) => formatNumber(parseNumber(value)),
+      render: (value: unknown) => formatNumber(parseNumber(value as number)),
     },
     {
       key: "shiftPagiOnspek",
       header: "Pagi Onspek",
-      render: (value: unknown) => formatNumber(parseNumber(value)),
+      render: (value: unknown) => formatNumber(parseNumber(value as number)),
     },
     {
       key: "shiftPagiOffspek",
       header: "Pagi Offspek",
-      render: (value: unknown) => formatNumber(parseNumber(value)),
+      render: (value: unknown) => formatNumber(parseNumber(value as number)),
     },
     {
       key: "shiftSoreOnspek",
       header: "Sore Onspek",
-      render: (value: unknown) => formatNumber(parseNumber(value)),
+      render: (value: unknown) => formatNumber(parseNumber(value as number)),
     },
     {
       key: "shiftSoreOffspek",
       header: "Sore Offspek",
-      render: (value: unknown) => formatNumber(parseNumber(value)),
+      render: (value: unknown) => formatNumber(parseNumber(value as number)),
     },
     {
       key: "total",
       header: "Total",
       render: (value: unknown) => (
         <span className="font-semibold text-primary-600">
-          {formatNumber(parseNumber(value))}
+          {formatNumber(parseNumber(value as number))}
         </span>
       ),
     },
@@ -886,8 +881,9 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
           setPendingEditItem(null);
         }}
         onSubmit={handleApprovalSubmit}
-        actionType={approvalAction}
-        isLoading={loading}
+        action={approvalAction}
+        itemName="data produksi NPK"
+        loading={loading}
       />
 
       {/* Success Overlay */}
@@ -916,63 +912,63 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
           {
             key: "shiftMalamOnspek",
             header: "Malam Onspek",
-            render: (v) => formatNumber(parseNumber(v)),
+            render: (v) => formatNumber(parseNumber(v as number)),
             align: "right",
             width: "70px",
           },
           {
             key: "shiftMalamOffspek",
             header: "Malam Offspek",
-            render: (v) => formatNumber(parseNumber(v)),
+            render: (v) => formatNumber(parseNumber(v as number)),
             align: "right",
             width: "70px",
           },
           {
             key: "shiftPagiOnspek",
             header: "Pagi Onspek",
-            render: (v) => formatNumber(parseNumber(v)),
+            render: (v) => formatNumber(parseNumber(v as number)),
             align: "right",
             width: "65px",
           },
           {
             key: "shiftPagiOffspek",
             header: "Pagi Offspek",
-            render: (v) => formatNumber(parseNumber(v)),
+            render: (v) => formatNumber(parseNumber(v as number)),
             align: "right",
             width: "65px",
           },
           {
             key: "shiftSoreOnspek",
             header: "Sore Onspek",
-            render: (v) => formatNumber(parseNumber(v)),
+            render: (v) => formatNumber(parseNumber(v as number)),
             align: "right",
             width: "65px",
           },
           {
             key: "shiftSoreOffspek",
             header: "Sore Offspek",
-            render: (v) => formatNumber(parseNumber(v)),
+            render: (v) => formatNumber(parseNumber(v as number)),
             align: "right",
             width: "45px",
           },
           {
             key: "totalOnspek",
             header: "Total Onspek",
-            render: (v) => formatNumber(parseNumber(v)),
+            render: (v) => formatNumber(parseNumber(v as number)),
             align: "right",
             width: "70px",
           },
           {
             key: "totalOffspek",
             header: "Total Offspek",
-            render: (v) => formatNumber(parseNumber(v)),
+            render: (v) => formatNumber(parseNumber(v as number)),
             align: "right",
             width: "70px",
           },
           {
             key: "total",
             header: "S. Total",
-            render: (v) => formatNumber(parseNumber(v)),
+            render: (v) => formatNumber(parseNumber(v as number)),
             align: "right",
             width: "60px",
           },
@@ -983,21 +979,22 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
             label: "Total Onspek:",
             getValue: (d) =>
               formatNumber(
-                d.reduce((s, i) => s + parseNumber(i.totalOnspek), 0)
+                d.reduce((s, i) => s + parseNumber(i.totalOnspek as number), 0)
               ) + " Ton",
           },
           {
             label: "Total Offspek:",
             getValue: (d) =>
               formatNumber(
-                d.reduce((s, i) => s + parseNumber(i.totalOffspek), 0)
+                d.reduce((s, i) => s + parseNumber(i.totalOffspek as number), 0)
               ) + " Ton",
           },
           {
             label: "Grand Total:",
             getValue: (d) =>
-              formatNumber(d.reduce((s, i) => s + parseNumber(i.total), 0)) +
-              " Ton",
+              formatNumber(
+                d.reduce((s, i) => s + parseNumber(i.total as number), 0)
+              ) + " Ton",
           },
         ]}
       />
@@ -1009,7 +1006,7 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
           setShowLogModal(false);
           setLogRecordId("");
         }}
-        sheetName={plant === "NPK1" ? "produksi_npk_NPK1" : "produksi_npk"}
+        sheetName={plant === "NPK1" ? "ProduksiNPK_NPK1" : "ProduksiNPK"}
         recordId={logRecordId}
         title="Log Aktivitas Produksi NPK"
       />

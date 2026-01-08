@@ -21,8 +21,6 @@ import {
   formatNumber,
   parseNumber,
   canAdd,
-  canEditDirect,
-  canDeleteDirect,
   needsApprovalForEdit,
   needsApprovalForDelete,
   isViewOnly,
@@ -94,8 +92,6 @@ const PertaPage = () => {
   }, [showForm, loading]);
   useSaveShortcut(triggerSave, showForm);
 
-  const userCanEditDirect = canEditDirect(user?.role || "");
-  const userCanDeleteDirect = canDeleteDirect(user?.role || "");
   const userNeedsApprovalEdit = needsApprovalForEdit(user?.role || "");
   const userNeedsApprovalDelete = needsApprovalForDelete(user?.role || "");
 
@@ -347,14 +343,14 @@ const PertaPage = () => {
     {
       key: "volumeAwal",
       header: "Vol. Awal (L)",
-      render: (value: unknown) => formatNumber(parseNumber(value)),
+      render: (value: unknown) => formatNumber(parseNumber(value as number)),
     },
     {
       key: "volumePengisian",
       header: "Pengisian (L)",
       render: (value: unknown) => (
         <span className="text-green-600 font-semibold">
-          +{formatNumber(parseNumber(value))}
+          +{formatNumber(parseNumber(value as number))}
         </span>
       ),
     },
@@ -363,7 +359,7 @@ const PertaPage = () => {
       header: "Pemakaian (L)",
       render: (value: unknown) => (
         <span className="text-red-600 font-semibold">
-          -{formatNumber(parseNumber(value))}
+          -{formatNumber(parseNumber(value as number))}
         </span>
       ),
     },
@@ -372,7 +368,7 @@ const PertaPage = () => {
       header: "Vol. Akhir (L)",
       render: (value: unknown) => (
         <span className="font-bold text-dark-900 dark:text-white">
-          {formatNumber(parseNumber(value))}
+          {formatNumber(parseNumber(value as number))}
         </span>
       ),
     },

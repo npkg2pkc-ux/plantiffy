@@ -44,7 +44,7 @@ const PrintModal = ({
   signatures,
   filters,
   summaryRows,
-  plant,
+  plant: _plant,
   compactMode = false,
 }: PrintModalProps) => {
   const printRef = useRef<HTMLDivElement>(null);

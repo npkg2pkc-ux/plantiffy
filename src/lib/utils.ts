@@ -284,7 +284,7 @@ export function hasPermission(
 // ============================================
 
 // Type imports for permission checks
-import type { PlantType } from "@/types";
+import type { PlantType as _PlantType } from "@/types";
 
 // Can Add Data - All roles except manager and eksternal can add
 export function canAdd(userRole: string): boolean {

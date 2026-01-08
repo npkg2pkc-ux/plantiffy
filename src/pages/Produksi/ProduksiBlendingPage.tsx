@@ -6,8 +6,6 @@ import {
   Printer,
   Search,
   CalendarDays,
-  TrendingUp,
-  TrendingDown,
   Package,
   BarChart3,
   Filter,
@@ -44,8 +42,6 @@ import {
   formatNumber,
   parseNumber,
   canAdd,
-  canEditDirect,
-  canDeleteDirect,
   needsApprovalForEdit,
   needsApprovalForDelete,
   isViewOnly,
@@ -124,8 +120,6 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
   }, [showForm, loading]);
   useSaveShortcut(triggerSave, showForm);
 
-  const userCanEditDirect = canEditDirect(userRole);
-  const userCanDeleteDirect = canDeleteDirect(userRole);
   const userNeedsApprovalEdit = needsApprovalForEdit(userRole);
   const userNeedsApprovalDelete = needsApprovalForDelete(userRole);
   const userIsViewOnly = isViewOnly(userRole);
@@ -191,77 +185,79 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
 
         if (result.success && result.data) {
           // Normalize data - handle different field names from backend
-          const normalizedData = result.data.map(
-            (item: Record<string, unknown>) => {
-              // Debug log for first item
-              if (
-                result.data &&
-                result.data.indexOf(item as ProduksiBlending) === 0
-              ) {
-                console.log("First item raw:", item);
-              }
-
-              // Handle tonase field - check all possible variations
-              const tonaseValue =
-                item.tonase ??
-                item.Tonase ??
-                item.total ??
-                item.Total ??
-                item.jumlah ??
-                item.Jumlah ??
-                item.ton ??
-                item.Ton ??
-                item.qty ??
-                item.Qty ??
-                item.quantity ??
-                item.Quantity ??
-                0;
-
-              // Handle formula field - might be 'formula', 'Formula', or empty
-              const formulaValue =
-                item.formula ??
-                item.Formula ??
-                item.formulasi ??
-                item.Formulasi ??
-                item.jenis ??
-                item.Jenis ??
-                item.produk ??
-                item.Produk ??
-                "";
-
-              // Handle kategori field
-              const kategoriValue =
-                item.kategori ??
-                item.Kategori ??
-                item.tipe ??
-                item.Tipe ??
-                item.jenis ??
-                item.Jenis ??
-                (type === "retail" ? "Retail" : "Fresh");
-
-              const normalized = {
-                ...item,
-                id: (item.id ??
-                  item.ID ??
-                  item.Id ??
-                  item.no ??
-                  item.No) as string,
-                tanggal: (item.tanggal ??
-                  item.Tanggal ??
-                  item.tgl ??
-                  item.Tgl ??
-                  item.date ??
-                  item.Date ??
-                  "") as string,
-                kategori: kategoriValue as string,
-                formula: ((formulaValue as string) || "Tanpa Formula").trim(),
-                tonase: parseNumber(tonaseValue),
-                _plant: plant,
-              } as ProduksiBlending;
-
-              return normalized;
+          const normalizedData = (
+            result.data as unknown as Record<string, unknown>[]
+          ).map((item) => {
+            // Debug log for first item
+            if (
+              result.data &&
+              (result.data as unknown as Record<string, unknown>[]).indexOf(
+                item
+              ) === 0
+            ) {
+              console.log("First item raw:", item);
             }
-          );
+
+            // Handle tonase field - check all possible variations
+            const tonaseValue =
+              item.tonase ??
+              item.Tonase ??
+              item.total ??
+              item.Total ??
+              item.jumlah ??
+              item.Jumlah ??
+              item.ton ??
+              item.Ton ??
+              item.qty ??
+              item.Qty ??
+              item.quantity ??
+              item.Quantity ??
+              0;
+
+            // Handle formula field - might be 'formula', 'Formula', or empty
+            const formulaValue =
+              item.formula ??
+              item.Formula ??
+              item.formulasi ??
+              item.Formulasi ??
+              item.jenis ??
+              item.Jenis ??
+              item.produk ??
+              item.Produk ??
+              "";
+
+            // Handle kategori field
+            const kategoriValue =
+              item.kategori ??
+              item.Kategori ??
+              item.tipe ??
+              item.Tipe ??
+              item.jenis ??
+              item.Jenis ??
+              (type === "retail" ? "Retail" : "Fresh");
+
+            const normalized = {
+              ...item,
+              id: (item.id ??
+                item.ID ??
+                item.Id ??
+                item.no ??
+                item.No) as string,
+              tanggal: (item.tanggal ??
+                item.Tanggal ??
+                item.tgl ??
+                item.Tgl ??
+                item.date ??
+                item.Date ??
+                "") as string,
+              kategori: kategoriValue as string,
+              formula: ((formulaValue as string) || "Tanpa Formula").trim(),
+              tonase: parseNumber(tonaseValue as number),
+              _plant: plant as "NPK1" | "NPK2",
+            } as ProduksiBlending;
+
+            return normalized;
+          });
 
           const sortedData = normalizedData.sort(
             (a, b) =>
@@ -479,15 +475,16 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
       .slice(0, 10); // Top 10
   }, [formulaStats]);
 
-  // Daily production for selected month
-  const dailyProduction = useMemo(() => {
+  // Daily production for selected month (keeping for potential future use)
+  // Commented out to avoid unused variable warning
+  /* const dailyProduction = useMemo(() => {
     const days: Record<number, number> = {};
     filteredByMonth.forEach((item) => {
       const day = new Date(item.tanggal).getDate();
       days[day] = (days[day] || 0) + parseNumber(item.tonase);
     });
     return days;
-  }, [filteredByMonth]);
+  }, [filteredByMonth]); */
 
   // Navigation functions for month
   const goToPrevMonth = () => {
@@ -522,7 +519,8 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
     }
   };
 
-  const currentMonthProduksi = useMemo(() => {
+  // Commented out to avoid unused variable warning
+  /* const currentMonthProduksi = useMemo(() => {
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
@@ -555,7 +553,7 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
       total,
       entryCount: thisMonthData.length,
     };
-  }, [data]);
+  }, [data]); */
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -583,7 +581,7 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
           throw new Error(updateResult.error || "Gagal mengupdate data");
         }
       } else {
-        const newData = { ...form, _plant: plant };
+        const newData = { ...form, _plant: plant as "NPK1" | "NPK2" };
         const createResult = await createWithLog<ProduksiBlending>(
           "produksi_blending",
           newData
@@ -591,7 +589,7 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
         if (createResult.success && createResult.data) {
           const newItem: ProduksiBlending = {
             ...createResult.data,
-            _plant: plant,
+            _plant: plant as "NPK1" | "NPK2",
           };
           setData((prev) => [newItem, ...prev]);
         } else {
@@ -676,7 +674,7 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
         },
       };
 
-      const response = await fetch(API_URL, {
+      await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(approvalData),
@@ -762,7 +760,7 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
       header: "Tonase",
       render: (value: unknown) => (
         <span className="font-semibold">
-          {formatNumber(parseNumber(value))} Ton
+          {formatNumber(parseNumber(value as number))} Ton
         </span>
       ),
     },
@@ -1145,8 +1143,8 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
           <Card className="p-8 text-center">
             <Package className="h-12 w-12 text-dark-300 mx-auto mb-3" />
             <p className="text-dark-500 dark:text-dark-400">
-              Tidak ada data produksi untuk bulan {MONTH_NAMES[selectedMonth]}{" "}
-              {selectedYear}
+              Tidak ada data produksi untuk bulan{" "}
+              {MONTH_NAMES[selectedMonth as number]} {selectedYear}
             </p>
           </Card>
         )}
@@ -1455,8 +1453,9 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
           setPendingEditItem(null);
         }}
         onSubmit={handleApprovalSubmit}
-        actionType={approvalAction}
-        isLoading={loading}
+        action={approvalAction}
+        itemName="data produksi blending"
+        loading={loading}
       />
 
       {/* Success Overlay */}
@@ -1470,7 +1469,9 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
       <PrintModal
         isOpen={showPrintModal}
         onClose={() => setShowPrintModal(false)}
-        title={`${pageTitle} - ${MONTH_NAMES[selectedMonth]} ${selectedYear}${
+        title={`${pageTitle} - ${
+          MONTH_NAMES[selectedMonth as number]
+        } ${selectedYear}${
           selectedFormula !== "all" ? ` (${selectedFormula})` : ""
         }`}
         plant={plant === "NPK1" ? "NPK Plant 1" : "NPK Plant 2"}
@@ -1487,7 +1488,7 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
           {
             key: "tonase",
             header: "Tonase (Ton)",
-            render: (v) => formatNumber(parseNumber(v)),
+            render: (v) => formatNumber(parseNumber(v as number)),
             align: "right",
             width: "80px",
           },
@@ -1513,8 +1514,16 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
           {
             label: "Total Tonase:",
             getValue: (d) =>
-              formatNumber(d.reduce((s, i) => s + parseNumber(i.tonase), 0)) +
-              " Ton",
+              formatNumber(
+                d.reduce(
+                  (s, i) =>
+                    s +
+                    parseNumber(
+                      (i as Record<string, unknown>).tonase as number
+                    ),
+                  0
+                )
+              ) + " Ton",
           },
         ]}
       />
@@ -1526,7 +1535,9 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
           setShowLogModal(false);
           setLogRecordId("");
         }}
-        sheetName={type === "blending" ? "produksi_blending" : "produksi_blending_NPK1"}
+        sheetName={
+          type === "blending" ? "produksi_blending" : "produksi_blending_NPK1"
+        }
         recordId={logRecordId}
         title={`Log Aktivitas ${pageTitle}`}
       />
