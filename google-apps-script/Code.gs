@@ -190,6 +190,13 @@ const SHEET_HEADERS = {
     "satuan",
     "keterangan",
   ],
+  bahanbaku_npk: [
+    "id",
+    "tanggal",
+    "bahanBaku",
+    "entries",
+    "totalBerat",
+  ],
   vibrasi: [
     "id",
     "tanggal",
@@ -1345,6 +1352,8 @@ function initializeAllSheets() {
     "workrequest_NPK1",
     "bahanbaku",
     "bahanbaku_NPK1",
+    "bahanbaku_npk",
+    "bahanbaku_npk_NPK1",
     "vibrasi",
     "vibrasi_NPK1",
     "gatepass",
@@ -1614,6 +1623,8 @@ function fillEmptyIdsAllSheets() {
     "workrequest_NPK1",
     "bahanbaku",
     "bahanbaku_NPK1",
+    "bahanbaku_npk",
+    "bahanbaku_npk_NPK1",
     "vibrasi",
     "vibrasi_NPK1",
     "gatepass",
@@ -2042,6 +2053,8 @@ function getSheetDisplayName(sheetName) {
     workrequest_NPK1: "Work Request",
     bahanbaku: "Bahan Baku",
     bahanbaku_NPK1: "Bahan Baku",
+    bahanbaku_npk: "Bahan Baku NPK",
+    bahanbaku_npk_NPK1: "Bahan Baku NPK",
     vibrasi: "Vibrasi",
     vibrasi_NPK1: "Vibrasi",
     gatepass: "Gate Pass",
@@ -2080,6 +2093,7 @@ function getPlantFromSheet(sheetName) {
 function createRecordPreview(data, sheetName) {
   if (data.tanggal) {
     if (data.namaBarang) return `${data.tanggal} - ${data.namaBarang}`;
+    if (data.bahanBaku) return `${data.tanggal} - ${data.bahanBaku}`;
     if (data.nomorWR) return `${data.tanggal} - WR ${data.nomorWR}`;
     if (data.nomorGatePass) return `${data.tanggal} - GP ${data.nomorGatePass}`;
     if (data.item) return `${data.tanggal} - ${data.item}`;

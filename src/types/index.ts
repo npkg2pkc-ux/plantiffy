@@ -184,6 +184,22 @@ export interface BahanBaku {
   _plant?: PlantType;
 }
 
+// Bahan Baku NPK Entry
+export interface BahanBakuNPKEntry {
+  berat: number;
+  unit: string;
+}
+
+// Bahan Baku NPK
+export interface BahanBakuNPK {
+  id?: string;
+  tanggal: string;
+  bahanBaku: string;
+  entries: BahanBakuNPKEntry[] | string; // Array or JSON string
+  totalBerat: number;
+  _plant?: PlantType;
+}
+
 // Pemantauan Bahan Baku
 export interface PemantauanBahanBaku {
   id?: string;

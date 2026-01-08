@@ -727,7 +727,6 @@ const Header = () => {
     toggleChat,
     unreadChatCount,
     setUnreadChatCount,
-    markChatAsRead,
   } = useChatStore();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);

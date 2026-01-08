@@ -230,6 +230,7 @@ export const SHEETS = {
   DOWNTIME: "downtime",
   WORK_REQUEST: "workrequest",
   BAHAN_BAKU: "bahanbaku",
+  BAHAN_BAKU_NPK: "bahanbaku_npk",
   VIBRASI: "vibrasi",
   GATE_PASS: "gatepass",
   PERTA: "perta",

@@ -30,7 +30,7 @@ import {
 } from "@/pages/Laporan";
 import {
   WorkRequestPage,
-  BahanBakuPage,
+  BahanBakuNPKPage,
   VibrasiPage,
   GatePassPage,
   PertaPage,
@@ -196,11 +196,11 @@ function App() {
             />
             <Route
               path="bahan-baku-npk1"
-              element={<BahanBakuPage plant="NPK1" />}
+              element={<BahanBakuNPKPage plant="NPK1" />}
             />
             <Route
               path="bahan-baku-npk2"
-              element={<BahanBakuPage plant="NPK2" />}
+              element={<BahanBakuNPKPage plant="NPK2" />}
             />
             <Route path="vibrasi-npk1" element={<VibrasiPage plant="NPK1" />} />
             <Route path="vibrasi-npk2" element={<VibrasiPage plant="NPK2" />} />

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Edit2, Trash2, Search, Package, History } from "lucide-react";
+import { Plus, Edit2, Trash2, Search, Package, History, X } from "lucide-react";
 import { useSaveShortcut, useDataWithLogging } from "@/hooks";
 import {
   Button,
@@ -21,15 +21,28 @@ import {
   formatNumber,
   parseNumber,
   canAdd,
-  canEditDirect,
-  canDeleteDirect,
   needsApprovalForEdit,
   needsApprovalForDelete,
   isViewOnly,
   getCurrentDate,
 } from "@/lib/utils";
 import { SHEETS } from "@/services/api";
-import type { BahanBaku, PlantType } from "@/types";
+import type { PlantType } from "@/types";
+
+// Interface for Bahan Baku NPK
+interface BahanBakuNPKEntry {
+  berat: number;
+  unit: string;
+}
+
+interface BahanBakuNPK {
+  id?: string;
+  tanggal: string;
+  bahanBaku: string;
+  entries: BahanBakuNPKEntry[]; // Array of berat and unit
+  totalBerat: number;
+  _plant?: PlantType;
+}
 
 // Generate year options from 2023 to current year + 1
 const currentYear = new Date().getFullYear();
@@ -41,35 +54,51 @@ const YEAR_OPTIONS = [
   { value: String(currentYear + 1), label: String(currentYear + 1) },
 ];
 
-const initialFormState: BahanBaku = {
+const BAHAN_BAKU_OPTIONS = [
+  { value: "Urea", label: "Urea" },
+  { value: "DAP", label: "DAP" },
+  { value: "KCL", label: "KCL" },
+  { value: "ZA", label: "ZA" },
+  { value: "Clay", label: "Clay" },
+  { value: "Dolomite", label: "Dolomite" },
+  { value: "Coating Oil", label: "Coating Oil" },
+  { value: "Pewarna", label: "Pewarna" },
+  { value: "Silika", label: "Silika" },
+  { value: "Amnit", label: "Amnit" },
+];
+
+const UNIT_OPTIONS = [
+  { value: "Ton", label: "Ton" },
+  { value: "Pallet", label: "Pallet" },
+  { value: "Jumbo", label: "Jumbo" },
+];
+
+const initialFormState: BahanBakuNPK = {
   tanggal: getCurrentDate(),
-  namaBarang: "",
-  namaBarangLainnya: "",
-  jumlah: 0,
-  satuan: "Kg",
-  keterangan: "",
+  bahanBaku: "",
+  entries: [{ berat: 0, unit: "Ton" }],
+  totalBerat: 0,
 };
 
-interface BahanBakuPageProps {
+interface BahanBakuNPKPageProps {
   plant: PlantType;
 }
 
-const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
+const BahanBakuNPKPage = ({ plant }: BahanBakuNPKPageProps) => {
   const { user } = useAuthStore();
   const { createWithLog, updateWithLog, deleteWithLog } = useDataWithLogging();
-  const [data, setData] = useState<BahanBaku[]>([]);
+  const [data, setData] = useState<BahanBakuNPK[]>([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [form, setForm] = useState<BahanBaku>(initialFormState);
+  const [form, setForm] = useState<BahanBakuNPK>(initialFormState);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedYear, setSelectedYear] = useState<string>(
     String(new Date().getFullYear())
   );
-  // Plant is now set from prop
   const currentPlant = plant;
 
   // Approval states
@@ -77,7 +106,7 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
   const [approvalAction, setApprovalAction] = useState<"edit" | "delete">(
     "edit"
   );
-  const [pendingEditItem, setPendingEditItem] = useState<BahanBaku | null>(
+  const [pendingEditItem, setPendingEditItem] = useState<BahanBakuNPK | null>(
     null
   );
 
@@ -98,47 +127,73 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
   // Alt+S shortcut to save
   const triggerSave = useCallback(() => {
     if (showForm && !loading) {
-      const form = document.querySelector("form");
-      if (form) form.requestSubmit();
+      const formEl = document.querySelector("form");
+      if (formEl) formEl.requestSubmit();
     }
   }, [showForm, loading]);
   useSaveShortcut(triggerSave, showForm);
 
-  const userCanEditDirect = canEditDirect(user?.role || "");
-  const userCanDeleteDirect = canDeleteDirect(user?.role || "");
   const userNeedsApprovalEdit = needsApprovalForEdit(user?.role || "");
   const userNeedsApprovalDelete = needsApprovalForDelete(user?.role || "");
 
-  const namaBarangOptions = [
-    { value: "Urea", label: "Urea" },
-    { value: "DAP", label: "DAP" },
-    { value: "KCL", label: "KCL" },
-    { value: "ZA", label: "ZA" },
-    { value: "Dolomite", label: "Dolomite" },
-    { value: "Clay", label: "Clay" },
-    { value: "Silica", label: "Silica" },
-    { value: "Pewarna", label: "Pewarna" },
-    { value: "Coating Oil", label: "Coating Oil" },
-    { value: "Rock Phosphate", label: "Rock Phosphate" },
-    { value: "Lainnya", label: "Lainnya" },
-  ];
+  // Calculate total berat from entries
+  const calculateTotalBerat = (entries: BahanBakuNPKEntry[]): number => {
+    return entries.reduce((sum, entry) => sum + (entry.berat || 0), 0);
+  };
 
-  const satuanOptions = [
-    { value: "Kg", label: "Kg" },
-    { value: "Ton", label: "Ton" },
-    { value: "Liter", label: "Liter" },
-    { value: "Drum", label: "Drum" },
-    { value: "Bag", label: "Bag" },
-  ];
+  // Update form entries
+  const updateEntry = (index: number, field: keyof BahanBakuNPKEntry, value: string | number) => {
+    setForm((prev) => {
+      const newEntries = [...prev.entries];
+      newEntries[index] = {
+        ...newEntries[index],
+        [field]: field === "berat" ? parseFloat(value as string) || 0 : value,
+      };
+      return {
+        ...prev,
+        entries: newEntries,
+        totalBerat: calculateTotalBerat(newEntries),
+      };
+    });
+  };
+
+  // Add new entry
+  const addEntry = () => {
+    setForm((prev) => ({
+      ...prev,
+      entries: [...prev.entries, { berat: 0, unit: "Ton" }],
+    }));
+  };
+
+  // Remove entry
+  const removeEntry = (index: number) => {
+    if (form.entries.length <= 1) return;
+    setForm((prev) => {
+      const newEntries = prev.entries.filter((_, i) => i !== index);
+      return {
+        ...prev,
+        entries: newEntries,
+        totalBerat: calculateTotalBerat(newEntries),
+      };
+    });
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const { fetchDataByPlant, SHEETS } = await import("@/services/api");
-        const result = await fetchDataByPlant<BahanBaku>(SHEETS.BAHAN_BAKU);
+        const { fetchDataByPlant } = await import("@/services/api");
+        const result = await fetchDataByPlant<BahanBakuNPK>(SHEETS.BAHAN_BAKU_NPK);
         if (result.success && result.data) {
-          const sortedData = [...result.data].sort(
+          // Parse entries JSON if stored as string
+          const parsedData = result.data.map((item) => ({
+            ...item,
+            entries: typeof item.entries === "string" 
+              ? JSON.parse(item.entries) 
+              : item.entries || [{ berat: 0, unit: "Ton" }],
+            totalBerat: item.totalBerat || 0,
+          }));
+          const sortedData = [...parsedData].sort(
             (a, b) =>
               new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime()
           );
@@ -161,18 +216,31 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
     setLoading(true);
 
     try {
+      // Prepare data with entries as JSON string for storage
+      const dataToSave = {
+        ...form,
+        entries: JSON.stringify(form.entries),
+        totalBerat: calculateTotalBerat(form.entries),
+        _plant: currentPlant,
+      };
+
       if (editingId) {
         // Update with logging
-        const dataToUpdate = { ...form, id: editingId, _plant: currentPlant };
-        const updateResult = await updateWithLog<BahanBaku>(
-          SHEETS.BAHAN_BAKU,
+        const dataToUpdate = { ...dataToSave, id: editingId };
+        const updateResult = await updateWithLog<typeof dataToUpdate>(
+          SHEETS.BAHAN_BAKU_NPK,
           dataToUpdate
         );
         if (updateResult.success) {
           setData((prev) =>
             prev.map((item) =>
               item.id === editingId
-                ? { ...form, id: editingId, _plant: currentPlant }
+                ? { 
+                    ...form, 
+                    id: editingId, 
+                    _plant: currentPlant,
+                    totalBerat: calculateTotalBerat(form.entries),
+                  }
                 : item
             )
           );
@@ -181,15 +249,16 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
         }
       } else {
         // Create with logging
-        const newData = { ...form, _plant: currentPlant };
-        const createResult = await createWithLog<BahanBaku>(
-          SHEETS.BAHAN_BAKU,
-          newData
+        const createResult = await createWithLog<typeof dataToSave>(
+          SHEETS.BAHAN_BAKU_NPK,
+          dataToSave
         );
         if (createResult.success && createResult.data) {
-          const newItem: BahanBaku = {
-            ...createResult.data,
+          const newItem: BahanBakuNPK = {
+            ...form,
+            id: createResult.data.id,
             _plant: currentPlant,
+            totalBerat: calculateTotalBerat(form.entries),
           };
           setData((prev) => [newItem, ...prev]);
         } else {
@@ -214,14 +283,23 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
     }
   };
 
-  const handleEdit = (item: BahanBaku) => {
+  const handleEdit = (item: BahanBakuNPK) => {
     if (userNeedsApprovalEdit) {
       setPendingEditItem(item);
       setApprovalAction("edit");
       setShowApprovalDialog(true);
       return;
     }
-    setForm(item);
+    // Parse entries if string
+    const parsedEntries = typeof item.entries === "string" 
+      ? JSON.parse(item.entries) 
+      : item.entries || [{ berat: 0, unit: "Ton" }];
+    
+    setForm({
+      ...item,
+      entries: parsedEntries,
+      totalBerat: calculateTotalBerat(parsedEntries),
+    });
     setEditingId(item.id || null);
     setShowForm(true);
   };
@@ -242,7 +320,7 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
     try {
       const { createData, SHEETS } = await import("@/services/api");
       const approvalData = {
-        type: "BAHAN_BAKU" as const,
+        type: "BAHAN_BAKU_NPK" as const,
         action: approvalAction,
         itemId: approvalAction === "edit" ? pendingEditItem?.id : deleteId,
         itemData:
@@ -279,7 +357,7 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
       const itemToDelete = data.find((item) => item.id === deleteId);
 
       // Delete with logging
-      const deleteResult = await deleteWithLog(SHEETS.BAHAN_BAKU, {
+      const deleteResult = await deleteWithLog(SHEETS.BAHAN_BAKU_NPK, {
         id: deleteId,
         _plant: itemToDelete?._plant,
       });
@@ -313,8 +391,7 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
   const filteredData = data.filter((item) => {
     const matchesSearch =
       item.tanggal?.includes(searchTerm) ||
-      item.namaBarang?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.keterangan?.toLowerCase().includes(searchTerm.toLowerCase());
+      item.bahanBaku?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesPlant = item._plant === currentPlant;
 
@@ -325,12 +402,21 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
     return matchesSearch && matchesPlant && matchesYear;
   });
 
-  // Calculate totals per item
-  const totalsByItem = filteredData.reduce((acc, item) => {
-    const key = item.namaBarang || "Unknown";
-    acc[key] = (acc[key] || 0) + (item.jumlah || 0);
+  // Calculate totals per bahan baku
+  const totalsByBahanBaku = filteredData.reduce((acc, item) => {
+    const key = item.bahanBaku || "Unknown";
+    acc[key] = (acc[key] || 0) + (item.totalBerat || 0);
     return acc;
   }, {} as Record<string, number>);
+
+  // Format entries for display
+  const formatEntries = (entries: BahanBakuNPKEntry[] | string) => {
+    const parsedEntries = typeof entries === "string" ? JSON.parse(entries) : entries;
+    if (!parsedEntries || !Array.isArray(parsedEntries)) return "-";
+    return parsedEntries
+      .map((e: BahanBakuNPKEntry) => `${formatNumber(e.berat)} ${e.unit}`)
+      .join(", ");
+  };
 
   const columns = [
     {
@@ -340,29 +426,33 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
       render: (value: unknown) => formatDate(value as string),
     },
     {
-      key: "namaBarang",
-      header: "Nama Barang",
-      render: (value: unknown, row: BahanBaku) => (
+      key: "bahanBaku",
+      header: "Bahan Baku",
+      render: (value: unknown) => (
         <div className="flex items-center gap-2">
           <Package className="h-4 w-4 text-dark-400" />
-          <span className="font-medium">
-            {value === "Lainnya"
-              ? row.namaBarangLainnya || "Lainnya"
-              : (value as string)}
-          </span>
+          <span className="font-medium">{value as string}</span>
         </div>
       ),
     },
     {
-      key: "jumlah",
-      header: "Jumlah",
-      render: (value: unknown, row: BahanBaku) => (
-        <span className="font-semibold text-dark-900 dark:text-white">
-          {formatNumber(parseNumber(value))} {row.satuan}
+      key: "entries",
+      header: "Detail Berat & Unit",
+      render: (value: unknown) => (
+        <span className="text-sm text-dark-600 dark:text-dark-300">
+          {formatEntries(value as BahanBakuNPKEntry[] | string)}
         </span>
       ),
     },
-    { key: "keterangan", header: "Keterangan" },
+    {
+      key: "totalBerat",
+      header: "Total Berat",
+      render: (value: unknown) => (
+        <span className="font-semibold text-primary-600 dark:text-primary-400">
+          {formatNumber(parseNumber(value as number))}
+        </span>
+      ),
+    },
   ];
 
   return (
@@ -371,10 +461,10 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-display font-bold text-dark-900 dark:text-white">
-            Data Bahan Baku {currentPlant === "NPK1" ? "NPK 1" : "NPK 2"}
+            Data Bahan Baku NPK {currentPlant === "NPK1" ? "1" : "2"}
           </h1>
           <p className="text-dark-500 dark:text-dark-400 mt-1">
-            Kelola data pengiriman bahan baku
+            Kelola data pengiriman bahan baku NPK
           </p>
         </div>
 
@@ -390,7 +480,7 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
 
       {/* Summary - Top Items */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        {Object.entries(totalsByItem)
+        {Object.entries(totalsByBahanBaku)
           .slice(0, 5)
           .map(([name, total]) => (
             <Card key={name} className="p-4">
@@ -403,7 +493,7 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
                     {name}
                   </p>
                   <p className="text-lg font-bold text-dark-900 dark:text-white">
-                    {formatNumber(total)} Kg
+                    {formatNumber(total)}
                   </p>
                 </div>
               </div>
@@ -415,7 +505,7 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Data Bahan Baku - Tahun {selectedYear}</CardTitle>
+            <CardTitle>Data Bahan Baku NPK - Tahun {selectedYear}</CardTitle>
             <div className="flex items-center gap-3">
               <Select
                 value={selectedYear}
@@ -507,8 +597,8 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
           setForm(initialFormState);
           setEditingId(null);
         }}
-        title={editingId ? "Edit Data Bahan Baku" : "Tambah Data Bahan Baku"}
-        size="md"
+        title={editingId ? "Edit Data Bahan Baku NPK" : "Tambah Data Bahan Baku NPK"}
+        size="lg"
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
@@ -522,71 +612,87 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
           />
 
           <Select
-            label="Nama Barang"
-            value={form.namaBarang}
+            label="Bahan Baku"
+            value={form.bahanBaku}
             onChange={(e) =>
-              setForm((prev) => ({
-                ...prev,
-                namaBarang: e.target.value,
-                namaBarangLainnya:
-                  e.target.value !== "Lainnya" ? "" : prev.namaBarangLainnya,
-              }))
+              setForm((prev) => ({ ...prev, bahanBaku: e.target.value }))
             }
-            options={namaBarangOptions}
+            options={BAHAN_BAKU_OPTIONS}
             placeholder="Pilih bahan baku"
             required
           />
 
-          {form.namaBarang === "Lainnya" && (
-            <Input
-              label="Nama Barang Lainnya"
-              type="text"
-              value={form.namaBarangLainnya}
-              onChange={(e) =>
-                setForm((prev) => ({
-                  ...prev,
-                  namaBarangLainnya: e.target.value,
-                }))
-              }
-              placeholder="Masukkan nama barang"
-              required
-            />
-          )}
+          {/* Entries Section */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-dark-700 dark:text-dark-300">
+                Detail Berat & Unit
+              </label>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={addEntry}
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Tambah
+              </Button>
+            </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Jumlah"
-              type="number"
-              value={form.jumlah || ""}
-              onChange={(e) =>
-                setForm((prev) => ({
-                  ...prev,
-                  jumlah: parseFloat(e.target.value) || 0,
-                }))
-              }
-              placeholder="0"
-              required
-            />
-            <Select
-              label="Satuan"
-              value={form.satuan}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, satuan: e.target.value }))
-              }
-              options={satuanOptions}
-              required
-            />
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {form.entries.map((entry, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-2 p-3 bg-dark-50 dark:bg-dark-800 rounded-lg"
+                >
+                  <div className="flex-1">
+                    <Input
+                      type="number"
+                      value={entry.berat || ""}
+                      onChange={(e) =>
+                        updateEntry(index, "berat", e.target.value)
+                      }
+                      placeholder="Berat"
+                      step="0.01"
+                      min="0"
+                      required
+                    />
+                  </div>
+                  <div className="w-32">
+                    <Select
+                      value={entry.unit}
+                      onChange={(e) =>
+                        updateEntry(index, "unit", e.target.value)
+                      }
+                      options={UNIT_OPTIONS}
+                      required
+                    />
+                  </div>
+                  {form.entries.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeEntry(index)}
+                      className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Total Display */}
+            <div className="flex items-center justify-between p-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800">
+              <span className="font-medium text-dark-700 dark:text-dark-300">
+                Total Berat:
+              </span>
+              <span className="text-xl font-bold text-primary-600 dark:text-primary-400">
+                {formatNumber(calculateTotalBerat(form.entries))}
+              </span>
+            </div>
           </div>
-
-          <Input
-            label="Keterangan"
-            type="text"
-            value={form.keterangan}
-            onChange={(e) =>
-              setForm((prev) => ({ ...prev, keterangan: e.target.value }))
-            }
-            placeholder="Keterangan tambahan"
-          />
 
           <div className="flex justify-end gap-3 pt-4 border-t">
             <Button
@@ -631,7 +737,7 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
         }}
         onSubmit={handleApprovalSubmit}
         action={approvalAction}
-        itemName="data bahan baku"
+        itemName="data bahan baku NPK"
         loading={loading}
       />
 
@@ -648,12 +754,12 @@ const BahanBakuPage = ({ plant }: BahanBakuPageProps) => {
           setShowLogModal(false);
           setLogRecordId("");
         }}
-        sheetName={currentPlant === "NPK1" ? "bahanbaku_NPK1" : "bahanbaku"}
+        sheetName={currentPlant === "NPK1" ? "bahanbaku_npk_NPK1" : "bahanbaku_npk"}
         recordId={logRecordId}
-        title="Log Aktivitas Bahan Baku"
+        title="Log Aktivitas Bahan Baku NPK"
       />
     </div>
   );
 };
 
-export default BahanBakuPage;
+export default BahanBakuNPKPage;

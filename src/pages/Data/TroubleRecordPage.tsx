@@ -35,8 +35,6 @@ import {
   formatDate,
   formatTime,
   canAdd,
-  canEditDirect,
-  canDeleteDirect,
   needsApprovalForEdit,
   needsApprovalForDelete,
   isViewOnly,
@@ -130,8 +128,6 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
   }, [showForm, loading]);
   useSaveShortcut(triggerSave, showForm);
 
-  const userCanEditDirect = canEditDirect(userRole);
-  const userCanDeleteDirect = canDeleteDirect(userRole);
   const userNeedsApprovalEdit = needsApprovalForEdit(userRole);
   const userNeedsApprovalDelete = needsApprovalForDelete(userRole);
   const userIsViewOnly = isViewOnly(userRole);
@@ -170,7 +166,7 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
         if (result.success && result.data) {
           const sortedData = [...result.data].sort(
             (a, b) =>
-              new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime()
+              new Date(b.tanggal || "").getTime() - new Date(a.tanggal || "").getTime()
           );
           setData(sortedData);
         } else {
@@ -300,7 +296,7 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
         },
       };
 
-      const response = await fetch(API_URL, {
+      await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(approvalData),
@@ -367,7 +363,7 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
     const matchesPlant = item._plant === currentPlant;
 
     // Filter by year
-    const itemYear = new Date(item.tanggal).getFullYear();
+    const itemYear = new Date(item.tanggal || "").getFullYear();
     const matchesYear = itemYear === parseInt(selectedYear);
 
     return matchesSearch && matchesPlant && matchesYear;
@@ -834,7 +830,7 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
                   </p>
                 </div>
                 <p className="font-semibold text-dark-900 dark:text-white">
-                  {formatDate(viewItem.tanggal)}
+                  {formatDate(viewItem.tanggal || "")}
                 </p>
               </div>
               <div className="bg-dark-50 dark:bg-dark-800 rounded-xl p-4">
@@ -967,8 +963,9 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
           setPendingEditItem(null);
         }}
         onSubmit={handleApprovalSubmit}
-        actionType={approvalAction}
-        isLoading={loading}
+        action={approvalAction}
+        itemName="data trouble record"
+        loading={loading}
       />
 
       <SuccessOverlay
