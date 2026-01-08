@@ -190,13 +190,7 @@ const SHEET_HEADERS = {
     "satuan",
     "keterangan",
   ],
-  bahanbaku_npk: [
-    "id",
-    "tanggal",
-    "bahanBaku",
-    "entries",
-    "totalBerat",
-  ],
+  bahanbaku_npk: ["id", "tanggal", "bahanBaku", "entries", "totalBerat"],
   vibrasi: [
     "id",
     "tanggal",

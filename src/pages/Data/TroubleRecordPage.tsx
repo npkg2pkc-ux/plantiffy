@@ -166,7 +166,8 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
         if (result.success && result.data) {
           const sortedData = [...result.data].sort(
             (a, b) =>
-              new Date(b.tanggal || "").getTime() - new Date(a.tanggal || "").getTime()
+              new Date(b.tanggal || "").getTime() -
+              new Date(a.tanggal || "").getTime()
           );
           setData(sortedData);
         } else {

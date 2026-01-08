@@ -142,7 +142,11 @@ const BahanBakuNPKPage = ({ plant }: BahanBakuNPKPageProps) => {
   };
 
   // Update form entries
-  const updateEntry = (index: number, field: keyof BahanBakuNPKEntry, value: string | number) => {
+  const updateEntry = (
+    index: number,
+    field: keyof BahanBakuNPKEntry,
+    value: string | number
+  ) => {
     setForm((prev) => {
       const newEntries = [...prev.entries];
       newEntries[index] = {
@@ -183,14 +187,17 @@ const BahanBakuNPKPage = ({ plant }: BahanBakuNPKPageProps) => {
       setLoading(true);
       try {
         const { fetchDataByPlant } = await import("@/services/api");
-        const result = await fetchDataByPlant<BahanBakuNPK>(SHEETS.BAHAN_BAKU_NPK);
+        const result = await fetchDataByPlant<BahanBakuNPK>(
+          SHEETS.BAHAN_BAKU_NPK
+        );
         if (result.success && result.data) {
           // Parse entries JSON if stored as string
           const parsedData = result.data.map((item) => ({
             ...item,
-            entries: typeof item.entries === "string" 
-              ? JSON.parse(item.entries) 
-              : item.entries || [{ berat: 0, unit: "Ton" }],
+            entries:
+              typeof item.entries === "string"
+                ? JSON.parse(item.entries)
+                : item.entries || [{ berat: 0, unit: "Ton" }],
             totalBerat: item.totalBerat || 0,
           }));
           const sortedData = [...parsedData].sort(
@@ -235,9 +242,9 @@ const BahanBakuNPKPage = ({ plant }: BahanBakuNPKPageProps) => {
           setData((prev) =>
             prev.map((item) =>
               item.id === editingId
-                ? { 
-                    ...form, 
-                    id: editingId, 
+                ? {
+                    ...form,
+                    id: editingId,
                     _plant: currentPlant,
                     totalBerat: calculateTotalBerat(form.entries),
                   }
@@ -291,10 +298,11 @@ const BahanBakuNPKPage = ({ plant }: BahanBakuNPKPageProps) => {
       return;
     }
     // Parse entries if string
-    const parsedEntries = typeof item.entries === "string" 
-      ? JSON.parse(item.entries) 
-      : item.entries || [{ berat: 0, unit: "Ton" }];
-    
+    const parsedEntries =
+      typeof item.entries === "string"
+        ? JSON.parse(item.entries)
+        : item.entries || [{ berat: 0, unit: "Ton" }];
+
     setForm({
       ...item,
       entries: parsedEntries,
@@ -411,7 +419,8 @@ const BahanBakuNPKPage = ({ plant }: BahanBakuNPKPageProps) => {
 
   // Format entries for display
   const formatEntries = (entries: BahanBakuNPKEntry[] | string) => {
-    const parsedEntries = typeof entries === "string" ? JSON.parse(entries) : entries;
+    const parsedEntries =
+      typeof entries === "string" ? JSON.parse(entries) : entries;
     if (!parsedEntries || !Array.isArray(parsedEntries)) return "-";
     return parsedEntries
       .map((e: BahanBakuNPKEntry) => `${formatNumber(e.berat)} ${e.unit}`)
@@ -597,7 +606,9 @@ const BahanBakuNPKPage = ({ plant }: BahanBakuNPKPageProps) => {
           setForm(initialFormState);
           setEditingId(null);
         }}
-        title={editingId ? "Edit Data Bahan Baku NPK" : "Tambah Data Bahan Baku NPK"}
+        title={
+          editingId ? "Edit Data Bahan Baku NPK" : "Tambah Data Bahan Baku NPK"
+        }
         size="lg"
       >
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -754,7 +765,9 @@ const BahanBakuNPKPage = ({ plant }: BahanBakuNPKPageProps) => {
           setShowLogModal(false);
           setLogRecordId("");
         }}
-        sheetName={currentPlant === "NPK1" ? "bahanbaku_npk_NPK1" : "bahanbaku_npk"}
+        sheetName={
+          currentPlant === "NPK1" ? "bahanbaku_npk_NPK1" : "bahanbaku_npk"
+        }
         recordId={logRecordId}
         title="Log Aktivitas Bahan Baku NPK"
       />
