@@ -473,7 +473,7 @@ const BahanBakuNPKPage = ({ plant }: BahanBakuNPKPageProps) => {
             Data Bahan Baku NPK {currentPlant === "NPK1" ? "1" : "2"}
           </h1>
           <p className="text-dark-500 dark:text-dark-400 mt-1">
-            Kelola data pengiriman bahan baku NPK
+            Kelola data penerimaan bahan baku NPK
           </p>
         </div>
 
