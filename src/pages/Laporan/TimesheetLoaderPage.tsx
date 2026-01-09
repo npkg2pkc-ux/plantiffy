@@ -83,7 +83,6 @@ const TimesheetLoaderPage = ({ plant }: TimesheetLoaderPageProps) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState<TimesheetLoader>(initialFormState);
-  const [searchTerm, setSearchTerm] = useState("");
   const [selectedYear, setSelectedYear] = useState<string>(
     String(new Date().getFullYear())
   );
@@ -368,16 +367,11 @@ const TimesheetLoaderPage = ({ plant }: TimesheetLoaderPageProps) => {
   };
 
   const filteredData = data.filter((item) => {
-    const matchesSearch =
-      item.tanggal?.includes(searchTerm) ||
-      item.shift?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.deskripsiTemuan?.toLowerCase().includes(searchTerm.toLowerCase());
-
     // Filter by year
     const itemYear = new Date(item.tanggal).getFullYear();
     const matchesYear = itemYear === parseInt(selectedYear);
 
-    return matchesSearch && matchesYear;
+    return matchesYear;
   });
 
   const columns = [
@@ -540,16 +534,6 @@ const TimesheetLoaderPage = ({ plant }: TimesheetLoaderPageProps) => {
                 options={YEAR_OPTIONS}
                 className="w-full sm:w-28"
               />
-              <div className="relative w-full sm:w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-400" />
-                <Input
-                  type="text"
-                  placeholder="Cari..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
             </div>
           </div>
         </CardHeader>
@@ -557,7 +541,8 @@ const TimesheetLoaderPage = ({ plant }: TimesheetLoaderPageProps) => {
           data={filteredData}
           columns={columns}
           loading={loading}
-          searchable={false}
+          searchable={true}
+          searchKeys={["tanggal", "shift", "deskripsiTemuan"]}
           actions={
             !userIsViewOnly
               ? (row) => (

@@ -74,7 +74,6 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
   const [isCustomFormula, setIsCustomFormula] = useState(false);
   const [customFormulaValue, setCustomFormulaValue] = useState("");
   const [form, setForm] = useState<ProduksiBlending>(initialFormState);
-  const [searchTerm, setSearchTerm] = useState("");
 
   // Filter states
   const [selectedFormula, setSelectedFormula] = useState<string>("all");
@@ -1237,44 +1236,28 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <CardTitle>
-                Data {pageTitle} - Semua Data
-                {selectedFormula !== "all" && (
-                  <Badge variant="primary" className="ml-2">
-                    {selectedFormula}
-                  </Badge>
-                )}
-              </CardTitle>
-              <p className="text-sm text-dark-500 dark:text-dark-400 mt-1">
-                {data.length} data total
-              </p>
-            </div>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-400" />
-              <Input
-                type="text"
-                placeholder="Cari..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 w-64"
-              />
-            </div>
+            <CardTitle>
+              Data {pageTitle} - Semua Data
+              {selectedFormula !== "all" && (
+                <Badge variant="primary" className="ml-2">
+                  {selectedFormula}
+                </Badge>
+              )}
+            </CardTitle>
+            <p className="text-sm text-dark-500 dark:text-dark-400 mt-1">
+              {data.length} data total
+            </p>
           </div>
         </CardHeader>
         <DataTable
           data={data.filter(
             (item) =>
-              (selectedFormula === "all" || item.formula === selectedFormula) &&
-              (item.tanggal?.includes(searchTerm) ||
-                item.formula
-                  ?.toLowerCase()
-                  .includes(searchTerm.toLowerCase()) ||
-                item.kategori?.toLowerCase().includes(searchTerm.toLowerCase()))
+              selectedFormula === "all" || item.formula === selectedFormula
           )}
           columns={columns}
           loading={loading}
-          searchable={false}
+          searchable={true}
+          searchKeys={["tanggal", "formula", "kategori"]}
           actions={
             !userIsViewOnly
               ? (row) => (

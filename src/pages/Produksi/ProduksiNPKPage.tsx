@@ -67,7 +67,6 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState<ProduksiNPK>(initialFormState);
-  const [searchTerm, setSearchTerm] = useState("");
   const [selectedYear, setSelectedYear] = useState<number>(
     new Date().getFullYear()
   );
@@ -606,29 +605,14 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Data Produksi</CardTitle>
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-400" />
-                <Input
-                  type="text"
-                  placeholder="Cari..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9 w-64"
-                />
-              </div>
-            </div>
           </div>
         </CardHeader>
         <DataTable
-          data={data.filter(
-            (item) =>
-              item.tanggal?.includes(searchTerm) ||
-              item.total?.toString().includes(searchTerm)
-          )}
+          data={data}
           columns={columns}
           loading={loading}
-          searchable={false}
+          searchable={true}
+          searchKeys={["tanggal", "total"]}
           actions={
             !userIsViewOnly
               ? (row) => (

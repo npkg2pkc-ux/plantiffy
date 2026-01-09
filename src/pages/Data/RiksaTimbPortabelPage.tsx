@@ -470,15 +470,11 @@ const RiksaTimbPortabelPage = () => {
   };
 
   const filteredData = data.filter((item) => {
-    const matchesSearch =
-      item.area.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.tanggal.includes(searchTerm);
-
     // Filter by year
     const itemYear = new Date(item.tanggal).getFullYear();
     const matchesYear = itemYear === parseInt(selectedYear);
 
-    return matchesSearch && matchesYear;
+    return matchesYear;
   });
 
   const columns = [
@@ -891,15 +887,6 @@ const RiksaTimbPortabelPage = () => {
               options={YEAR_OPTIONS}
               className="w-32"
             />
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Cari data..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 w-64"
-              />
-            </div>
             {userCanAdd && (
               <Button onClick={() => setShowForm(true)}>
                 <Plus className="h-4 w-4 mr-2" />
@@ -914,6 +901,8 @@ const RiksaTimbPortabelPage = () => {
           data={filteredData}
           loading={loading}
           emptyMessage="Belum ada data riksa timbangan portabel"
+          searchable={true}
+          searchKeys={["tanggal", "area", "keterangan"]}
         />
       </Card>
 

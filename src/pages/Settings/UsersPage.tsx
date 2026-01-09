@@ -48,7 +48,7 @@ const UsersPage = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState<User>(initialFormState);
-  const [searchTerm, setSearchTerm] = useState("");
+
   const [roleFilter, setRoleFilter] = useState("ALL");
 
   const roleOptions = [
@@ -242,15 +242,9 @@ const UsersPage = () => {
   };
 
   const filteredData = data.filter((item) => {
-    const matchesSearch =
-      item.nama?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.namaLengkap?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.email?.toLowerCase().includes(searchTerm.toLowerCase());
-
     const matchesRole = roleFilter === "ALL" || item.role === roleFilter;
 
-    return matchesSearch && matchesRole;
+    return matchesRole;
   });
 
   const getRoleBadge = (role: string) => {
@@ -436,23 +430,14 @@ const UsersPage = () => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Daftar User</CardTitle>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-400" />
-              <Input
-                type="text"
-                placeholder="Cari user..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 w-64"
-              />
-            </div>
           </div>
         </CardHeader>
         <DataTable
           data={filteredData}
           columns={columns}
           loading={loading}
-          searchable={false}
+          searchable={true}
+          searchKeys={["nama", "namaLengkap", "username", "email", "role"]}
           actions={
             isAdmin
               ? (row) => (

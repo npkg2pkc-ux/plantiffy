@@ -683,6 +683,13 @@ const RiwayatTransaksiModal = ({
             columns={columns}
             loading={loading}
             emptyMessage="Belum ada transaksi"
+            searchable={true}
+            searchKeys={[
+              "kode_material",
+              "nama_material",
+              "jenis",
+              "keterangan",
+            ]}
           />
         </div>
 
@@ -725,7 +732,6 @@ const InventarisPage = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   // Search and pagination
-  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -737,19 +743,8 @@ const InventarisPage = () => {
 
   // Filtered and paginated data
   const filteredMaterials = useMemo(() => {
-    let result = [...materials];
-
-    if (searchTerm) {
-      const search = searchTerm.toLowerCase();
-      result = result.filter(
-        (m) =>
-          m.kode_material.toLowerCase().includes(search) ||
-          m.nama_material.toLowerCase().includes(search)
-      );
-    }
-
-    return result;
-  }, [materials, searchTerm]);
+    return [...materials];
+  }, [materials]);
 
   const paginatedMaterials = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -999,21 +994,6 @@ const InventarisPage = () => {
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Daftar Material ({filteredMaterials.length})</span>
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-400" />
-                <input
-                  type="text"
-                  placeholder="Cari material..."
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="pl-9 pr-4 py-2 text-sm border border-dark-200 dark:border-dark-600 rounded-lg bg-white dark:bg-dark-800 text-dark-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-            </div>
           </CardTitle>
         </CardHeader>
         <div className="p-4">
@@ -1022,6 +1002,8 @@ const InventarisPage = () => {
             columns={columns}
             loading={loading}
             emptyMessage="Belum ada data material"
+            searchable={true}
+            searchKeys={["kode_material", "nama_material", "satuan"]}
           />
 
           {/* Pagination */}

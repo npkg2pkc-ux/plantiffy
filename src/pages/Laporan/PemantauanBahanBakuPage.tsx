@@ -99,7 +99,6 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState<PemantauanBahanBaku>(initialFormState);
-  const [searchTerm, setSearchTerm] = useState("");
   const [filterBahanBaku, setFilterBahanBaku] = useState("Urea"); // Default ke Urea
   const [selectedYear, setSelectedYear] = useState<string>(
     String(new Date().getFullYear())
@@ -417,20 +416,17 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
 
   const stats = getSummaryStats();
 
-  // Filter data by selected bahan baku and search term
+  // Filter data by selected bahan baku
   const filteredData = data.filter((item) => {
     const matchesFilter = filterBahanBaku
       ? item.bahanBaku === filterBahanBaku
       : true;
-    const matchesSearch =
-      item.bahanBaku?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.tanggal?.includes(searchTerm);
 
     // Filter by year
     const itemYear = new Date(item.tanggal).getFullYear();
     const matchesYear = itemYear === parseInt(selectedYear);
 
-    return matchesFilter && matchesSearch && matchesYear;
+    return matchesFilter && matchesYear;
   });
 
   // Get stats for filtered bahan baku
@@ -688,16 +684,6 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
                   ))}
                 </select>
               </div>
-              {/* Search */}
-              <div className="relative w-full sm:w-64">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Cari tanggal..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
             </div>
           </div>
           {/* Show filtered stats when filter is active */}
@@ -724,7 +710,8 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
           data={filteredData}
           columns={columns}
           loading={loading}
-          searchable={false}
+          searchable={true}
+          searchKeys={["tanggal", "bahanBaku", "keterangan"]}
           actions={
             !userIsViewOnly
               ? (row) => (

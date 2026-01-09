@@ -43,7 +43,6 @@ const ApprovalPage = () => {
   const [showRejectConfirm, setShowRejectConfirm] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ApprovalItem | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("pending");
   const [rejectReason, setRejectReason] = useState("");
 
@@ -168,15 +167,10 @@ const ApprovalPage = () => {
   };
 
   const filteredData = data.filter((item) => {
-    const matchesSearch =
-      item.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.submittedBy?.toLowerCase().includes(searchTerm.toLowerCase());
-
     const matchesStatus =
       statusFilter === "all" || item.status === statusFilter;
 
-    return matchesSearch && matchesStatus;
+    return matchesStatus;
   });
 
   const getTypeBadge = (type: ApprovalItem["type"]) => {
@@ -217,7 +211,9 @@ const ApprovalPage = () => {
       header: "Judul",
       render: (value: unknown, row: ApprovalItem) => (
         <div>
-          <p className="font-medium text-dark-900 dark:text-white">{value as string}</p>
+          <p className="font-medium text-dark-900 dark:text-white">
+            {value as string}
+          </p>
           <p className="text-sm text-dark-500 dark:text-dark-400 line-clamp-1">
             {row.description}
           </p>
@@ -302,7 +298,9 @@ const ApprovalPage = () => {
               <Clock className="h-6 w-6 text-amber-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500 dark:text-dark-400">Menunggu Approval</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">
+                Menunggu Approval
+              </p>
               <p className="text-2xl font-bold text-amber-600">
                 {pendingCount}
               </p>
@@ -318,7 +316,9 @@ const ApprovalPage = () => {
               <CheckCircle className="h-6 w-6 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500 dark:text-dark-400">Approved</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">
+                Approved
+              </p>
               <p className="text-2xl font-bold text-green-600">
                 {approvedCount}
               </p>
@@ -334,7 +334,9 @@ const ApprovalPage = () => {
               <XCircle className="h-6 w-6 text-red-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-500 dark:text-dark-400">Rejected</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">
+                Rejected
+              </p>
               <p className="text-2xl font-bold text-red-600">{rejectedCount}</p>
             </div>
           </div>
@@ -346,23 +348,14 @@ const ApprovalPage = () => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Daftar Approval</CardTitle>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-400" />
-              <Input
-                type="text"
-                placeholder="Cari..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 w-64"
-              />
-            </div>
           </div>
         </CardHeader>
         <DataTable
           data={filteredData}
           columns={columns}
           loading={loading}
-          searchable={false}
+          searchable={true}
+          searchKeys={["title", "description", "submittedBy", "status"]}
           actions={(row) => (
             <div className="flex items-center gap-2">
               <Button
@@ -422,7 +415,9 @@ const ApprovalPage = () => {
                 <h3 className="font-semibold text-dark-900 dark:text-white">
                   {selectedItem.title}
                 </h3>
-                <p className="text-dark-500 dark:text-dark-400 mt-1">{selectedItem.description}</p>
+                <p className="text-dark-500 dark:text-dark-400 mt-1">
+                  {selectedItem.description}
+                </p>
               </div>
             </div>
 
@@ -434,17 +429,23 @@ const ApprovalPage = () => {
                 </Badge>
               </div>
               <div>
-                <p className="text-sm text-dark-500 dark:text-dark-400">Status</p>
+                <p className="text-sm text-dark-500 dark:text-dark-400">
+                  Status
+                </p>
                 <Badge variant={getStatusBadge(selectedItem.status).variant}>
                   {getStatusBadge(selectedItem.status).label}
                 </Badge>
               </div>
               <div>
-                <p className="text-sm text-dark-500 dark:text-dark-400">Diajukan Oleh</p>
+                <p className="text-sm text-dark-500 dark:text-dark-400">
+                  Diajukan Oleh
+                </p>
                 <p className="font-medium">{selectedItem.submittedBy}</p>
               </div>
               <div>
-                <p className="text-sm text-dark-500 dark:text-dark-400">Tanggal</p>
+                <p className="text-sm text-dark-500 dark:text-dark-400">
+                  Tanggal
+                </p>
                 <p className="font-medium">
                   {formatDate(selectedItem.submittedAt)}
                 </p>

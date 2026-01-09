@@ -80,7 +80,6 @@ const PerbaikanTahunanPage = ({ plant }: PerbaikanTahunanPageProps) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState<PerbaikanTahunan>(initialFormState);
-  const [searchTerm, setSearchTerm] = useState("");
   const [selectedYear, setSelectedYear] = useState<string>(
     String(new Date().getFullYear())
   );
@@ -390,22 +389,13 @@ const PerbaikanTahunanPage = ({ plant }: PerbaikanTahunanPageProps) => {
   };
 
   const filteredData = data.filter((item) => {
-    const matchesSearch =
-      item.tanggalMulai?.includes(searchTerm) ||
-      item.tanggalSelesai?.includes(searchTerm) ||
-      item.items?.some(
-        (i: ItemDeskripsi) =>
-          i.item?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          i.deskripsi?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-
     const matchesPlant = item._plant === currentPlant;
 
     // Filter by year
     const itemYear = new Date(item.tanggalMulai).getFullYear();
     const matchesYear = itemYear === parseInt(selectedYear);
 
-    return matchesSearch && matchesPlant && matchesYear;
+    return matchesPlant && matchesYear;
   });
 
   const totalHariPerta = filteredData.reduce(
@@ -518,31 +508,20 @@ const PerbaikanTahunanPage = ({ plant }: PerbaikanTahunanPageProps) => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Data Perbaikan Tahunan - Tahun {selectedYear}</CardTitle>
-            <div className="flex items-center gap-3">
-              <Select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(e.target.value)}
-                options={YEAR_OPTIONS}
-                className="w-32"
-              />
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-400" />
-                <Input
-                  type="text"
-                  placeholder="Cari..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9 w-64"
-                />
-              </div>
-            </div>
+            <Select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              options={YEAR_OPTIONS}
+              className="w-32"
+            />
           </div>
         </CardHeader>
         <DataTable
           data={filteredData}
           columns={columns}
           loading={loading}
-          searchable={false}
+          searchable={true}
+          searchKeys={["tanggalMulai", "tanggalSelesai"]}
           actions={(row) => (
             <div className="flex items-center gap-2">
               <Button
