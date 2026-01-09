@@ -902,7 +902,8 @@ const RiksaTimbPortabelPage = () => {
           loading={loading}
           emptyMessage="Belum ada data riksa timbangan portabel"
           searchable={true}
-          searchKeys={["tanggal", "area", "keterangan"]}
+          searchPlaceholder="Cari tanggal, area, rata-rata selisih..."
+          searchKeys={["tanggal", "area", "rataRataSelisih", "keterangan"]}
         />
       </Card>
 

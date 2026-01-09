@@ -521,7 +521,8 @@ const PerbaikanTahunanPage = ({ plant }: PerbaikanTahunanPageProps) => {
           columns={columns}
           loading={loading}
           searchable={true}
-          searchKeys={["tanggalMulai", "tanggalSelesai"]}
+          searchPlaceholder="Cari tanggal mulai, tanggal selesai..."
+          searchKeys={["tanggalMulai", "tanggalSelesai", "jumlahHari"]}
           actions={(row) => (
             <div className="flex items-center gap-2">
               <Button

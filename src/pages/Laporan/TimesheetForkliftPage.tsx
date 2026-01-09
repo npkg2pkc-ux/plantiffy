@@ -525,7 +525,17 @@ const TimesheetForkliftPage = ({ plant }: TimesheetForkliftPageProps) => {
           columns={columns}
           loading={loading}
           searchable={true}
-          searchKeys={["tanggal", "forklift", "deskripsiTemuan"]}
+          searchPlaceholder="Cari tanggal, forklift, deskripsi, status..."
+          searchKeys={[
+            "tanggal",
+            "forklift",
+            "deskripsiTemuan",
+            "jamOff",
+            "jamStart",
+            "jamGrounded",
+            "jamOperasi",
+            "keterangan",
+          ]}
           actions={
             !userIsViewOnly
               ? (row) => (

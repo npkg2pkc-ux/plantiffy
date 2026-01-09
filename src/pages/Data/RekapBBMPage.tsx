@@ -580,7 +580,14 @@ const RekapBBMPage = ({ plant }: RekapBBMPageProps) => {
           loading={loading}
           emptyMessage="Tidak ada data rekap BBM"
           searchable={true}
-          searchKeys={["namaAlatBerat", "keterangan"]}
+          searchPlaceholder="Cari tanggal, nama alat berat, keterangan..."
+          searchKeys={[
+            "tanggal",
+            "namaAlatBerat",
+            "pengajuanSolar",
+            "realisasiPengisian",
+            "keterangan",
+          ]}
         />
       </Card>
 

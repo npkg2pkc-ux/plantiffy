@@ -711,7 +711,16 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
           columns={columns}
           loading={loading}
           searchable={true}
-          searchKeys={["tanggal", "bahanBaku", "keterangan"]}
+          searchPlaceholder="Cari tanggal, bahan baku, stock..."
+          searchKeys={[
+            "tanggal",
+            "bahanBaku",
+            "stockAwal",
+            "bahanBakuIn",
+            "bahanBakuOut",
+            "stockAkhir",
+            "keterangan",
+          ]}
           actions={
             !userIsViewOnly
               ? (row) => (

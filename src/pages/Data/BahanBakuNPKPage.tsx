@@ -523,7 +523,8 @@ const BahanBakuNPKPage = ({ plant }: BahanBakuNPKPageProps) => {
           columns={columns}
           loading={loading}
           searchable={true}
-          searchKeys={["tanggal", "namaBarang", "jenis"]}
+          searchPlaceholder="Cari tanggal, bahan baku, total berat..."
+          searchKeys={["tanggal", "bahanBaku", "totalBerat"]}
           actions={
             !userIsViewOnly
               ? (row) => (

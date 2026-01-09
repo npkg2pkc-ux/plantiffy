@@ -451,12 +451,16 @@ const GatePassPage = ({ plant }: GatePassPageProps) => {
           columns={columns}
           loading={loading}
           searchable={true}
+          searchPlaceholder="Cari tanggal, nomor GP, no polisi, pemilik, pembawa..."
           searchKeys={[
             "tanggal",
             "nomorGatePass",
-            "namaPengemudi",
-            "nomorPolisi",
-            "keterangan",
+            "noPolisi",
+            "pemilikBarang",
+            "namaPembawa",
+            "mengetahui",
+            "deskripsiBarang",
+            "alasanKeluar",
           ]}
           actions={(row) => (
             <div className="flex items-center gap-2">

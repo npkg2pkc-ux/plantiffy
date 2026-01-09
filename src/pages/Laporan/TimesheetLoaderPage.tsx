@@ -542,7 +542,16 @@ const TimesheetLoaderPage = ({ plant }: TimesheetLoaderPageProps) => {
           columns={columns}
           loading={loading}
           searchable={true}
-          searchKeys={["tanggal", "shift", "deskripsiTemuan"]}
+          searchPlaceholder="Cari tanggal, shift, deskripsi, jam..."
+          searchKeys={[
+            "tanggal",
+            "shift",
+            "deskripsiTemuan",
+            "jamOff",
+            "jamStart",
+            "jamGrounded",
+            "jamOperasi",
+          ]}
           actions={
             !userIsViewOnly
               ? (row) => (

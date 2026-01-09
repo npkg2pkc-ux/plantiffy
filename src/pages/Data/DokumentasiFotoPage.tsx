@@ -409,12 +409,16 @@ export default function DokumentasiFotoPage({
   };
 
   // Filter photos by search
-  const filteredPhotos = photos.filter(
-    (photo) =>
-      photo.judul?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      photo.keterangan?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      photo.uploadBy?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredPhotos = photos.filter((photo) => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      photo.judul?.toLowerCase().includes(searchLower) ||
+      photo.keterangan?.toLowerCase().includes(searchLower) ||
+      photo.uploadBy?.toLowerCase().includes(searchLower) ||
+      photo.tanggal?.includes(searchTerm) ||
+      photo.kategori?.toLowerCase().includes(searchLower)
+    );
+  });
 
   // Group photos by judul (folder)
   const groupedPhotos = filteredPhotos.reduce((acc, photo) => {
@@ -443,10 +447,10 @@ export default function DokumentasiFotoPage({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               type="text"
-              placeholder="Cari foto..."
+              placeholder="Cari judul, kategori, keterangan, uploader..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-full sm:w-64"
+              className="pl-10 w-full sm:w-80"
             />
           </div>
 

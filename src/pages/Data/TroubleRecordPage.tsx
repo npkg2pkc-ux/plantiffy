@@ -539,6 +539,7 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
           columns={columns}
           loading={loading}
           searchable={true}
+          searchPlaceholder="Cari tanggal, nomor berkas, area, masalah, PIC..."
           searchKeys={[
             "tanggal",
             "nomorBerkas",

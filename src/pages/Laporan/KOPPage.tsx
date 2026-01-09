@@ -1573,9 +1573,19 @@ const KOPPage = ({ plant }: KOPPageProps) => {
 
   // Filtered data
   const filteredData = data.filter((item) => {
+    const searchLower = searchTerm.toLowerCase();
     const matchesSearch =
       item.tanggal?.includes(searchTerm) ||
-      item.jenisOperasi?.toLowerCase().includes(searchTerm.toLowerCase());
+      item.jenisOperasi?.toLowerCase().includes(searchLower) ||
+      item.formulaBiaya?.toLowerCase().includes(searchLower) ||
+      item.kursDollar?.toString().includes(searchTerm) ||
+      // Search in calculated fields
+      item.steamMalamCalc?.selisih?.toString().includes(searchTerm) ||
+      item.steamPagiCalc?.selisih?.toString().includes(searchTerm) ||
+      item.steamSoreCalc?.selisih?.toString().includes(searchTerm) ||
+      item.gasMalamCalc?.selisih?.toString().includes(searchTerm) ||
+      item.gasPagiCalc?.selisih?.toString().includes(searchTerm) ||
+      item.gasSoreCalc?.selisih?.toString().includes(searchTerm);
     const matchesMonth = filterMonth
       ? item.tanggal?.startsWith(filterMonth)
       : true;
@@ -1629,7 +1639,7 @@ const KOPPage = ({ plant }: KOPPageProps) => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-400" />
               <Input
-                placeholder="Cari berdasarkan tanggal atau jenis operasi..."
+                placeholder="Cari tanggal, jenis operasi, formula, kurs..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"

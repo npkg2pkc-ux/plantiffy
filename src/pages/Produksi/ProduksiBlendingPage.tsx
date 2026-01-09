@@ -1257,7 +1257,8 @@ const ProduksiBlendingPage = ({ type }: ProduksiBlendingPageProps) => {
           columns={columns}
           loading={loading}
           searchable={true}
-          searchKeys={["tanggal", "formula", "kategori"]}
+          searchPlaceholder="Cari tanggal, formula, kategori, tonase..."
+          searchKeys={["tanggal", "formula", "kategori", "tonase"]}
           actions={
             !userIsViewOnly
               ? (row) => (

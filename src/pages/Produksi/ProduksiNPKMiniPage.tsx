@@ -527,7 +527,8 @@ const ProduksiNPKMiniPage = () => {
           columns={columns}
           loading={loading}
           searchable={true}
-          searchKeys={["tanggal", "formulasi"]}
+          searchPlaceholder="Cari tanggal, formulasi, tonase..."
+          searchKeys={["tanggal", "formulasi", "tonase"]}
           actions={
             !userIsViewOnly
               ? (row) => (

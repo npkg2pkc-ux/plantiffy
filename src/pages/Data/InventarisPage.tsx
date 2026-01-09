@@ -684,6 +684,7 @@ const RiwayatTransaksiModal = ({
             loading={loading}
             emptyMessage="Belum ada transaksi"
             searchable={true}
+            searchPlaceholder="Cari kode, nama material, jenis, keterangan..."
             searchKeys={[
               "kode_material",
               "nama_material",
@@ -1003,7 +1004,14 @@ const InventarisPage = () => {
             loading={loading}
             emptyMessage="Belum ada data material"
             searchable={true}
-            searchKeys={["kode_material", "nama_material", "satuan"]}
+            searchPlaceholder="Cari kode, nama material, satuan..."
+            searchKeys={[
+              "kode_material",
+              "nama_material",
+              "satuan",
+              "stok_awal",
+              "stok_akhir",
+            ]}
           />
 
           {/* Pagination */}

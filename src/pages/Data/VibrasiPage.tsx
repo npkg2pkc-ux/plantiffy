@@ -551,7 +551,16 @@ const VibrasiPage = ({ plant }: VibrasiPageProps) => {
           columns={columns}
           loading={loading}
           searchable={true}
-          searchKeys={["tanggal", "area", "peralatan"]}
+          searchPlaceholder="Cari tanggal, equipment, posisi, status..."
+          searchKeys={[
+            "tanggal",
+            "namaEquipment",
+            "posisiPengukuran",
+            "pointPengukuran",
+            "nilaiVibrasi",
+            "status",
+            "keterangan",
+          ]}
           actions={
             !userIsViewOnly
               ? (row) => (

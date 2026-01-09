@@ -437,7 +437,15 @@ const UsersPage = () => {
           columns={columns}
           loading={loading}
           searchable={true}
-          searchKeys={["nama", "namaLengkap", "username", "email", "role"]}
+          searchPlaceholder="Cari nama, username, email, role..."
+          searchKeys={[
+            "nama",
+            "namaLengkap",
+            "username",
+            "email",
+            "role",
+            "plant",
+          ]}
           actions={
             isAdmin
               ? (row) => (

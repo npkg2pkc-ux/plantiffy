@@ -612,7 +612,17 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
           columns={columns}
           loading={loading}
           searchable={true}
-          searchKeys={["tanggal", "total"]}
+          searchPlaceholder="Cari tanggal, shift, total produksi..."
+          searchKeys={[
+            "tanggal",
+            "shiftMalamOnspek",
+            "shiftMalamOffspek",
+            "shiftPagiOnspek",
+            "shiftPagiOffspek",
+            "shiftSoreOnspek",
+            "shiftSoreOffspek",
+            "total",
+          ]}
           actions={
             !userIsViewOnly
               ? (row) => (

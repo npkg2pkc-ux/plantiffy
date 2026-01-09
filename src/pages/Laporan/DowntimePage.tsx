@@ -446,7 +446,16 @@ const DowntimePage = ({ plant }: DowntimePageProps) => {
           columns={columns}
           loading={loading}
           searchable={true}
-          searchKeys={["tanggal", "item", "deskripsi"]}
+          searchPlaceholder="Cari tanggal, equipment, deskripsi, plant..."
+          searchKeys={[
+            "tanggal",
+            "item",
+            "deskripsi",
+            "jamOff",
+            "jamStart",
+            "downtime",
+            "_plant",
+          ]}
           actions={
             !userIsViewOnly
               ? (row) => (

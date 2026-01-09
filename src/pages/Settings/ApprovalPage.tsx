@@ -355,7 +355,15 @@ const ApprovalPage = () => {
           columns={columns}
           loading={loading}
           searchable={true}
-          searchKeys={["title", "description", "submittedBy", "status"]}
+          searchPlaceholder="Cari judul, deskripsi, status..."
+          searchKeys={[
+            "title",
+            "description",
+            "submittedBy",
+            "status",
+            "type",
+            "action",
+          ]}
           actions={(row) => (
             <div className="flex items-center gap-2">
               <Button

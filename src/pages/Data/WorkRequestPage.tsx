@@ -409,6 +409,7 @@ const WorkRequestPage = ({ plant }: WorkRequestPageProps) => {
           columns={columns}
           loading={loading}
           searchable={true}
+          searchPlaceholder="Cari tanggal, nomor WR, item, area, eksekutor..."
           searchKeys={[
             "tanggal",
             "nomorWR",

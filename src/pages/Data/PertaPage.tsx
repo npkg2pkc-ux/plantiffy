@@ -488,7 +488,17 @@ const PertaPage = () => {
           columns={columns}
           loading={loading}
           searchable={true}
-          searchKeys={["tanggal", "namaAlatBerat", "keterangan"]}
+          searchPlaceholder="Cari tanggal, shift, jenis BBM, keterangan..."
+          searchKeys={[
+            "tanggal",
+            "shift",
+            "jenisBBM",
+            "volumeAwal",
+            "volumePengisian",
+            "volumePemakaian",
+            "volumeAkhir",
+            "keterangan",
+          ]}
           actions={
             !userIsViewOnly
               ? (row) => (

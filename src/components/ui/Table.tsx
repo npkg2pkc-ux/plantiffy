@@ -308,6 +308,7 @@ interface DataTableProps<T> {
   emptyMessage?: string;
   searchable?: boolean;
   searchKeys?: string[];
+  searchPlaceholder?: string;
   pagination?: boolean;
   itemsPerPage?: number;
   onRowClick?: (row: T) => void;
@@ -321,6 +322,7 @@ function DataTable<T extends object>({
   emptyMessage = "Tidak ada data",
   searchable = true,
   searchKeys = [],
+  searchPlaceholder = "Cari...",
   pagination = true,
   itemsPerPage = 10,
   onRowClick,
@@ -383,7 +385,11 @@ function DataTable<T extends object>({
     <div className="card">
       {searchable && (
         <div className="px-6 py-4 border-b border-dark-100">
-          <TableSearch value={search} onChange={setSearch} />
+          <TableSearch
+            value={search}
+            onChange={setSearch}
+            placeholder={searchPlaceholder}
+          />
         </div>
       )}
 
