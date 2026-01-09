@@ -1241,6 +1241,88 @@ const DashboardPage = () => {
       return total + rkapTotal;
     }, 0);
 
+    // Separate RKAP targets for NPK1 and NPK2
+    const rkapNPK1 = dashboardData.rkap
+      .filter(
+        (item) => item.plant === "NPK1" && Number(item.tahun) === dashboardYear
+      )
+      .reduce((total, rkapItem) => {
+        const hasTotal =
+          rkapItem.total !== undefined && rkapItem.total !== null;
+        return (
+          total +
+          (hasTotal
+            ? parseNumber(rkapItem.total)
+            : MONTH_KEY.reduce(
+                (sum, monthKey) =>
+                  sum + parseNumber(rkapItem[monthKey as keyof RKAP]),
+                0
+              ))
+        );
+      }, 0);
+
+    const rkapNPK2 = dashboardData.rkap
+      .filter(
+        (item) => item.plant === "NPK2" && Number(item.tahun) === dashboardYear
+      )
+      .reduce((total, rkapItem) => {
+        const hasTotal =
+          rkapItem.total !== undefined && rkapItem.total !== null;
+        return (
+          total +
+          (hasTotal
+            ? parseNumber(rkapItem.total)
+            : MONTH_KEY.reduce(
+                (sum, monthKey) =>
+                  sum + parseNumber(rkapItem[monthKey as keyof RKAP]),
+                0
+              ))
+        );
+      }, 0);
+
+    // Produksi per plant for separate calculations
+    const produksiNPK1 = dashboardData.produksiNPK
+      .filter(
+        (item) =>
+          item._plant === "NPK1" &&
+          new Date(item.tanggal).getFullYear() === dashboardYear
+      )
+      .reduce((sum, item) => {
+        const hasTotal = item.total !== undefined && item.total !== null;
+        return (
+          sum +
+          (hasTotal
+            ? parseNumber(item.total)
+            : parseNumber(item.shiftMalamOnspek) +
+              parseNumber(item.shiftMalamOffspek) +
+              parseNumber(item.shiftPagiOnspek) +
+              parseNumber(item.shiftPagiOffspek) +
+              parseNumber(item.shiftSoreOnspek) +
+              parseNumber(item.shiftSoreOffspek))
+        );
+      }, 0);
+
+    const produksiNPK2 = dashboardData.produksiNPK
+      .filter(
+        (item) =>
+          item._plant === "NPK2" &&
+          new Date(item.tanggal).getFullYear() === dashboardYear
+      )
+      .reduce((sum, item) => {
+        const hasTotal = item.total !== undefined && item.total !== null;
+        return (
+          sum +
+          (hasTotal
+            ? parseNumber(item.total)
+            : parseNumber(item.shiftMalamOnspek) +
+              parseNumber(item.shiftMalamOffspek) +
+              parseNumber(item.shiftPagiOnspek) +
+              parseNumber(item.shiftPagiOffspek) +
+              parseNumber(item.shiftSoreOnspek) +
+              parseNumber(item.shiftSoreOffspek))
+        );
+      }, 0);
+
     // Total downtime
     const totalDowntime = filteredData.downtime.reduce(
       (sum, item) => sum + parseNumber(item.downtime),
@@ -1318,8 +1400,16 @@ const DashboardPage = () => {
       bbmRecordCount: filteredData.rekapBBM.length,
       percentage:
         totalRKAP > 0 ? ((totalProduksiNPK / totalRKAP) * 100).toFixed(1) : "0",
+      rkapNPK1,
+      rkapNPK2,
+      produksiNPK1,
+      produksiNPK2,
+      percentageNPK1:
+        rkapNPK1 > 0 ? ((produksiNPK1 / rkapNPK1) * 100).toFixed(1) : "0",
+      percentageNPK2:
+        rkapNPK2 > 0 ? ((produksiNPK2 / rkapNPK2) * 100).toFixed(1) : "0",
     };
-  }, [filteredData]);
+  }, [filteredData, dashboardData, dashboardYear]);
 
   // Monthly chart data
   const monthlyChartData = useMemo(() => {
@@ -1377,11 +1467,30 @@ const DashboardPage = () => {
         return sum + parseNumber(rkapItem[monthKey as keyof RKAP]);
       }, 0);
 
-      return { bulan, produksi, rkap, onspek, offspek };
+      // Get separate RKAP for NPK1 and NPK2
+      const rkapNPK1 = dashboardData.rkap
+        .filter(
+          (item) =>
+            item.plant === "NPK1" && Number(item.tahun) === dashboardYear
+        )
+        .reduce((sum, rkapItem) => {
+          return sum + parseNumber(rkapItem[monthKey as keyof RKAP]);
+        }, 0);
+
+      const rkapNPK2 = dashboardData.rkap
+        .filter(
+          (item) =>
+            item.plant === "NPK2" && Number(item.tahun) === dashboardYear
+        )
+        .reduce((sum, rkapItem) => {
+          return sum + parseNumber(rkapItem[monthKey as keyof RKAP]);
+        }, 0);
+
+      return { bulan, produksi, rkap, rkapNPK1, rkapNPK2, onspek, offspek };
     });
 
     return monthlyData;
-  }, [filteredData]);
+  }, [filteredData, dashboardData, dashboardYear]);
 
   // Current month production data (filtered by produksiMonthFilter)
   const currentMonthData = useMemo(() => {
@@ -1830,6 +1939,55 @@ const DashboardPage = () => {
               <p className="text-blue-100 text-[10px]">Ton</p>
             </div>
           </div>
+          {/* Show separate NPK1 and NPK2 RKAP when viewing ALL */}
+          {effectivePlantFilter === "ALL" && (
+            <div className="mt-3 pt-3 border-t border-white/20 grid grid-cols-2 gap-3">
+              <div className="bg-white/10 rounded-lg px-3 py-2">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-blue-100 text-[10px] uppercase tracking-wider">
+                    NPK 1
+                  </p>
+                  <Badge
+                    variant={
+                      Number(metrics.percentageNPK1) >= 100
+                        ? "success"
+                        : "warning"
+                    }
+                    size="sm"
+                    className="text-[9px] px-1.5 py-0.5"
+                  >
+                    {metrics.percentageNPK1}%
+                  </Badge>
+                </div>
+                <p className="font-semibold">
+                  {formatNumber(metrics.produksiNPK1)} /{" "}
+                  {formatNumber(metrics.rkapNPK1)} Ton
+                </p>
+              </div>
+              <div className="bg-white/10 rounded-lg px-3 py-2">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-blue-100 text-[10px] uppercase tracking-wider">
+                    NPK 2
+                  </p>
+                  <Badge
+                    variant={
+                      Number(metrics.percentageNPK2) >= 100
+                        ? "success"
+                        : "warning"
+                    }
+                    size="sm"
+                    className="text-[9px] px-1.5 py-0.5"
+                  >
+                    {metrics.percentageNPK2}%
+                  </Badge>
+                </div>
+                <p className="font-semibold">
+                  {formatNumber(metrics.produksiNPK2)} /{" "}
+                  {formatNumber(metrics.rkapNPK2)} Ton
+                </p>
+              </div>
+            </div>
+          )}
           <div className="mt-3 pt-3 border-t border-white/20 grid grid-cols-2 gap-3">
             <div className="bg-white/10 rounded-lg px-3 py-2">
               <p className="text-blue-100 text-[10px]">Blending/Retail</p>
@@ -2237,15 +2395,38 @@ const DashboardPage = () => {
                   dot={{ fill: "#3b82f6", r: 4 }}
                   name="Produksi"
                 />
-                <Line
-                  type="monotone"
-                  dataKey="rkap"
-                  stroke="#22c55e"
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  dot={false}
-                  name="RKAP"
-                />
+                {effectivePlantFilter === "ALL" ? (
+                  <>
+                    <Line
+                      type="monotone"
+                      dataKey="rkapNPK1"
+                      stroke="#22c55e"
+                      strokeWidth={2}
+                      strokeDasharray="5 5"
+                      dot={false}
+                      name="RKAP NPK 1"
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="rkapNPK2"
+                      stroke="#f59e0b"
+                      strokeWidth={2}
+                      strokeDasharray="5 5"
+                      dot={false}
+                      name="RKAP NPK 2"
+                    />
+                  </>
+                ) : (
+                  <Line
+                    type="monotone"
+                    dataKey="rkap"
+                    stroke="#22c55e"
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    dot={false}
+                    name="RKAP"
+                  />
+                )}
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
