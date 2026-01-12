@@ -225,6 +225,24 @@ const BahanBakuNPKPage = ({ plant }: BahanBakuNPKPageProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // VALIDATION: Check required fields before submitting
+    if (!form.tanggal) {
+      alert("Tanggal wajib diisi!");
+      return;
+    }
+    if (!form.bahanBaku) {
+      alert("Bahan Baku wajib dipilih!");
+      return;
+    }
+    if (
+      form.entries.length === 0 ||
+      form.entries.every((entry) => entry.berat === 0)
+    ) {
+      alert("Minimal satu entry berat harus diisi!");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -235,6 +253,8 @@ const BahanBakuNPKPage = ({ plant }: BahanBakuNPKPageProps) => {
         totalBerat: calculateTotalBerat(form.entries),
         _plant: currentPlant,
       };
+
+      console.log("Sending data to save:", dataToSave);
 
       if (editingId) {
         // Update with logging

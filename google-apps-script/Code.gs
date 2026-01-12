@@ -693,34 +693,61 @@ function readSheet(sheetName) {
  */
 function createRecord(sheetName, data) {
   try {
+    // LOG: What data was received
+    Logger.log("createRecord called for sheet: " + sheetName);
+    Logger.log("createRecord received data: " + JSON.stringify(data));
+
+    // VALIDATION: Check if data has required fields (not just ID)
+    // For bahanbaku_npk, require tanggal and bahanBaku
+    if (sheetName.includes("bahanbaku_npk")) {
+      if (!data.tanggal || !data.bahanBaku) {
+        Logger.log(
+          "createRecord REJECTED: Missing required fields (tanggal or bahanBaku)"
+        );
+        return {
+          success: false,
+          error: "Data tidak lengkap: tanggal dan bahanBaku wajib diisi",
+        };
+      }
+    }
+
     const sheet = getOrCreateSheet(sheetName);
 
     // Get headers from SHEET_HEADERS config for consistent column mapping
     let baseSheetName = sheetName.replace("_NPK1", "");
     let configHeaders = SHEET_HEADERS[baseSheetName];
 
-    // Fallback: get headers from sheet if not in config
     let headers;
     if (configHeaders && configHeaders.length > 0) {
       headers = configHeaders;
 
-      // Ensure sheet has correct headers
-      const currentHeaders = sheet
-        .getRange(1, 1, 1, sheet.getLastColumn() || 1)
-        .getValues()[0];
-      if (
-        currentHeaders.length < headers.length ||
-        currentHeaders[0] !== headers[0]
-      ) {
-        // Update headers if they don't match
+      // ALWAYS ensure headers are correct before inserting data
+      const lastCol = sheet.getLastColumn();
+      if (lastCol === 0) {
+        // Sheet has no columns - add headers
         sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+        sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold");
+        sheet.setFrozenRows(1);
+        Logger.log("createRecord: Added headers to empty sheet " + sheetName);
+      } else {
+        // Check current headers
+        const currentHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+
+        // Fix headers if they don't match
+        if (lastCol < headers.length || currentHeaders[0] !== headers[0]) {
+          sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+          sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold");
+          Logger.log("createRecord: Fixed headers in " + sheetName);
+        }
       }
     } else {
-      // Get headers from sheet
+      // No config - get headers from sheet or use defaults
       const lastCol = sheet.getLastColumn();
       if (lastCol === 0) {
         headers = ["id", "createdAt", "updatedAt"];
         sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+        sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold");
+        sheet.setFrozenRows(1);
       } else {
         headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
       }
@@ -740,12 +767,22 @@ function createRecord(sheetName, data) {
       return value;
     });
 
+    Logger.log(
+      "createRecord: Appending row to " +
+        sheetName +
+        ": " +
+        JSON.stringify(rowData)
+    );
+
     // Append row
     sheet.appendRow(rowData);
 
+    // Force flush to ensure data is written
+    SpreadsheetApp.flush();
+
     return { success: true, data: data };
   } catch (error) {
-    Logger.log("createRecord error: " + error.toString());
+    Logger.log("createRecord error for " + sheetName + ": " + error.toString());
     return { success: false, error: error.toString() };
   }
 }
@@ -1559,6 +1596,188 @@ function testCreate() {
 }
 
 /**
+ * DIAGNOSTIC: Check bahanbaku_npk sheet status
+ * Run this to see what's happening with the sheet
+ */
+function diagnoseBahanBakuNPK() {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetNames = ["bahanbaku_npk", "bahanbaku_npk_NPK1"];
+
+  sheetNames.forEach((sheetName) => {
+    Logger.log("\n=== Diagnosing " + sheetName + " ===");
+
+    const sheet = spreadsheet.getSheetByName(sheetName);
+
+    if (!sheet) {
+      Logger.log("❌ Sheet does NOT exist!");
+      return;
+    }
+
+    Logger.log("✓ Sheet exists");
+    Logger.log("Last row: " + sheet.getLastRow());
+    Logger.log("Last column: " + sheet.getLastColumn());
+
+    if (sheet.getLastColumn() > 0) {
+      const headers = sheet
+        .getRange(1, 1, 1, sheet.getLastColumn())
+        .getValues()[0];
+      Logger.log("Current headers: " + JSON.stringify(headers));
+
+      const expectedHeaders = SHEET_HEADERS["bahanbaku_npk"];
+      Logger.log("Expected headers: " + JSON.stringify(expectedHeaders));
+
+      // Check if headers match
+      const headersMatch = expectedHeaders.every((h, i) => headers[i] === h);
+      Logger.log("Headers match: " + headersMatch);
+
+      if (sheet.getLastRow() > 1) {
+        // Show first few rows of data
+        const dataRows = sheet
+          .getRange(
+            2,
+            1,
+            Math.min(5, sheet.getLastRow() - 1),
+            sheet.getLastColumn()
+          )
+          .getValues();
+        Logger.log("Data rows (first 5):");
+        dataRows.forEach((row, idx) => {
+          Logger.log("Row " + (idx + 2) + ": " + JSON.stringify(row));
+        });
+      } else {
+        Logger.log("No data rows in sheet");
+      }
+    } else {
+      Logger.log("❌ Sheet has no columns!");
+    }
+
+    // Test reading via readSheet
+    const readResult = readSheet(sheetName);
+    Logger.log(
+      "readSheet result: success=" +
+        readResult.success +
+        ", data count=" +
+        (readResult.data ? readResult.data.length : 0)
+    );
+    if (readResult.data && readResult.data.length > 0) {
+      Logger.log("First record: " + JSON.stringify(readResult.data[0]));
+    }
+  });
+
+  SpreadsheetApp.getActiveSpreadsheet().toast(
+    "Check Apps Script Logs for diagnostic info",
+    "Diagnosis Complete",
+    5
+  );
+}
+
+/**
+ * REPAIR: Completely reset bahanbaku_npk sheets with correct headers
+ * WARNING: This will clear existing data!
+ */
+function resetBahanBakuNPKSheets() {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetNames = ["bahanbaku_npk", "bahanbaku_npk_NPK1"];
+  const expectedHeaders = [
+    "id",
+    "tanggal",
+    "bahanBaku",
+    "entries",
+    "totalBerat",
+  ];
+
+  sheetNames.forEach((sheetName) => {
+    Logger.log("Resetting " + sheetName);
+
+    let sheet = spreadsheet.getSheetByName(sheetName);
+
+    if (sheet) {
+      // Delete and recreate
+      spreadsheet.deleteSheet(sheet);
+    }
+
+    // Create fresh sheet
+    sheet = spreadsheet.insertSheet(sheetName);
+    sheet
+      .getRange(1, 1, 1, expectedHeaders.length)
+      .setValues([expectedHeaders]);
+    sheet.getRange(1, 1, 1, expectedHeaders.length).setFontWeight("bold");
+    sheet.setFrozenRows(1);
+
+    Logger.log(
+      "✓ Reset " +
+        sheetName +
+        " with headers: " +
+        JSON.stringify(expectedHeaders)
+    );
+  });
+
+  SpreadsheetApp.getActiveSpreadsheet().toast(
+    "bahanbaku_npk sheets have been reset!",
+    "✅ Reset Complete",
+    5
+  );
+}
+
+/**
+ * CLEANUP: Remove rows with empty data (only ID exists)
+ * This cleans up corrupted/incomplete records
+ */
+function cleanupEmptyRowsBahanBakuNPK() {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetNames = ["bahanbaku_npk", "bahanbaku_npk_NPK1"];
+  let totalDeleted = 0;
+
+  sheetNames.forEach((sheetName) => {
+    const sheet = spreadsheet.getSheetByName(sheetName);
+    if (!sheet) {
+      Logger.log("Sheet " + sheetName + " not found");
+      return;
+    }
+
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 1) {
+      Logger.log("No data in " + sheetName);
+      return;
+    }
+
+    // Get all data
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    const tanggalIndex = headers.indexOf("tanggal");
+    const bahanBakuIndex = headers.indexOf("bahanBaku");
+
+    // Find rows to delete (from bottom to top to avoid index shifting)
+    let rowsToDelete = [];
+    for (let i = data.length - 1; i >= 1; i--) {
+      const row = data[i];
+      // If tanggal and bahanBaku are both empty, mark for deletion
+      if (!row[tanggalIndex] && !row[bahanBakuIndex]) {
+        rowsToDelete.push(i + 1); // +1 for 1-indexed rows
+      }
+    }
+
+    // Delete rows from bottom to top
+    rowsToDelete.forEach((rowNum) => {
+      sheet.deleteRow(rowNum);
+      totalDeleted++;
+    });
+
+    Logger.log(
+      "Deleted " + rowsToDelete.length + " empty rows from " + sheetName
+    );
+  });
+
+  SpreadsheetApp.getActiveSpreadsheet().toast(
+    "Deleted " + totalDeleted + " empty rows!",
+    "✅ Cleanup Complete",
+    5
+  );
+
+  return totalDeleted;
+}
+
+/**
  * Test create bahan baku NPK
  */
 function testCreateBahanBakuNPK() {
@@ -1784,7 +2003,13 @@ function onOpen() {
     .addItem("🔑 Fill Empty IDs - All Sheets", "fillEmptyIdsAllSheets")
     .addItem("🔑 Fill Empty IDs - Pemantauan BB", "fillEmptyIdsPemantauanBB")
     .addSeparator()
+    .addItem("🩺 Diagnose Bahan Baku NPK", "diagnoseBahanBakuNPK")
+    .addItem(
+      "🧹 Cleanup Empty Rows - Bahan Baku NPK",
+      "cleanupEmptyRowsBahanBakuNPK"
+    )
     .addItem("🔧 Fix Headers - Bahan Baku NPK", "fixBahanBakuNPKHeaders")
+    .addItem("⚠️ RESET Bahan Baku NPK Sheets", "resetBahanBakuNPKSheets")
     .addItem("🧪 Test Create Bahan Baku NPK", "testCreateBahanBakuNPK")
     .addSeparator()
     .addItem("Test Read Users", "testRead")
