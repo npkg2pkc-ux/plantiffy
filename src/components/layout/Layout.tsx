@@ -588,7 +588,7 @@ const Sidebar = () => {
                 Plantiffy
               </span>
               <span className="text-xs text-dark-500 dark:text-dark-400">
-                v2.3.5
+                v2.3.6
               </span>
             </Link>
           )}

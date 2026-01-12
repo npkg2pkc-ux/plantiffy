@@ -694,16 +694,44 @@ function readSheet(sheetName) {
 function createRecord(sheetName, data) {
   try {
     const sheet = getOrCreateSheet(sheetName);
-    const headers = sheet
-      .getRange(1, 1, 1, sheet.getLastColumn())
-      .getValues()[0];
+
+    // Get headers from SHEET_HEADERS config for consistent column mapping
+    let baseSheetName = sheetName.replace("_NPK1", "");
+    let configHeaders = SHEET_HEADERS[baseSheetName];
+
+    // Fallback: get headers from sheet if not in config
+    let headers;
+    if (configHeaders && configHeaders.length > 0) {
+      headers = configHeaders;
+
+      // Ensure sheet has correct headers
+      const currentHeaders = sheet
+        .getRange(1, 1, 1, sheet.getLastColumn() || 1)
+        .getValues()[0];
+      if (
+        currentHeaders.length < headers.length ||
+        currentHeaders[0] !== headers[0]
+      ) {
+        // Update headers if they don't match
+        sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+      }
+    } else {
+      // Get headers from sheet
+      const lastCol = sheet.getLastColumn();
+      if (lastCol === 0) {
+        headers = ["id", "createdAt", "updatedAt"];
+        sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+      } else {
+        headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+      }
+    }
 
     // Generate ID if not provided
     if (!data.id) {
       data.id = generateId();
     }
 
-    // Prepare row data
+    // Prepare row data based on headers
     const rowData = headers.map((header) => {
       let value = data[header];
       if (value === undefined || value === null) {
@@ -717,6 +745,7 @@ function createRecord(sheetName, data) {
 
     return { success: true, data: data };
   } catch (error) {
+    Logger.log("createRecord error: " + error.toString());
     return { success: false, error: error.toString() };
   }
 }
@@ -1277,25 +1306,65 @@ function testExchangeRate() {
 
 /**
  * Get or create a sheet with proper headers
+ * Also validates and fixes headers if sheet already exists
  */
 function getOrCreateSheet(sheetName) {
   const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
   let sheet = spreadsheet.getSheetByName(sheetName);
 
+  // Get expected headers from config
+  let baseSheetName = sheetName.replace("_NPK1", "");
+  let expectedHeaders = SHEET_HEADERS[baseSheetName];
+
   if (!sheet) {
+    // Create new sheet
     sheet = spreadsheet.insertSheet(sheetName);
 
-    // Get headers from config or use default
-    let baseSheetName = sheetName.replace("_NPK1", "");
-    let headers = SHEET_HEADERS[baseSheetName];
-
-    if (!headers) {
-      headers = ["id", "createdAt", "updatedAt"];
+    // Use default headers if not in config
+    if (!expectedHeaders) {
+      expectedHeaders = ["id", "createdAt", "updatedAt"];
     }
 
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-    sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold");
+    sheet
+      .getRange(1, 1, 1, expectedHeaders.length)
+      .setValues([expectedHeaders]);
+    sheet.getRange(1, 1, 1, expectedHeaders.length).setFontWeight("bold");
     sheet.setFrozenRows(1);
+  } else if (expectedHeaders && expectedHeaders.length > 0) {
+    // Sheet exists - validate and fix headers if needed
+    const lastCol = sheet.getLastColumn();
+
+    if (lastCol === 0) {
+      // Sheet exists but has no columns - add headers
+      sheet
+        .getRange(1, 1, 1, expectedHeaders.length)
+        .setValues([expectedHeaders]);
+      sheet.getRange(1, 1, 1, expectedHeaders.length).setFontWeight("bold");
+      sheet.setFrozenRows(1);
+    } else {
+      // Check if current headers match expected
+      const currentHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+
+      // If headers don't match or are incomplete, fix them
+      if (
+        currentHeaders.length < expectedHeaders.length ||
+        !expectedHeaders.every((h, i) => currentHeaders[i] === h)
+      ) {
+        // Preserve existing data if any
+        if (sheet.getLastRow() > 1) {
+          // Headers mismatch but data exists - just update header row
+          sheet
+            .getRange(1, 1, 1, expectedHeaders.length)
+            .setValues([expectedHeaders]);
+        } else {
+          // No data - safe to reset headers
+          sheet
+            .getRange(1, 1, 1, expectedHeaders.length)
+            .setValues([expectedHeaders]);
+        }
+        sheet.getRange(1, 1, 1, expectedHeaders.length).setFontWeight("bold");
+      }
+    }
   }
 
   return sheet;
@@ -1490,6 +1559,55 @@ function testCreate() {
 }
 
 /**
+ * Test create bahan baku NPK
+ */
+function testCreateBahanBakuNPK() {
+  const testData = {
+    tanggal: "2026-01-12",
+    bahanBaku: "Urea",
+    entries: JSON.stringify([{ berat: 100, unit: "Ton" }]),
+    totalBerat: 100,
+  };
+
+  Logger.log("Testing bahanbaku_npk creation...");
+  Logger.log("Data to save: " + JSON.stringify(testData, null, 2));
+
+  const result = createRecord("bahanbaku_npk", testData);
+
+  Logger.log("Result: " + JSON.stringify(result, null, 2));
+
+  // Also test reading
+  const readResult = readSheet("bahanbaku_npk");
+  Logger.log("Data in sheet: " + JSON.stringify(readResult, null, 2));
+}
+
+/**
+ * Test createRecordWithLog for bahan baku NPK
+ */
+function testCreateBahanBakuNPKWithLog() {
+  const testData = {
+    tanggal: "2026-01-12",
+    bahanBaku: "DAP",
+    entries: JSON.stringify([{ berat: 50, unit: "Ton" }]),
+    totalBerat: 50,
+  };
+
+  const userInfo = {
+    username: "test",
+    namaLengkap: "Test User",
+    nama: "Test",
+    role: "admin",
+  };
+
+  Logger.log("Testing bahanbaku_npk creation with log...");
+  Logger.log("Data to save: " + JSON.stringify(testData, null, 2));
+
+  const result = createRecordWithLog("bahanbaku_npk", testData, userInfo);
+
+  Logger.log("Result: " + JSON.stringify(result, null, 2));
+}
+
+/**
  * Clear all data in a sheet (except headers)
  */
 function clearSheetData(sheetName) {
@@ -1666,6 +1784,9 @@ function onOpen() {
     .addItem("🔑 Fill Empty IDs - All Sheets", "fillEmptyIdsAllSheets")
     .addItem("🔑 Fill Empty IDs - Pemantauan BB", "fillEmptyIdsPemantauanBB")
     .addSeparator()
+    .addItem("🔧 Fix Headers - Bahan Baku NPK", "fixBahanBakuNPKHeaders")
+    .addItem("🧪 Test Create Bahan Baku NPK", "testCreateBahanBakuNPK")
+    .addSeparator()
     .addItem("Test Read Users", "testRead")
     .addToUi();
 }
@@ -1712,6 +1833,67 @@ function fillEmptyIdsPemantauanBB() {
   Logger.log("=== Total IDs filled: " + totalFilled + " ===");
   SpreadsheetApp.getActiveSpreadsheet().toast(
     "Berhasil mengisi " + totalFilled + " ID kosong di pemantauan_bahan_baku!",
+    "✅ Selesai",
+    5
+  );
+}
+
+/**
+ * Fix headers for bahanbaku_npk sheets
+ * Run this to ensure headers are correct
+ */
+function fixBahanBakuNPKHeaders() {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetNames = ["bahanbaku_npk", "bahanbaku_npk_NPK1"];
+  const expectedHeaders = SHEET_HEADERS["bahanbaku_npk"];
+
+  Logger.log("Expected headers: " + JSON.stringify(expectedHeaders));
+
+  sheetNames.forEach((sheetName) => {
+    let sheet = spreadsheet.getSheetByName(sheetName);
+
+    if (!sheet) {
+      // Create the sheet if it doesn't exist
+      sheet = spreadsheet.insertSheet(sheetName);
+      sheet
+        .getRange(1, 1, 1, expectedHeaders.length)
+        .setValues([expectedHeaders]);
+      sheet.getRange(1, 1, 1, expectedHeaders.length).setFontWeight("bold");
+      sheet.setFrozenRows(1);
+      Logger.log("Created sheet " + sheetName + " with headers");
+    } else {
+      // Check and fix headers
+      const lastCol = sheet.getLastColumn();
+
+      if (lastCol === 0) {
+        // No columns yet
+        sheet
+          .getRange(1, 1, 1, expectedHeaders.length)
+          .setValues([expectedHeaders]);
+        sheet.getRange(1, 1, 1, expectedHeaders.length).setFontWeight("bold");
+        sheet.setFrozenRows(1);
+        Logger.log("Added headers to empty sheet " + sheetName);
+      } else {
+        const currentHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+        Logger.log(
+          "Current headers in " +
+            sheetName +
+            ": " +
+            JSON.stringify(currentHeaders)
+        );
+
+        // Update headers
+        sheet
+          .getRange(1, 1, 1, expectedHeaders.length)
+          .setValues([expectedHeaders]);
+        sheet.getRange(1, 1, 1, expectedHeaders.length).setFontWeight("bold");
+        Logger.log("Updated headers in " + sheetName);
+      }
+    }
+  });
+
+  SpreadsheetApp.getActiveSpreadsheet().toast(
+    "Headers bahanbaku_npk sudah diperbaiki!",
     "✅ Selesai",
     5
   );
@@ -2217,7 +2399,12 @@ function createRecordWithLog(sheetName, data, userInfo) {
   try {
     lock.waitLock(30000);
 
+    Logger.log("createRecordWithLog called for sheet: " + sheetName);
+    Logger.log("Data received: " + JSON.stringify(data));
+
     const result = createRecord(sheetName, data);
+
+    Logger.log("createRecord result: " + JSON.stringify(result));
 
     if (!result.success) return result;
 
