@@ -185,10 +185,15 @@ const BahanBakuNPKPage = ({ plant }: BahanBakuNPKPageProps) => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const { fetchDataByPlant } = await import("@/services/api");
-        const result = await fetchDataByPlant<BahanBakuNPK>(
-          SHEETS.BAHAN_BAKU_NPK
+        const { readData, getSheetNameByPlant } = await import(
+          "@/services/api"
         );
+        // Use plant-specific sheet name to fetch only data for current plant
+        const sheetName = getSheetNameByPlant(
+          SHEETS.BAHAN_BAKU_NPK,
+          currentPlant
+        );
+        const result = await readData<BahanBakuNPK>(sheetName);
         if (result.success && result.data) {
           // Parse entries JSON if stored as string
           const parsedData = result.data.map((item) => ({
@@ -198,6 +203,7 @@ const BahanBakuNPKPage = ({ plant }: BahanBakuNPKPageProps) => {
                 ? JSON.parse(item.entries)
                 : item.entries || [{ berat: 0, unit: "Ton" }],
             totalBerat: item.totalBerat || 0,
+            _plant: currentPlant, // Add plant info
           }));
           const sortedData = [...parsedData].sort(
             (a, b) =>
@@ -215,7 +221,7 @@ const BahanBakuNPKPage = ({ plant }: BahanBakuNPKPageProps) => {
       }
     };
     fetchData();
-  }, []);
+  }, [currentPlant]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
