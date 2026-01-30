@@ -71,6 +71,19 @@ const getShiftHours = (shift: string): number => {
   return 7; // Pagi and Sore = 7 hours
 };
 
+// Helper to ensure keterangan is calculated for each item
+const ensureKeterangan = (item: TimesheetLoader, plant: "NPK1" | "NPK2"): TimesheetLoader => {
+  let keterangan = item.keterangan;
+  // Recalculate keterangan if missing or empty
+  if (!keterangan && item.jamOff && item.jamStart) {
+    const grounded = calculateJamGrounded(item.jamOff, item.jamStart);
+    const shiftHours = getShiftHours(item.shift || 'Malam');
+    const operasi = Math.max(0, shiftHours - grounded);
+    keterangan = operasi < shiftHours ? "Grounded" : "Operasi";
+  }
+  return { ...item, _plant: plant, keterangan };
+};
+
 const TimesheetLoaderPage = ({ plant }: TimesheetLoaderPageProps) => {
   const { user } = useAuthStore();
   const { createWithLog, updateWithLog, deleteWithLog } = useDataWithLogging();
@@ -133,7 +146,7 @@ const TimesheetLoaderPage = ({ plant }: TimesheetLoaderPageProps) => {
         const result = await readData<TimesheetLoader>(sheetName);
         if (result.success && result.data) {
           const sortedData = result.data
-            .map((item) => ({ ...item, _plant: plant }))
+            .map((item) => ensureKeterangan(item, plant))
             .sort(
               (a, b) =>
                 new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime()
@@ -203,7 +216,7 @@ const TimesheetLoaderPage = ({ plant }: TimesheetLoaderPageProps) => {
         const result = await readData<TimesheetLoader>(sheetName);
         if (result.success && result.data) {
           const sortedData = result.data
-            .map((item) => ({ ...item, _plant: plant }))
+            .map((item) => ensureKeterangan(item, plant))
             .sort(
               (a, b) =>
                 new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime()

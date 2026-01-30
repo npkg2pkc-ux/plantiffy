@@ -57,6 +57,18 @@ interface TimesheetForkliftPageProps {
   plant: "NPK1" | "NPK2";
 }
 
+// Helper to ensure keterangan is calculated for each item
+const ensureKeterangan = (item: TimesheetForklift, plant: "NPK1" | "NPK2"): TimesheetForklift => {
+  let keterangan = item.keterangan;
+  // Recalculate keterangan if missing or empty
+  if (!keterangan && item.jamOff && item.jamStart) {
+    const grounded = calculateJamGrounded(item.jamOff, item.jamStart);
+    // Forklift logic: Grounded <= 2 = Operasi, Grounded >= 3 = Grounded
+    keterangan = grounded <= 2 ? "Operasi" : "Grounded";
+  }
+  return { ...item, _plant: plant, keterangan };
+};
+
 const TimesheetForkliftPage = ({ plant }: TimesheetForkliftPageProps) => {
   const { user } = useAuthStore();
   const { createWithLog, updateWithLog, deleteWithLog } = useDataWithLogging();
@@ -137,7 +149,7 @@ const TimesheetForkliftPage = ({ plant }: TimesheetForkliftPageProps) => {
         const result = await readData<TimesheetForklift>(sheetName);
         if (result.success && result.data) {
           const sortedData = result.data
-            .map((item) => ({ ...item, _plant: plant }))
+            .map((item) => ensureKeterangan(item, plant))
             .sort(
               (a, b) =>
                 new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime()
@@ -196,7 +208,7 @@ const TimesheetForkliftPage = ({ plant }: TimesheetForkliftPageProps) => {
         const result = await readData<TimesheetForklift>(sheetName);
         if (result.success && result.data) {
           const sortedData = result.data
-            .map((item) => ({ ...item, _plant: plant }))
+            .map((item) => ensureKeterangan(item, plant))
             .sort(
               (a, b) =>
                 new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime()

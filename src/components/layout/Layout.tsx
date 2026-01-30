@@ -138,7 +138,28 @@ const ActiveUsersMarquee = () => {
           return now - lastActive < TIMEOUT && u.status === "online";
         });
 
-        setActiveUsers(onlineUsers);
+        // Deduplicate users by username - keep the one with the most recent lastActive
+        const uniqueUsersMap = new Map<string, ActiveUser>();
+        onlineUsers.forEach((u) => {
+          const existing = uniqueUsersMap.get(u.username);
+          if (!existing) {
+            uniqueUsersMap.set(u.username, u);
+          } else {
+            // Keep the one with more recent lastActive
+            const existingTime = new Date(existing.lastActive).getTime();
+            const currentTime = new Date(u.lastActive).getTime();
+            if (currentTime > existingTime) {
+              uniqueUsersMap.set(u.username, u);
+            }
+          }
+        });
+
+        // Convert map to array and sort by namaLengkap for consistent ordering
+        const uniqueOnlineUsers = Array.from(uniqueUsersMap.values()).sort((a, b) => 
+          (a.namaLengkap || a.username).localeCompare(b.namaLengkap || b.username)
+        );
+
+        setActiveUsers(uniqueOnlineUsers);
       }
     } catch (error) {
       console.error("Error fetching active users:", error);
@@ -588,7 +609,7 @@ const Sidebar = () => {
                 Plantiffy
               </span>
               <span className="text-xs text-dark-500 dark:text-dark-400">
-                v2.3.7
+                v2.3.8
               </span>
             </Link>
           )}
@@ -781,15 +802,19 @@ const Header = () => {
   // Handle mark all notifications as read - also update backend
   const handleMarkAllAsRead = async () => {
     try {
+      // Get unread notifications before marking (to update backend)
+      const unreadNotifs = notifications.filter((n) => !n.read);
+      
       // Update local state first for instant feedback
       markAllAsRead();
 
-      // Update backend for all unread notifications
+      // Update backend for all unread notifications in parallel
       const { updateData, SHEETS } = await import("@/services/api");
-      const unreadNotifs = notifications.filter((n) => !n.read);
-      for (const notif of unreadNotifs) {
-        await updateData(SHEETS.NOTIFICATIONS, { id: notif.id, read: true });
-      }
+      await Promise.all(
+        unreadNotifs.map((notif) =>
+          updateData(SHEETS.NOTIFICATIONS, { id: notif.id, read: true })
+        )
+      );
     } catch (error) {
       console.error("Error marking all notifications as read:", error);
     }

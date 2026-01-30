@@ -94,16 +94,21 @@ export const useUIStore = create<UIState>()(
 interface NotificationState {
   notifications: Notification[];
   unreadCount: number;
+  isMarkingAllAsRead: boolean;
+  lastMarkedAllReadTimestamp: number | null;
   addNotification: (notification: Notification) => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
+  setMarkingAllAsRead: (value: boolean) => void;
   clearNotifications: () => void;
   setNotifications: (notifications: Notification[]) => void;
 }
 
-export const useNotificationStore = create<NotificationState>((set) => ({
+export const useNotificationStore = create<NotificationState>((set, get) => ({
   notifications: [],
   unreadCount: 0,
+  isMarkingAllAsRead: false,
+  lastMarkedAllReadTimestamp: null,
   addNotification: (notification) =>
     set((state) => ({
       notifications: [notification, ...state.notifications],
@@ -120,13 +125,35 @@ export const useNotificationStore = create<NotificationState>((set) => ({
     set((state) => ({
       notifications: state.notifications.map((n) => ({ ...n, read: true })),
       unreadCount: 0,
+      lastMarkedAllReadTimestamp: Date.now(),
     })),
+  setMarkingAllAsRead: (value) => set({ isMarkingAllAsRead: value }),
   clearNotifications: () => set({ notifications: [], unreadCount: 0 }),
-  setNotifications: (notifications) =>
-    set({
-      notifications,
-      unreadCount: notifications.filter((n) => !n.read).length,
-    }),
+  setNotifications: (notifications) => {
+    const state = get();
+    // Skip updating if we just marked all as read (within last 3 seconds)
+    // This prevents the badge from reappearing due to stale backend data
+    if (state.lastMarkedAllReadTimestamp && 
+        Date.now() - state.lastMarkedAllReadTimestamp < 3000) {
+      // Apply the "read" status to incoming notifications that were marked as read locally
+      const markedAsReadNotifications = notifications.map(n => {
+        const existingNotif = state.notifications.find(existing => existing.id === n.id);
+        if (existingNotif && existingNotif.read) {
+          return { ...n, read: true };
+        }
+        return n;
+      });
+      set({
+        notifications: markedAsReadNotifications,
+        unreadCount: markedAsReadNotifications.filter((n) => !n.read).length,
+      });
+    } else {
+      set({
+        notifications,
+        unreadCount: notifications.filter((n) => !n.read).length,
+      });
+    }
+  },
 }));
 
 // Chat Store with persistence for instant loading
