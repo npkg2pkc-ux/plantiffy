@@ -44,7 +44,7 @@ import { Badge, NotificationLogModal } from "@/components/ui";
 import type { Notification } from "@/types";
 
 // ============================================
-// ACTIVE USERS MARQUEE COMPONENT
+// INFORMATIVE MARQUEE COMPONENT
 // ============================================
 interface ActiveUser {
   id: string;
@@ -55,6 +55,22 @@ interface ActiveUser {
   lastActive: string;
   status: string;
 }
+
+interface DashboardMetrics {
+  totalProduksiNPK: number;
+  totalProduksiBlending: number;
+  totalDowntime: number;
+  workRequestPending: number;
+  troubleRecordOpen: number;
+  vibrasiWarnings: number;
+  gatePassToday: number;
+  bahanBakuToday: number;
+}
+
+// Helper function to format numbers with thousand separators
+const formatMarqueeNumber = (num: number): string => {
+  return num.toLocaleString("id-ID", { maximumFractionDigits: 0 });
+};
 
 // Global function to set user offline - can be called from logout
 export const setUserOffline = async (username: string) => {
@@ -78,7 +94,160 @@ export const setUserOffline = async (username: string) => {
 const ActiveUsersMarquee = () => {
   const { user } = useAuthStore();
   const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([]);
+  const [dashboardMetrics, setDashboardMetrics] = useState<DashboardMetrics>({
+    totalProduksiNPK: 0,
+    totalProduksiBlending: 0,
+    totalDowntime: 0,
+    workRequestPending: 0,
+    troubleRecordOpen: 0,
+    vibrasiWarnings: 0,
+    gatePassToday: 0,
+    bahanBakuToday: 0,
+  });
   const [isPaused, setIsPaused] = useState(false);
+  const [currentDate, setCurrentDate] = useState(new Date());
+
+  // Update current date every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentDate(new Date());
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Fetch dashboard metrics
+  const fetchDashboardMetrics = useCallback(async () => {
+    try {
+      const { fetchDataByPlant, SHEETS } = await import("@/services/api");
+      const currentYear = new Date().getFullYear();
+      const today = new Date().toISOString().split("T")[0];
+
+      // Parse number helper
+      const parseNum = (val: unknown): number => {
+        if (typeof val === "number") return val;
+        if (typeof val === "string") {
+          const parsed = parseFloat(val.replace(/,/g, ""));
+          return isNaN(parsed) ? 0 : parsed;
+        }
+        return 0;
+      };
+
+      const [
+        produksiNPKResult,
+        produksiBlendingResult,
+        downtimeResult,
+        workRequestResult,
+        troubleRecordResult,
+        vibrasiResult,
+        gatePassResult,
+        bahanBakuResult,
+      ] = await Promise.all([
+        fetchDataByPlant(SHEETS.PRODUKSI_NPK),
+        fetchDataByPlant(SHEETS.PRODUKSI_BLENDING),
+        fetchDataByPlant(SHEETS.DOWNTIME),
+        fetchDataByPlant(SHEETS.WORK_REQUEST),
+        fetchDataByPlant(SHEETS.TROUBLE_RECORD),
+        fetchDataByPlant(SHEETS.VIBRASI),
+        fetchDataByPlant(SHEETS.GATE_PASS),
+        fetchDataByPlant(SHEETS.BAHAN_BAKU),
+      ]);
+
+      // Filter by current year
+      const filterByYear = <T extends { tanggal?: string }>(data: T[]): T[] => {
+        return data.filter((item) => {
+          if (!item.tanggal) return false;
+          const year = new Date(item.tanggal).getFullYear();
+          return year === currentYear;
+        });
+      };
+
+      // Filter by today
+      const filterByToday = <T extends { tanggal?: string }>(data: T[]): T[] => {
+        return data.filter((item) => {
+          if (!item.tanggal) return false;
+          return item.tanggal.startsWith(today);
+        });
+      };
+
+      const produksiNPK = filterByYear(
+        (produksiNPKResult.data as Array<{ tanggal?: string; total?: number; shiftMalamOnspek?: number; shiftMalamOffspek?: number; shiftPagiOnspek?: number; shiftPagiOffspek?: number; shiftSoreOnspek?: number; shiftSoreOffspek?: number }>) || []
+      );
+      const produksiBlending = filterByYear(
+        (produksiBlendingResult.data as Array<{ tanggal?: string; tonase?: number }>) || []
+      );
+      const downtime = filterByYear(
+        (downtimeResult.data as Array<{ tanggal?: string; downtime?: number }>) || []
+      );
+      const workRequest = (workRequestResult.data as Array<{ tanggal?: string; eksekutor?: string }>) || [];
+      const troubleRecord = (troubleRecordResult.data as Array<{ tanggal?: string; status?: string }>) || [];
+      const vibrasi = (vibrasiResult.data as Array<{ tanggal?: string; status?: string }>) || [];
+      const gatePassToday = filterByToday(
+        (gatePassResult.data as Array<{ tanggal?: string }>) || []
+      );
+      const bahanBakuToday = filterByToday(
+        (bahanBakuResult.data as Array<{ tanggal?: string }>) || []
+      );
+
+      // Calculate metrics
+      const totalProduksiNPK = produksiNPK.reduce((sum, item) => {
+        const hasTotal = item.total !== undefined && item.total !== null;
+        const total = hasTotal
+          ? parseNum(item.total)
+          : parseNum(item.shiftMalamOnspek) +
+            parseNum(item.shiftMalamOffspek) +
+            parseNum(item.shiftPagiOnspek) +
+            parseNum(item.shiftPagiOffspek) +
+            parseNum(item.shiftSoreOnspek) +
+            parseNum(item.shiftSoreOffspek);
+        return sum + total;
+      }, 0);
+
+      const totalProduksiBlending = produksiBlending.reduce(
+        (sum, item) => sum + parseNum(item.tonase),
+        0
+      );
+
+      const totalDowntime = downtime.reduce(
+        (sum, item) => sum + parseNum(item.downtime),
+        0
+      );
+
+      const workRequestPending = workRequest.filter(
+        (item) => !item.eksekutor || item.eksekutor === ""
+      ).length;
+
+      const troubleRecordOpen = troubleRecord.filter(
+        (item) => item.status === "Open" || item.status === "In Progress"
+      ).length;
+
+      const vibrasiWarnings = vibrasi.filter(
+        (item) =>
+          item.status === "Warning" ||
+          item.status === "Critical" ||
+          item.status === "Alert"
+      ).length;
+
+      setDashboardMetrics({
+        totalProduksiNPK,
+        totalProduksiBlending,
+        totalDowntime,
+        workRequestPending,
+        troubleRecordOpen,
+        vibrasiWarnings,
+        gatePassToday: gatePassToday.length,
+        bahanBakuToday: bahanBakuToday.length,
+      });
+    } catch (error) {
+      console.error("Error fetching dashboard metrics:", error);
+    }
+  }, []);
+
+  // Fetch metrics on mount and periodically
+  useEffect(() => {
+    fetchDashboardMetrics();
+    const metricsInterval = setInterval(fetchDashboardMetrics, 60000); // Update every minute
+    return () => clearInterval(metricsInterval);
+  }, [fetchDashboardMetrics]);
 
   // Update current user's active status
   const updateMyStatus = useCallback(async () => {
@@ -234,7 +403,7 @@ const ActiveUsersMarquee = () => {
     };
   }, [user, updateMyStatus]);
 
-  if (activeUsers.length === 0) return null;
+  // Always show marquee - it now contains dashboard info too
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
@@ -264,6 +433,126 @@ const ActiveUsersMarquee = () => {
     }
   };
 
+  // Format date for display
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString("id-ID", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  };
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString("id-ID", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  // Get greeting based on time
+  const getGreeting = () => {
+    const hour = currentDate.getHours();
+    if (hour >= 5 && hour < 11) return "Selamat Pagi";
+    if (hour >= 11 && hour < 15) return "Selamat Siang";
+    if (hour >= 15 && hour < 18) return "Selamat Sore";
+    return "Selamat Malam";
+  };
+
+  // Build informative messages
+  const infoMessages = [
+    // Greeting and date
+    {
+      id: "greeting",
+      icon: "📅",
+      text: `${getGreeting()}! ${formatDate(currentDate)} • ${formatTime(currentDate)} WIB`,
+      bgColor: "bg-white/15",
+    },
+    // Production info
+    {
+      id: "produksi",
+      icon: "🏭",
+      text: `Produksi NPK ${new Date().getFullYear()}: ${formatMarqueeNumber(dashboardMetrics.totalProduksiNPK)} Ton`,
+      bgColor: "bg-green-500/20",
+    },
+    // Blending production
+    {
+      id: "blending",
+      icon: "⚗️",
+      text: `Produksi Blending: ${formatMarqueeNumber(dashboardMetrics.totalProduksiBlending)} Ton`,
+      bgColor: "bg-blue-500/20",
+    },
+    // Downtime info
+    ...(dashboardMetrics.totalDowntime > 0
+      ? [
+          {
+            id: "downtime",
+            icon: "⏱️",
+            text: `Total Downtime: ${formatMarqueeNumber(dashboardMetrics.totalDowntime)} Jam`,
+            bgColor: "bg-amber-500/20",
+          },
+        ]
+      : []),
+    // Work Request pending
+    ...(dashboardMetrics.workRequestPending > 0
+      ? [
+          {
+            id: "wr-pending",
+            icon: "📋",
+            text: `Work Request Pending: ${dashboardMetrics.workRequestPending} item`,
+            bgColor: "bg-orange-500/20",
+          },
+        ]
+      : []),
+    // Trouble Record open
+    ...(dashboardMetrics.troubleRecordOpen > 0
+      ? [
+          {
+            id: "trouble",
+            icon: "🔧",
+            text: `Trouble Record Open: ${dashboardMetrics.troubleRecordOpen} masalah`,
+            bgColor: "bg-red-500/20",
+          },
+        ]
+      : []),
+    // Vibrasi warnings
+    ...(dashboardMetrics.vibrasiWarnings > 0
+      ? [
+          {
+            id: "vibrasi",
+            icon: "⚠️",
+            text: `Vibrasi Warning/Critical: ${dashboardMetrics.vibrasiWarnings} alat`,
+            bgColor: "bg-yellow-500/20",
+          },
+        ]
+      : []),
+    // Today's activities
+    ...(dashboardMetrics.gatePassToday > 0
+      ? [
+          {
+            id: "gatepass",
+            icon: "🚛",
+            text: `Gate Pass Hari Ini: ${dashboardMetrics.gatePassToday} kendaraan`,
+            bgColor: "bg-cyan-500/20",
+          },
+        ]
+      : []),
+    ...(dashboardMetrics.bahanBakuToday > 0
+      ? [
+          {
+            id: "bahanbaku",
+            icon: "📦",
+            text: `Penerimaan BB Hari Ini: ${dashboardMetrics.bahanBakuToday} batch`,
+            bgColor: "bg-purple-500/20",
+          },
+        ]
+      : []),
+  ];
+
+  // Calculate animation duration based on content
+  const totalItems = infoMessages.length + activeUsers.length;
+  const animationDuration = Math.max(totalItems * 4, 30);
+
   return (
     <div
       className="bg-gradient-to-r from-primary-600 via-primary-500 to-secondary-500 text-white overflow-hidden"
@@ -271,11 +560,11 @@ const ActiveUsersMarquee = () => {
       onMouseLeave={() => setIsPaused(false)}
     >
       <div className="flex items-center h-8">
-        {/* Fixed Label */}
+        {/* Fixed Label - PlantIQ Info */}
         <div className="flex-shrink-0 flex items-center gap-2 px-4 bg-primary-700/50 h-full border-r border-white/20 z-10">
-          <Users className="h-4 w-4" />
+          <Factory className="h-4 w-4" />
           <span className="text-xs font-semibold whitespace-nowrap">
-            Online ({activeUsers.length})
+            Plantiffy Info
           </span>
         </div>
 
@@ -285,13 +574,47 @@ const ActiveUsersMarquee = () => {
             <div
               className="marquee-inner"
               style={{
-                animationDuration: `${Math.max(activeUsers.length * 6, 15)}s`,
+                animationDuration: `${animationDuration}s`,
               }}
             >
+              {/* Info Messages */}
+              {infoMessages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={cn(
+                    "inline-flex items-center gap-2 px-3 py-1 mx-2 rounded-full backdrop-blur-sm",
+                    msg.bgColor
+                  )}
+                >
+                  <span className="text-sm">{msg.icon}</span>
+                  <span className="text-xs font-medium whitespace-nowrap">
+                    {msg.text}
+                  </span>
+                </div>
+              ))}
+
+              {/* Separator - only show if there are active users */}
+              {activeUsers.length > 0 && (
+                <div className="inline-flex items-center mx-4">
+                  <span className="text-white/40">|</span>
+                </div>
+              )}
+
+              {/* Online Users Section - only show if there are active users */}
+              {activeUsers.length > 0 && (
+                <div className="inline-flex items-center gap-1 px-2 py-0.5 mx-2 bg-white/10 rounded-full">
+                  <Users className="h-3 w-3" />
+                  <span className="text-xs font-semibold whitespace-nowrap">
+                    Online ({activeUsers.length}):
+                  </span>
+                </div>
+              )}
+
+              {/* Active Users */}
               {activeUsers.map((activeUser) => (
                 <div
                   key={activeUser.username}
-                  className="inline-flex items-center gap-2 px-3 py-1 mx-3 bg-white/10 rounded-full backdrop-blur-sm"
+                  className="inline-flex items-center gap-2 px-3 py-1 mx-2 bg-white/10 rounded-full backdrop-blur-sm"
                 >
                   <Circle className="h-2 w-2 fill-green-400 text-green-400 animate-pulse" />
                   <span className="text-xs font-medium whitespace-nowrap">
@@ -609,7 +932,7 @@ const Sidebar = () => {
                 Plantiffy
               </span>
               <span className="text-xs text-dark-500 dark:text-dark-400">
-                v2.3.8
+                v2.4.0
               </span>
             </Link>
           )}
