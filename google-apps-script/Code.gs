@@ -535,6 +535,32 @@ function handleRequest(e) {
             body.data.keterangan
           );
           break;
+        // Material with Logging Actions
+        case "addMaterialWithLog":
+          result = addMaterialWithLog(body.data, body.userInfo);
+          break;
+        case "updateMaterialWithLog":
+          result = updateMaterialWithLog(body.data, body.userInfo);
+          break;
+        case "deleteMaterialWithLog":
+          result = deleteMaterialWithLog(body.data.id, body.userInfo);
+          break;
+        case "updateStockMasukWithLog":
+          result = updateStockMasukWithLog(
+            body.data.materialId,
+            body.data.jumlah,
+            body.data.keterangan,
+            body.userInfo
+          );
+          break;
+        case "updateStockKeluarWithLog":
+          result = updateStockKeluarWithLog(
+            body.data.materialId,
+            body.data.jumlah,
+            body.data.keterangan,
+            body.userInfo
+          );
+          break;
         // Activity Log & Notification Actions
         case "createWithLog":
           result = createRecordWithLog(body.sheet, body.data, body.userInfo);
@@ -2201,6 +2227,360 @@ function deleteMaterial(materialId) {
     return deleteRecord("materials", { id: materialId });
   } catch (error) {
     return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Add material with logging
+ * @param {Object} data - Material data
+ * @param {Object} userInfo - User information for logging
+ */
+function addMaterialWithLog(data, userInfo) {
+  const lock = LockService.getScriptLock();
+
+  try {
+    lock.waitLock(30000);
+
+    const materialData = {
+      id: generateId(),
+      kode_material: data.kode_material || "",
+      nama_material: data.nama_material || "",
+      satuan: data.satuan || "pcs",
+      stok: parseFloat(data.stok) || 0,
+      stok_minimum: parseFloat(data.stok_minimum) || 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    const result = createRecord("materials", materialData);
+
+    if (!result.success) return result;
+
+    const preview = `${materialData.kode_material} - ${materialData.nama_material}`;
+
+    createActivityLog({
+      action: "create",
+      sheet_name: "materials",
+      record_id: materialData.id,
+      record_preview: preview,
+      user_id: userInfo?.username || "",
+      user_name: userInfo?.namaLengkap || userInfo?.nama || "",
+      user_role: userInfo?.role || "",
+      plant: userInfo?.plant || "",
+    });
+
+    return result;
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * Update material with logging
+ * @param {Object} data - Material data
+ * @param {Object} userInfo - User information for logging
+ */
+function updateMaterialWithLog(data, userInfo) {
+  const lock = LockService.getScriptLock();
+
+  try {
+    lock.waitLock(30000);
+
+    if (!data.id) {
+      return { success: false, error: "ID material diperlukan" };
+    }
+
+    const updateData = {
+      id: data.id,
+      kode_material: data.kode_material,
+      nama_material: data.nama_material,
+      satuan: data.satuan,
+      stok_minimum: parseFloat(data.stok_minimum) || 0,
+      updated_at: new Date().toISOString(),
+    };
+
+    const result = updateRecord("materials", updateData);
+
+    if (!result.success) return result;
+
+    const preview = `${updateData.kode_material} - ${updateData.nama_material}`;
+
+    createActivityLog({
+      action: "update",
+      sheet_name: "materials",
+      record_id: data.id,
+      record_preview: preview,
+      user_id: userInfo?.username || "",
+      user_name: userInfo?.namaLengkap || userInfo?.nama || "",
+      user_role: userInfo?.role || "",
+      plant: userInfo?.plant || "",
+    });
+
+    return result;
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * Delete material with logging
+ * @param {string} materialId - The ID of material to delete
+ * @param {Object} userInfo - User information for logging
+ */
+function deleteMaterialWithLog(materialId, userInfo) {
+  const lock = LockService.getScriptLock();
+
+  try {
+    lock.waitLock(30000);
+
+    if (!materialId) {
+      return { success: false, error: "ID material diperlukan" };
+    }
+
+    // Get material info before deleting for log preview
+    const materialsResult = readSheet("materials");
+    let preview = materialId;
+    if (materialsResult.success && materialsResult.data) {
+      const material = materialsResult.data.find((m) => m.id === materialId);
+      if (material) {
+        preview = `${material.kode_material} - ${material.nama_material}`;
+      }
+    }
+
+    const result = deleteRecord("materials", { id: materialId });
+
+    if (!result.success) return result;
+
+    createActivityLog({
+      action: "delete",
+      sheet_name: "materials",
+      record_id: materialId,
+      record_preview: preview,
+      user_id: userInfo?.username || "",
+      user_name: userInfo?.namaLengkap || userInfo?.nama || "",
+      user_role: userInfo?.role || "",
+      plant: userInfo?.plant || "",
+    });
+
+    return result;
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * Update stock masuk with logging
+ * @param {string} materialId - The ID of material
+ * @param {number} jumlah - Amount to add
+ * @param {string} keterangan - Description/notes
+ * @param {Object} userInfo - User information for logging
+ */
+function updateStockMasukWithLog(materialId, jumlah, keterangan, userInfo) {
+  const lock = LockService.getScriptLock();
+
+  try {
+    lock.waitLock(30000);
+
+    if (!materialId || !jumlah) {
+      return { success: false, error: "Material ID dan jumlah diperlukan" };
+    }
+
+    const amount = parseFloat(jumlah);
+    if (isNaN(amount) || amount <= 0) {
+      return { success: false, error: "Jumlah harus lebih dari 0" };
+    }
+
+    // Get current material data
+    const materialsSheet = getOrCreateSheet("materials");
+    const allData = materialsSheet.getDataRange().getValues();
+    const headers = allData[0];
+    const idIndex = headers.indexOf("id");
+    const stokIndex = headers.indexOf("stok");
+    const updatedAtIndex = headers.indexOf("updated_at");
+    const kodeMaterialIndex = headers.indexOf("kode_material");
+    const namaMaterialIndex = headers.indexOf("nama_material");
+
+    let materialRow = -1;
+    let currentStok = 0;
+    let kodeMaterial = "";
+    let namaMaterial = "";
+
+    for (let i = 1; i < allData.length; i++) {
+      if (allData[i][idIndex] === materialId) {
+        materialRow = i + 1;
+        currentStok = parseFloat(allData[i][stokIndex]) || 0;
+        kodeMaterial = allData[i][kodeMaterialIndex] || "";
+        namaMaterial = allData[i][namaMaterialIndex] || "";
+        break;
+      }
+    }
+
+    if (materialRow === -1) {
+      return { success: false, error: "Material tidak ditemukan" };
+    }
+
+    const newStok = currentStok + amount;
+    materialsSheet.getRange(materialRow, stokIndex + 1).setValue(newStok);
+    materialsSheet
+      .getRange(materialRow, updatedAtIndex + 1)
+      .setValue(new Date().toISOString());
+
+    // Log to stock history
+    const historyData = {
+      id: generateId(),
+      material_id: materialId,
+      kode_material: kodeMaterial,
+      nama_material: namaMaterial,
+      jenis: "masuk",
+      jumlah: amount,
+      stok_sebelum: currentStok,
+      stok_sesudah: newStok,
+      keterangan: keterangan || "",
+      created_at: new Date().toISOString(),
+    };
+
+    createRecord("stock_history", historyData);
+
+    // Log activity
+    const preview = `Stock Masuk: ${kodeMaterial} - ${namaMaterial} (+${amount})`;
+
+    createActivityLog({
+      action: "update",
+      sheet_name: "materials",
+      record_id: materialId,
+      record_preview: preview,
+      user_id: userInfo?.username || "",
+      user_name: userInfo?.namaLengkap || userInfo?.nama || "",
+      user_role: userInfo?.role || "",
+      plant: userInfo?.plant || "",
+    });
+
+    return {
+      success: true,
+      data: {
+        id: materialId,
+        stok: newStok,
+        stok_sebelum: currentStok,
+        jumlah_masuk: amount,
+      },
+    };
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * Update stock keluar with logging
+ * @param {string} materialId - The ID of material
+ * @param {number} jumlah - Amount to subtract
+ * @param {string} keterangan - Description/notes
+ * @param {Object} userInfo - User information for logging
+ */
+function updateStockKeluarWithLog(materialId, jumlah, keterangan, userInfo) {
+  const lock = LockService.getScriptLock();
+
+  try {
+    lock.waitLock(30000);
+
+    if (!materialId || !jumlah) {
+      return { success: false, error: "Material ID dan jumlah diperlukan" };
+    }
+
+    const amount = parseFloat(jumlah);
+    if (isNaN(amount) || amount <= 0) {
+      return { success: false, error: "Jumlah harus lebih dari 0" };
+    }
+
+    // Get current material data
+    const materialsSheet = getOrCreateSheet("materials");
+    const allData = materialsSheet.getDataRange().getValues();
+    const headers = allData[0];
+    const idIndex = headers.indexOf("id");
+    const stokIndex = headers.indexOf("stok");
+    const updatedAtIndex = headers.indexOf("updated_at");
+    const kodeMaterialIndex = headers.indexOf("kode_material");
+    const namaMaterialIndex = headers.indexOf("nama_material");
+
+    let materialRow = -1;
+    let currentStok = 0;
+    let kodeMaterial = "";
+    let namaMaterial = "";
+
+    for (let i = 1; i < allData.length; i++) {
+      if (allData[i][idIndex] === materialId) {
+        materialRow = i + 1;
+        currentStok = parseFloat(allData[i][stokIndex]) || 0;
+        kodeMaterial = allData[i][kodeMaterialIndex] || "";
+        namaMaterial = allData[i][namaMaterialIndex] || "";
+        break;
+      }
+    }
+
+    if (materialRow === -1) {
+      return { success: false, error: "Material tidak ditemukan" };
+    }
+
+    if (currentStok < amount) {
+      return { success: false, error: "Stok tidak mencukupi" };
+    }
+
+    const newStok = currentStok - amount;
+    materialsSheet.getRange(materialRow, stokIndex + 1).setValue(newStok);
+    materialsSheet
+      .getRange(materialRow, updatedAtIndex + 1)
+      .setValue(new Date().toISOString());
+
+    // Log to stock history
+    const historyData = {
+      id: generateId(),
+      material_id: materialId,
+      kode_material: kodeMaterial,
+      nama_material: namaMaterial,
+      jenis: "keluar",
+      jumlah: amount,
+      stok_sebelum: currentStok,
+      stok_sesudah: newStok,
+      keterangan: keterangan || "",
+      created_at: new Date().toISOString(),
+    };
+
+    createRecord("stock_history", historyData);
+
+    // Log activity
+    const preview = `Stock Keluar: ${kodeMaterial} - ${namaMaterial} (-${amount})`;
+
+    createActivityLog({
+      action: "update",
+      sheet_name: "materials",
+      record_id: materialId,
+      record_preview: preview,
+      user_id: userInfo?.username || "",
+      user_name: userInfo?.namaLengkap || userInfo?.nama || "",
+      user_role: userInfo?.role || "",
+      plant: userInfo?.plant || "",
+    });
+
+    return {
+      success: true,
+      data: {
+        id: materialId,
+        stok: newStok,
+        stok_sebelum: currentStok,
+        jumlah_keluar: amount,
+      },
+    };
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  } finally {
+    lock.releaseLock();
   }
 }
 

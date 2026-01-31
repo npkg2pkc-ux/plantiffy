@@ -28,6 +28,7 @@ import {
   SuccessOverlay,
   Badge,
   Select,
+  ActivityLogModal,
 } from "@/components/ui";
 import { useAuthStore } from "@/stores";
 import {
@@ -727,6 +728,8 @@ const InventarisPage = () => {
   const [showRiwayatModal, setShowRiwayatModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showLogModal, setShowLogModal] = useState(false);
+  const [logRecordId, setLogRecordId] = useState("");
 
   // Selected item states
   const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
@@ -891,6 +894,16 @@ const InventarisPage = () => {
       header: "Aksi",
       render: (_value: unknown, row: Material) => (
         <div className="flex items-center gap-1">
+          <button
+            onClick={() => {
+              setLogRecordId(row.id || "");
+              setShowLogModal(true);
+            }}
+            className="p-1.5 text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-900/30 rounded-lg transition-colors"
+            title="Lihat Log Aktivitas"
+          >
+            <History className="h-4 w-4" />
+          </button>
           {userCanEdit && (
             <button
               onClick={() => handleEdit(row)}
@@ -1096,6 +1109,18 @@ const InventarisPage = () => {
         confirmText="Hapus"
         cancelText="Batal"
         variant="danger"
+      />
+
+      {/* Activity Log Modal */}
+      <ActivityLogModal
+        isOpen={showLogModal}
+        onClose={() => {
+          setShowLogModal(false);
+          setLogRecordId("");
+        }}
+        sheetName="materials"
+        recordId={logRecordId}
+        title="Log Aktivitas Material"
       />
     </div>
   );

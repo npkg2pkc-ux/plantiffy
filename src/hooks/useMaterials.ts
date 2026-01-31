@@ -6,21 +6,34 @@ import type {
 } from "@/types";
 import {
   getMaterials,
-  addMaterial,
-  updateMaterial,
-  deleteMaterial,
-  updateStockMasuk,
-  updateStockKeluar,
+  addMaterialWithLog,
+  updateMaterialWithLog,
+  deleteMaterialWithLog,
+  updateStockMasukWithLog,
+  updateStockKeluarWithLog,
   getMaterialTransactions,
+  type UserInfoForLog,
 } from "@/services/api";
+import { useAuthStore } from "@/stores";
 
 // ============================================
 // useMaterials Hook
 // ============================================
 export function useMaterials() {
+  const { user } = useAuthStore();
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Get user info for logging
+  const getUserInfo = useCallback((): UserInfoForLog => {
+    return {
+      username: user?.username || "",
+      namaLengkap: user?.namaLengkap || user?.nama || "",
+      nama: user?.nama || "",
+      role: user?.role || "",
+    };
+  }, [user]);
 
   // Fetch all materials
   const fetchMaterials = useCallback(async () => {
@@ -52,7 +65,8 @@ export function useMaterials() {
       setLoading(true);
       setError(null);
       try {
-        const result = await addMaterial(data);
+        const userInfo = getUserInfo();
+        const result = await addMaterialWithLog(data, userInfo);
         if (result.success && result.data) {
           setMaterials((prev) =>
             [...prev, result.data as Material].sort((a, b) =>
@@ -73,7 +87,7 @@ export function useMaterials() {
         setLoading(false);
       }
     },
-    []
+    [getUserInfo]
   );
 
   // Update material
@@ -82,7 +96,8 @@ export function useMaterials() {
       setLoading(true);
       setError(null);
       try {
-        const result = await updateMaterial(data);
+        const userInfo = getUserInfo();
+        const result = await updateMaterialWithLog(data, userInfo);
         if (result.success) {
           setMaterials((prev) =>
             prev
@@ -103,7 +118,7 @@ export function useMaterials() {
         setLoading(false);
       }
     },
-    []
+    [getUserInfo]
   );
 
   // Delete material
@@ -111,7 +126,8 @@ export function useMaterials() {
     setLoading(true);
     setError(null);
     try {
-      const result = await deleteMaterial(materialId);
+      const userInfo = getUserInfo();
+      const result = await deleteMaterialWithLog(materialId, userInfo);
       if (result.success) {
         setMaterials((prev) => prev.filter((m) => m.id !== materialId));
         return { success: true };
@@ -126,7 +142,7 @@ export function useMaterials() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [getUserInfo]);
 
   // Update stock - MASUK
   const handleStockMasuk = useCallback(
@@ -134,7 +150,8 @@ export function useMaterials() {
       setLoading(true);
       setError(null);
       try {
-        const result = await updateStockMasuk(materialId, jumlah, keterangan);
+        const userInfo = getUserInfo();
+        const result = await updateStockMasukWithLog(materialId, jumlah, keterangan, userInfo);
         if (result.success && result.data) {
           // Update local state with new stock
           setMaterials((prev) =>
@@ -156,7 +173,7 @@ export function useMaterials() {
         setLoading(false);
       }
     },
-    []
+    [getUserInfo]
   );
 
   // Update stock - KELUAR
@@ -165,7 +182,8 @@ export function useMaterials() {
       setLoading(true);
       setError(null);
       try {
-        const result = await updateStockKeluar(materialId, jumlah, keterangan);
+        const userInfo = getUserInfo();
+        const result = await updateStockKeluarWithLog(materialId, jumlah, keterangan, userInfo);
         if (result.success && result.data) {
           // Update local state with new stock
           setMaterials((prev) =>
@@ -187,7 +205,7 @@ export function useMaterials() {
         setLoading(false);
       }
     },
-    []
+    [getUserInfo]
   );
 
   // Load materials on mount

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Edit2, Trash2, Search, Droplets } from "lucide-react";
+import { Plus, Edit2, Trash2, Search, Droplets, History } from "lucide-react";
 import { useSaveShortcut, useDataWithLogging } from "@/hooks";
 import {
   Button,
@@ -14,6 +14,7 @@ import {
   DataTable,
   SuccessOverlay,
   ApprovalDialog,
+  ActivityLogModal,
 } from "@/components/ui";
 import { useAuthStore } from "@/stores";
 import {
@@ -77,6 +78,10 @@ const PertaPage = () => {
     "edit"
   );
   const [pendingEditItem, setPendingEditItem] = useState<Perta | null>(null);
+
+  // Activity log states
+  const [showLogModal, setShowLogModal] = useState(false);
+  const [logRecordId, setLogRecordId] = useState("");
 
   // Check if user is view only
   const userIsViewOnly = isViewOnly(user?.role || "");
@@ -508,6 +513,18 @@ const PertaPage = () => {
                       size="icon"
                       onClick={(e) => {
                         e.stopPropagation();
+                        setLogRecordId(row.id || "");
+                        setShowLogModal(true);
+                      }}
+                      title="Lihat Log Aktivitas"
+                    >
+                      <History className="h-4 w-4 text-gray-600" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
                         handleEdit(row);
                       }}
                     >
@@ -689,6 +706,18 @@ const PertaPage = () => {
         isVisible={showSuccess}
         message="Data berhasil disimpan!"
         onClose={() => setShowSuccess(false)}
+      />
+
+      {/* Activity Log Modal */}
+      <ActivityLogModal
+        isOpen={showLogModal}
+        onClose={() => {
+          setShowLogModal(false);
+          setLogRecordId("");
+        }}
+        sheetName="perta"
+        recordId={logRecordId}
+        title="Log Aktivitas Perta (BBM)"
       />
     </div>
   );

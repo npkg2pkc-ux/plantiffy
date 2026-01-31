@@ -537,3 +537,71 @@ export function getActionIcon(action: ActivityLog["action"]): string {
   };
   return iconMap[action] || "📋";
 }
+
+// ============================================
+// MATERIAL OPERATIONS WITH LOGGING
+// ============================================
+
+// Add material with activity logging
+export async function addMaterialWithLog(
+  data: Omit<Material, "id" | "created_at" | "updated_at">,
+  userInfo: UserInfoForLog
+): Promise<ApiResponse<Material>> {
+  return fetchPOST<Material>({
+    action: "addMaterialWithLog",
+    data,
+    userInfo,
+  });
+}
+
+// Update material with activity logging
+export async function updateMaterialWithLog(
+  data: Partial<Material> & { id: string },
+  userInfo: UserInfoForLog
+): Promise<ApiResponse<Material>> {
+  return fetchPOST<Material>({
+    action: "updateMaterialWithLog",
+    data,
+    userInfo,
+  });
+}
+
+// Delete material with activity logging
+export async function deleteMaterialWithLog(
+  materialId: string,
+  userInfo: UserInfoForLog
+): Promise<ApiResponse<boolean>> {
+  return fetchPOST<boolean>({
+    action: "deleteMaterialWithLog",
+    data: { id: materialId },
+    userInfo,
+  });
+}
+
+// Update stock MASUK with activity logging
+export async function updateStockMasukWithLog(
+  materialId: string,
+  jumlah: number,
+  keterangan: string,
+  userInfo: UserInfoForLog
+): Promise<ApiResponse<StockUpdateResponse>> {
+  return fetchPOST<StockUpdateResponse>({
+    action: "updateStockMasukWithLog",
+    data: { materialId, jumlah, keterangan },
+    userInfo,
+  });
+}
+
+// Update stock KELUAR with activity logging
+export async function updateStockKeluarWithLog(
+  materialId: string,
+  jumlah: number,
+  keterangan: string,
+  userInfo: UserInfoForLog
+): Promise<ApiResponse<StockUpdateResponse>> {
+  return fetchPOST<StockUpdateResponse>({
+    action: "updateStockKeluarWithLog",
+    data: { materialId, jumlah, keterangan },
+    userInfo,
+  });
+}

@@ -6,8 +6,9 @@ import {
   Target,
   TrendingUp,
   Calendar,
+  History,
 } from "lucide-react";
-import { useSaveShortcut } from "@/hooks";
+import { useSaveShortcut, useDataWithLogging } from "@/hooks";
 import {
   Button,
   Card,
@@ -20,6 +21,7 @@ import {
   ConfirmDialog,
   Badge,
   SuccessOverlay,
+  ActivityLogModal,
 } from "@/components/ui";
 import { useAuthStore } from "@/stores";
 import { formatNumber, parseNumber } from "@/lib/utils";
@@ -68,6 +70,7 @@ const yearOptions = [
 
 const RKAPPage = () => {
   const { user } = useAuthStore();
+  const { createWithLog, updateWithLog, deleteWithLog } = useDataWithLogging();
   const [data, setData] = useState<RKAP[]>([]);
   const [produksiData, setProduksiData] = useState<ProduksiNPK[]>([]);
   const [loading, setLoading] = useState(false);
@@ -83,6 +86,10 @@ const RKAPPage = () => {
   const [yearFilter, setYearFilter] = useState(
     new Date().getFullYear().toString()
   );
+  
+  // Activity log states
+  const [showLogModal, setShowLogModal] = useState(false);
+  const [logRecordId, setLogRecordId] = useState("");
 
   // Fetch RKAP and Produksi data
   useEffect(() => {
@@ -249,11 +256,9 @@ const RKAPPage = () => {
     setLoading(true);
 
     try {
-      const { createData, updateData, SHEETS } = await import("@/services/api");
-
       if (editingId) {
         const dataToUpdate = { ...form, id: editingId };
-        const updateResult = await updateData<RKAP>(SHEETS.RKAP, dataToUpdate);
+        const updateResult = await updateWithLog<RKAP>("rkap", dataToUpdate);
         if (updateResult.success) {
           setData((prev) =>
             prev.map((item) =>
@@ -264,7 +269,7 @@ const RKAPPage = () => {
           throw new Error(updateResult.error || "Gagal mengupdate data");
         }
       } else {
-        const createResult = await createData<RKAP>(SHEETS.RKAP, form);
+        const createResult = await createWithLog<RKAP>("rkap", form);
         if (createResult.success && createResult.data) {
           setData((prev) => [createResult.data!, ...prev]);
         } else {
@@ -305,8 +310,7 @@ const RKAPPage = () => {
 
     setLoading(true);
     try {
-      const { deleteData, SHEETS } = await import("@/services/api");
-      const deleteResult = await deleteData(SHEETS.RKAP, deleteId);
+      const deleteResult = await deleteWithLog("rkap", { id: deleteId });
       if (deleteResult.success) {
         setData((prev) => prev.filter((item) => item.id !== deleteId));
         setShowDeleteConfirm(false);
@@ -428,6 +432,19 @@ const RKAPPage = () => {
               className="w-40"
             />
           )}
+          {plantFilter !== "ALL" && currentRKAP && (
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setLogRecordId(currentRKAP.id || "");
+                setShowLogModal(true);
+              }}
+              title="Lihat Log Aktivitas"
+            >
+              <History className="h-4 w-4 mr-2" />
+              Log
+            </Button>
+          )}
           {isAdmin &&
             plantFilter !== "ALL" &&
             (currentRKAP ? (
@@ -465,37 +482,52 @@ const RKAPPage = () => {
                     </p>
                   </div>
                 </div>
-                {isAdmin && (
-                  <Button
-                    size="sm"
-                    variant={rkapNPK1 ? "secondary" : "primary"}
-                    onClick={() => {
-                      if (rkapNPK1) {
-                        handleEdit(rkapNPK1);
-                      } else {
-                        setForm({
-                          ...initialFormState,
-                          tahun: yearFilter,
-                          plant: "NPK1",
-                        });
-                        setEditingId(null);
-                        setShowForm(true);
-                      }
-                    }}
-                  >
-                    {rkapNPK1 ? (
-                      <>
-                        <Edit2 className="h-3 w-3 mr-1" />
-                        Edit
-                      </>
-                    ) : (
-                      <>
-                        <Plus className="h-3 w-3 mr-1" />
-                        Buat
-                      </>
-                    )}
-                  </Button>
-                )}
+                <div className="flex gap-2">
+                  {rkapNPK1 && (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => {
+                        setLogRecordId(rkapNPK1.id || "");
+                        setShowLogModal(true);
+                      }}
+                      title="Lihat Log Aktivitas"
+                    >
+                      <History className="h-3 w-3" />
+                    </Button>
+                  )}
+                  {isAdmin && (
+                    <Button
+                      size="sm"
+                      variant={rkapNPK1 ? "secondary" : "primary"}
+                      onClick={() => {
+                        if (rkapNPK1) {
+                          handleEdit(rkapNPK1);
+                        } else {
+                          setForm({
+                            ...initialFormState,
+                            tahun: yearFilter,
+                            plant: "NPK1",
+                          });
+                          setEditingId(null);
+                          setShowForm(true);
+                        }
+                      }}
+                    >
+                      {rkapNPK1 ? (
+                        <>
+                          <Edit2 className="h-3 w-3 mr-1" />
+                          Edit
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="h-3 w-3 mr-1" />
+                          Buat
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div>
@@ -552,37 +584,52 @@ const RKAPPage = () => {
                     </p>
                   </div>
                 </div>
-                {isAdmin && (
-                  <Button
-                    size="sm"
-                    variant={rkapNPK2 ? "secondary" : "primary"}
-                    onClick={() => {
-                      if (rkapNPK2) {
-                        handleEdit(rkapNPK2);
-                      } else {
-                        setForm({
-                          ...initialFormState,
-                          tahun: yearFilter,
-                          plant: "NPK2",
-                        });
-                        setEditingId(null);
-                        setShowForm(true);
-                      }
-                    }}
-                  >
-                    {rkapNPK2 ? (
-                      <>
-                        <Edit2 className="h-3 w-3 mr-1" />
-                        Edit
-                      </>
-                    ) : (
-                      <>
-                        <Plus className="h-3 w-3 mr-1" />
-                        Buat
-                      </>
-                    )}
-                  </Button>
-                )}
+                <div className="flex gap-2">
+                  {rkapNPK2 && (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => {
+                        setLogRecordId(rkapNPK2.id || "");
+                        setShowLogModal(true);
+                      }}
+                      title="Lihat Log Aktivitas"
+                    >
+                      <History className="h-3 w-3" />
+                    </Button>
+                  )}
+                  {isAdmin && (
+                    <Button
+                      size="sm"
+                      variant={rkapNPK2 ? "secondary" : "primary"}
+                      onClick={() => {
+                        if (rkapNPK2) {
+                          handleEdit(rkapNPK2);
+                        } else {
+                          setForm({
+                            ...initialFormState,
+                            tahun: yearFilter,
+                            plant: "NPK2",
+                          });
+                          setEditingId(null);
+                          setShowForm(true);
+                        }
+                      }}
+                    >
+                      {rkapNPK2 ? (
+                        <>
+                          <Edit2 className="h-3 w-3 mr-1" />
+                          Edit
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="h-3 w-3 mr-1" />
+                          Buat
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div>
@@ -1211,6 +1258,18 @@ const RKAPPage = () => {
         isVisible={showSuccess}
         message="Data berhasil disimpan!"
         onClose={() => setShowSuccess(false)}
+      />
+
+      {/* Activity Log Modal */}
+      <ActivityLogModal
+        isOpen={showLogModal}
+        onClose={() => {
+          setShowLogModal(false);
+          setLogRecordId("");
+        }}
+        sheetName="rkap"
+        recordId={logRecordId}
+        title="Log Aktivitas RKAP"
       />
     </div>
   );

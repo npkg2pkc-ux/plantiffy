@@ -8,8 +8,9 @@ import {
   Shield,
   UserCheck,
   UserX,
+  History,
 } from "lucide-react";
-import { useSaveShortcut } from "@/hooks";
+import { useSaveShortcut, useDataWithLogging } from "@/hooks";
 import {
   Button,
   Card,
@@ -22,6 +23,7 @@ import {
   Badge,
   DataTable,
   SuccessOverlay,
+  ActivityLogModal,
 } from "@/components/ui";
 import { useAuthStore } from "@/stores";
 import { formatDate } from "@/lib/utils";
@@ -40,6 +42,7 @@ const initialFormState: User = {
 
 const UsersPage = () => {
   const { user } = useAuthStore();
+  const { createWithLog, updateWithLog, deleteWithLog } = useDataWithLogging();
   const [data, setData] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -48,6 +51,10 @@ const UsersPage = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState<User>(initialFormState);
+  
+  // Activity log states
+  const [showLogModal, setShowLogModal] = useState(false);
+  const [logRecordId, setLogRecordId] = useState("");
 
   const [roleFilter, setRoleFilter] = useState("ALL");
 
@@ -95,8 +102,6 @@ const UsersPage = () => {
     setLoading(true);
 
     try {
-      const { createData, updateData, SHEETS } = await import("@/services/api");
-
       // Prepare data with proper field mapping
       const preparedData = {
         ...form,
@@ -115,7 +120,7 @@ const UsersPage = () => {
           id: editingId,
           updatedAt: new Date().toISOString(),
         };
-        const updateResult = await updateData<User>(SHEETS.USERS, dataToUpdate);
+        const updateResult = await updateWithLog<User>("users", dataToUpdate);
         if (updateResult.success) {
           setData((prev) =>
             prev.map((item) =>
@@ -136,7 +141,7 @@ const UsersPage = () => {
           ...preparedData,
           createdAt: new Date().toISOString(),
         };
-        const createResult = await createData<User>(SHEETS.USERS, newData);
+        const createResult = await createWithLog<User>("users", newData);
         if (createResult.success && createResult.data) {
           const newItem: User = {
             ...newData,
@@ -185,8 +190,7 @@ const UsersPage = () => {
 
     setLoading(true);
     try {
-      const { deleteData, SHEETS } = await import("@/services/api");
-      const deleteResult = await deleteData(SHEETS.USERS, deleteId);
+      const deleteResult = await deleteWithLog("users", { id: deleteId });
       if (deleteResult.success) {
         setData((prev) => prev.filter((item) => item.id !== deleteId));
         setShowDeleteConfirm(false);
@@ -213,11 +217,10 @@ const UsersPage = () => {
     if (!item) return;
 
     try {
-      const { updateData, SHEETS } = await import("@/services/api");
       const newStatus: "active" | "inactive" =
         item.status === "active" ? "inactive" : "active";
       const dataToUpdate = { ...item, status: newStatus };
-      const updateResult = await updateData<User>(SHEETS.USERS, dataToUpdate);
+      const updateResult = await updateWithLog<User>("users", dataToUpdate);
       if (updateResult.success) {
         setData((prev) =>
           prev.map((u) => (u.id === id ? { ...u, status: newStatus } : u))
@@ -455,6 +458,18 @@ const UsersPage = () => {
                       size="icon"
                       onClick={(e) => {
                         e.stopPropagation();
+                        setLogRecordId(row.id || "");
+                        setShowLogModal(true);
+                      }}
+                      title="Lihat Log Aktivitas"
+                    >
+                      <History className="h-4 w-4 text-gray-600" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
                         handleEdit(row);
                       }}
                     >
@@ -629,6 +644,18 @@ const UsersPage = () => {
         isVisible={showSuccess}
         message="Data berhasil disimpan!"
         onClose={() => setShowSuccess(false)}
+      />
+
+      {/* Activity Log Modal */}
+      <ActivityLogModal
+        isOpen={showLogModal}
+        onClose={() => {
+          setShowLogModal(false);
+          setLogRecordId("");
+        }}
+        sheetName="users"
+        recordId={logRecordId}
+        title="Log Aktivitas User"
       />
     </div>
   );
