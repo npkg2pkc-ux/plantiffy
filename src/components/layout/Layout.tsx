@@ -13,7 +13,6 @@ import {
   LogOut,
   Bell,
   MessageCircle,
-  User,
   ChevronLeft,
   Send,
   X,
@@ -555,16 +554,25 @@ const ActiveUsersMarquee = () => {
 
   return (
     <div
-      className="bg-gradient-to-r from-primary-600 via-primary-500 to-secondary-500 text-white overflow-hidden"
+      className="bg-gradient-to-r from-primary-600 via-primary-500 to-secondary-500 text-white overflow-hidden relative"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      <div className="flex items-center h-8">
-        {/* Fixed Label - PlantIQ Info */}
-        <div className="flex-shrink-0 flex items-center gap-2 px-4 bg-primary-700/50 h-full border-r border-white/20 z-10">
-          <Factory className="h-4 w-4" />
-          <span className="text-xs font-semibold whitespace-nowrap">
-            Plantiffy Info
+      {/* Animated Background Pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0 bg-grid-pattern animate-slide-slow" />
+      </div>
+
+      <div className="flex items-center h-9 relative z-10">
+        {/* Fixed Label - PlantIQ Info with Live Indicator */}
+        <div className="flex-shrink-0 flex items-center gap-2 px-4 bg-primary-700/60 h-full border-r border-white/20 z-10 backdrop-blur-sm">
+          <div className="relative">
+            <Factory className="h-4 w-4" />
+            <span className="absolute -top-1 -right-1 h-2 w-2 bg-green-400 rounded-full animate-ping" />
+            <span className="absolute -top-1 -right-1 h-2 w-2 bg-green-400 rounded-full" />
+          </div>
+          <span className="text-xs font-semibold whitespace-nowrap tracking-wide">
+            LIVE INFO
           </span>
         </div>
 
@@ -577,17 +585,19 @@ const ActiveUsersMarquee = () => {
                 animationDuration: `${animationDuration}s`,
               }}
             >
-              {/* Info Messages */}
+              {/* Info Messages with improved hover effects */}
               {infoMessages.map((msg) => (
                 <div
                   key={msg.id}
                   className={cn(
-                    "inline-flex items-center gap-2 px-3 py-1 mx-2 rounded-full backdrop-blur-sm",
+                    "inline-flex items-center gap-2 px-3 py-1.5 mx-2 rounded-full backdrop-blur-sm",
+                    "transition-all duration-200 hover:scale-105 cursor-default",
+                    "shadow-sm hover:shadow-md",
                     msg.bgColor
                   )}
                 >
-                  <span className="text-sm">{msg.icon}</span>
-                  <span className="text-xs font-medium whitespace-nowrap">
+                  <span className="text-sm drop-shadow-sm">{msg.icon}</span>
+                  <span className="text-xs font-medium whitespace-nowrap drop-shadow-sm">
                     {msg.text}
                   </span>
                 </div>
@@ -596,33 +606,36 @@ const ActiveUsersMarquee = () => {
               {/* Separator - only show if there are active users */}
               {activeUsers.length > 0 && (
                 <div className="inline-flex items-center mx-4">
-                  <span className="text-white/40">|</span>
+                  <span className="text-white/30">•</span>
                 </div>
               )}
 
               {/* Online Users Section - only show if there are active users */}
               {activeUsers.length > 0 && (
-                <div className="inline-flex items-center gap-1 px-2 py-0.5 mx-2 bg-white/10 rounded-full">
-                  <Users className="h-3 w-3" />
-                  <span className="text-xs font-semibold whitespace-nowrap">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 mx-2 bg-white/15 rounded-full shadow-sm">
+                  <Users className="h-3.5 w-3.5" />
+                  <span className="text-xs font-bold whitespace-nowrap">
                     Online ({activeUsers.length}):
                   </span>
                 </div>
               )}
 
-              {/* Active Users */}
+              {/* Active Users with enhanced cards */}
               {activeUsers.map((activeUser) => (
                 <div
                   key={activeUser.username}
-                  className="inline-flex items-center gap-2 px-3 py-1 mx-2 bg-white/10 rounded-full backdrop-blur-sm"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 mx-2 bg-white/15 rounded-full backdrop-blur-sm shadow-sm hover:bg-white/25 transition-colors cursor-default"
                 >
-                  <Circle className="h-2 w-2 fill-green-400 text-green-400 animate-pulse" />
+                  <div className="relative">
+                    <Circle className="h-2 w-2 fill-green-400 text-green-400" />
+                    <Circle className="absolute inset-0 h-2 w-2 fill-green-400 text-green-400 animate-ping opacity-75" />
+                  </div>
                   <span className="text-xs font-medium whitespace-nowrap">
                     {activeUser.namaLengkap}
                   </span>
                   <span
                     className={cn(
-                      "text-[10px] px-1.5 py-0.5 rounded-full text-white font-medium uppercase",
+                      "text-[10px] px-1.5 py-0.5 rounded-full text-white font-semibold uppercase shadow-sm",
                       getRoleBadgeColor(activeUser.role)
                     )}
                   >
@@ -630,7 +643,7 @@ const ActiveUsersMarquee = () => {
                   </span>
                   <span
                     className={cn(
-                      "text-[10px] px-1.5 py-0.5 rounded-full text-white font-medium",
+                      "text-[10px] px-1.5 py-0.5 rounded-full text-white font-semibold shadow-sm",
                       getPlantBadgeColor(activeUser.plant)
                     )}
                   >
@@ -639,6 +652,14 @@ const ActiveUsersMarquee = () => {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+
+        {/* Quick Stats Badge - Desktop only */}
+        <div className="hidden lg:flex items-center gap-2 px-3 border-l border-white/20 h-full bg-primary-700/40">
+          <div className="flex items-center gap-1.5 px-2 py-1 bg-white/15 rounded-lg">
+            <Users className="h-3 w-3" />
+            <span className="text-xs font-bold">{activeUsers.length}</span>
           </div>
         </div>
       </div>
@@ -897,17 +918,24 @@ const Sidebar = () => {
 
   return (
     <>
-      {/* Mobile Overlay */}
+      {/* Mobile Overlay with blur effect */}
       {effectiveMobile && sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40"
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
           onClick={toggleSidebar}
         />
       )}
 
       <aside
         className={cn(
-          "fixed left-0 top-0 z-50 h-screen bg-white dark:bg-dark-800 border-r border-dark-100 dark:border-dark-700 transition-all duration-300",
+          "fixed left-0 top-0 z-50 h-screen transition-all duration-300",
+          // Enhanced gradient background
+          "bg-gradient-to-b from-white via-white to-dark-50 dark:from-dark-800 dark:via-dark-800 dark:to-dark-900",
+          "border-r border-dark-100/50 dark:border-dark-700/50",
+          "shadow-xl shadow-dark-200/20 dark:shadow-dark-900/50",
           // Mobile: hidden by default, show when sidebarOpen (unless forceDesktopView)
           effectiveMobile
             ? sidebarOpen
@@ -919,49 +947,68 @@ const Sidebar = () => {
             : "w-64"
         )}
       >
-        {/* Logo */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-dark-100 dark:border-dark-700">
+        {/* Logo with enhanced styling */}
+        <div className="h-16 flex items-center justify-between px-4 border-b border-dark-100/50 dark:border-dark-700/50 bg-white/50 dark:bg-dark-800/50 backdrop-blur-sm">
           {(!sidebarCollapsed || effectiveMobile) && (
             <Link
               to="/dashboard"
-              className="flex items-center gap-3"
+              className="flex items-center gap-3 group"
               onClick={handleLinkClick}
             >
-              <img src="/favicon.png" alt="PlantIQ Logo" className="h-9 w-9" />
-              <span className="font-display font-bold text-dark-900 dark:text-white">
-                Plantiffy
-              </span>
-              <span className="text-xs text-dark-500 dark:text-dark-400">
-                v2.4.0
-              </span>
+              <div className="relative">
+                <img src="/favicon.png" alt="PlantIQ Logo" className="h-10 w-10 transition-transform duration-200 group-hover:scale-110" />
+                <div className="absolute inset-0 bg-primary-500/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+              <div>
+                <span className="font-display font-bold text-lg text-dark-900 dark:text-white">
+                  Plantiffy
+                </span>
+                <span className="block text-[10px] text-dark-400 -mt-1">
+                  Plant Intelligence System
+                </span>
+              </div>
             </Link>
           )}
-          {/* Desktop: collapse toggle */}
-          {!effectiveMobile && (
-            <button
+          {/* Collapsed state logo */}
+          {sidebarCollapsed && !effectiveMobile && (
+            <Link to="/dashboard" className="mx-auto" onClick={handleLinkClick}>
+              <img src="/favicon.png" alt="PlantIQ Logo" className="h-10 w-10 transition-transform duration-200 hover:scale-110" />
+            </Link>
+          )}
+          {/* Desktop: collapse toggle with animation */}
+          {!effectiveMobile && !sidebarCollapsed && (
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
               onClick={toggleSidebarCollapse}
-              className="p-2 text-dark-500 dark:text-dark-400 hover:bg-dark-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
+              className="p-2 text-dark-400 hover:text-dark-600 dark:hover:text-dark-200 hover:bg-dark-100 dark:hover:bg-dark-700 rounded-xl transition-colors"
             >
-              {sidebarCollapsed ? (
-                <ChevronRight className="h-5 w-5" />
-              ) : (
-                <ChevronLeft className="h-5 w-5" />
-              )}
-            </button>
+              <ChevronLeft className="h-5 w-5" />
+            </motion.button>
+          )}
+          {sidebarCollapsed && !effectiveMobile && (
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={toggleSidebarCollapse}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-dark-400 hover:text-dark-600 dark:hover:text-dark-200 hover:bg-dark-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </motion.button>
           )}
           {/* Mobile: close button */}
           {effectiveMobile && (
             <button
               onClick={toggleSidebar}
-              className="p-2 text-dark-500 dark:text-dark-400 hover:bg-dark-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
+              className="p-2 text-dark-500 dark:text-dark-400 hover:bg-dark-100 dark:hover:bg-dark-700 rounded-xl transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
           )}
         </div>
 
-        {/* Navigation */}
-        <nav className="p-4 space-y-1 overflow-y-auto h-[calc(100vh-4rem)]">
+        {/* Navigation with improved styling */}
+        <nav className="p-3 space-y-1 overflow-y-auto h-[calc(100vh-8rem)] scrollbar-thin">
           {filteredNavItems.map((item) => (
             <div key={item.name}>
               {item.children ? (
@@ -973,18 +1020,33 @@ const Sidebar = () => {
                     }
                     className={cn(
                       "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200",
+                      "group relative overflow-hidden",
                       isParentActive(item)
-                        ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400"
-                        : "text-dark-600 dark:text-dark-300 hover:bg-dark-50 dark:hover:bg-dark-700 hover:text-dark-900 dark:hover:text-white"
+                        ? "bg-gradient-to-r from-primary-50 to-primary-100/50 dark:from-primary-900/40 dark:to-primary-800/20 text-primary-700 dark:text-primary-400 shadow-sm"
+                        : "text-dark-600 dark:text-dark-300 hover:bg-dark-100/70 dark:hover:bg-dark-700/50"
                     )}
                   >
-                    {item.icon}
+                    {/* Active indicator bar */}
+                    {isParentActive(item) && (
+                      <motion.div
+                        layoutId="activeParentIndicator"
+                        className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary-500 rounded-r-full"
+                      />
+                    )}
+                    <span className={cn(
+                      "p-1.5 rounded-lg transition-colors",
+                      isParentActive(item)
+                        ? "bg-primary-100 dark:bg-primary-800/50"
+                        : "bg-dark-100 dark:bg-dark-700 group-hover:bg-dark-200 dark:group-hover:bg-dark-600"
+                    )}>
+                      {item.icon}
+                    </span>
                     {(!sidebarCollapsed || effectiveMobile) && (
                       <>
                         <span className="flex-1 text-left">{item.name}</span>
                         <ChevronDown
                           className={cn(
-                            "h-4 w-4 transition-transform duration-200",
+                            "h-4 w-4 transition-transform duration-300",
                             expandedItems.includes(item.name) && "rotate-180"
                           )}
                         />
@@ -998,20 +1060,20 @@ const Sidebar = () => {
                           initial={{ height: 0, opacity: 0 }}
                           animate={{ height: "auto", opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.2 }}
+                          transition={{ duration: 0.25, ease: "easeInOut" }}
                           className="overflow-hidden"
                         >
-                          <div className="pl-12 py-1 space-y-1">
+                          <div className="ml-4 pl-4 py-1.5 space-y-0.5 border-l-2 border-dark-100 dark:border-dark-700">
                             {item.children.map((child) => (
                               <Link
                                 key={child.path}
                                 to={child.path}
                                 onClick={handleLinkClick}
                                 className={cn(
-                                  "block px-4 py-2 text-sm rounded-lg transition-colors",
+                                  "block px-3 py-2 text-sm rounded-lg transition-all duration-200 relative",
                                   isActive(child.path)
-                                    ? "bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-400 font-medium"
-                                    : "text-dark-500 dark:text-dark-400 hover:text-dark-900 dark:hover:text-white hover:bg-dark-50 dark:hover:bg-dark-700"
+                                    ? "bg-primary-500 text-white font-medium shadow-sm shadow-primary-500/30"
+                                    : "text-dark-500 dark:text-dark-400 hover:text-dark-900 dark:hover:text-white hover:bg-dark-100/70 dark:hover:bg-dark-700/50 hover:translate-x-1"
                                 )}
                               >
                                 {child.name}
@@ -1028,13 +1090,20 @@ const Sidebar = () => {
                   to={item.path}
                   onClick={handleLinkClick}
                   className={cn(
-                    "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200",
+                    "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 relative group",
                     isActive(item.path)
-                      ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 shadow-sm"
-                      : "text-dark-600 dark:text-dark-300 hover:bg-dark-50 dark:hover:bg-dark-700 hover:text-dark-900 dark:hover:text-white"
+                      ? "bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-500/30"
+                      : "text-dark-600 dark:text-dark-300 hover:bg-dark-100/70 dark:hover:bg-dark-700/50"
                   )}
                 >
-                  {item.icon}
+                  <span className={cn(
+                    "p-1.5 rounded-lg transition-colors",
+                    isActive(item.path)
+                      ? "bg-white/20"
+                      : "bg-dark-100 dark:bg-dark-700 group-hover:bg-dark-200 dark:group-hover:bg-dark-600"
+                  )}>
+                    {item.icon}
+                  </span>
                   {(!sidebarCollapsed || effectiveMobile) && (
                     <span>{item.name}</span>
                   )}
@@ -1043,6 +1112,18 @@ const Sidebar = () => {
             </div>
           ))}
         </nav>
+
+        {/* Footer with version info */}
+        {(!sidebarCollapsed || effectiveMobile) && (
+          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-dark-100/50 dark:border-dark-700/50 bg-white/50 dark:bg-dark-800/50 backdrop-blur-sm">
+            <div className="flex items-center justify-between text-xs text-dark-400">
+              <span>© 2026 Plantiffy</span>
+              <span className="px-2 py-0.5 bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-400 rounded-full font-medium">
+                v2.4.0
+              </span>
+            </div>
+          </div>
+        )}
       </aside>
     </>
   );
@@ -1270,7 +1351,11 @@ const Header = () => {
   return (
     <header
       className={cn(
-        "fixed top-8 right-0 z-30 h-16 bg-white/80 dark:bg-dark-800/80 backdrop-blur-md border-b border-dark-100 dark:border-dark-700 transition-all duration-300",
+        "fixed top-9 right-0 z-30 h-16 transition-all duration-300",
+        // Enhanced glassmorphism
+        "bg-white/70 dark:bg-dark-800/70 backdrop-blur-xl backdrop-saturate-150",
+        "border-b border-white/20 dark:border-dark-700/50",
+        "shadow-[0_4px_30px_rgba(0,0,0,0.1)]",
         // Mobile: full width (left-0), Desktop: depends on sidebar
         forceDesktopView ? "left-64" : "left-0 lg:left-64",
         sidebarCollapsed && (forceDesktopView ? "left-20" : "lg:left-20")
@@ -1281,101 +1366,120 @@ const Header = () => {
         {!forceDesktopView && (
           <button
             onClick={toggleSidebar}
-            className="lg:hidden p-2 text-dark-500 hover:bg-dark-100 dark:text-dark-300 dark:hover:bg-dark-700 rounded-lg"
+            className="lg:hidden p-2.5 text-dark-500 hover:bg-dark-100/50 dark:text-dark-300 dark:hover:bg-dark-700/50 rounded-xl transition-colors"
           >
             <Menu className="h-5 w-5" />
           </button>
         )}
 
-        {/* Search placeholder / Logo for mobile */}
+        {/* Spacer for desktop */}
         <div className={forceDesktopView ? "block" : "hidden lg:block"} />
 
-        {/* Right side */}
-        <div className="flex items-center gap-1 sm:gap-2">
-          {/* Desktop/Mobile View Toggle - Only show on mobile devices */}
-          {isMobileDevice && (
+        {/* Right side with improved action buttons */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Action Buttons Group */}
+          <div className="flex items-center gap-1 p-1 bg-dark-100/50 dark:bg-dark-700/50 rounded-xl">
+            {/* Desktop/Mobile View Toggle - Only show on mobile devices */}
+            {isMobileDevice && (
+              <button
+                onClick={toggleForceDesktopView}
+                className={cn(
+                  "p-2 rounded-lg transition-all duration-200",
+                  forceDesktopView
+                    ? "bg-white dark:bg-dark-600 shadow-sm text-primary-600 dark:text-primary-400"
+                    : "text-dark-500 hover:text-dark-700 dark:text-dark-400 dark:hover:text-dark-200"
+                )}
+                title={forceDesktopView ? "Tampilan HP" : "Tampilan Desktop"}
+              >
+                {forceDesktopView ? (
+                  <Smartphone className="h-4 w-4" />
+                ) : (
+                  <Monitor className="h-4 w-4" />
+                )}
+              </button>
+            )}
+
+            {/* Dark Mode Toggle with rotation animation */}
             <button
-              onClick={toggleForceDesktopView}
+              onClick={toggleDarkMode}
               className={cn(
-                "p-2 rounded-lg transition-colors",
-                forceDesktopView
-                  ? "bg-primary-100 text-primary-600 dark:bg-primary-900/50 dark:text-primary-400"
-                  : "text-dark-500 hover:bg-dark-100 dark:text-dark-300 dark:hover:bg-dark-700"
+                "p-2 rounded-lg transition-all duration-200",
+                "text-dark-500 hover:text-dark-700 dark:text-dark-400 dark:hover:text-dark-200"
               )}
-              title={forceDesktopView ? "Tampilan HP" : "Tampilan Desktop"}
+              title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
             >
-              {forceDesktopView ? (
-                <Smartphone className="h-5 w-5" />
-              ) : (
-                <Monitor className="h-5 w-5" />
-              )}
+              <motion.div
+                initial={false}
+                animate={{ rotate: darkMode ? 180 : 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                {darkMode ? (
+                  <Sun className="h-4 w-4" />
+                ) : (
+                  <Moon className="h-4 w-4" />
+                )}
+              </motion.div>
             </button>
-          )}
+          </div>
 
-          {/* Dark Mode Toggle */}
-          <button
-            onClick={toggleDarkMode}
-            className={cn(
-              "p-2 rounded-lg transition-colors",
-              "text-dark-500 hover:bg-dark-100 dark:text-dark-300 dark:hover:bg-dark-700"
-            )}
-            title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-          >
-            {darkMode ? (
-              <Sun className="h-5 w-5" />
-            ) : (
-              <Moon className="h-5 w-5" />
-            )}
-          </button>
-
-          {/* Chat */}
+          {/* Chat Button with enhanced styling */}
           <button
             onClick={toggleChat}
             className={cn(
-              "relative p-2 rounded-lg transition-colors",
+              "relative p-2.5 rounded-xl transition-all duration-200",
               chatOpen
-                ? "bg-primary-100 text-primary-600 dark:bg-primary-900/50 dark:text-primary-400"
-                : "text-dark-500 hover:bg-dark-100 dark:text-dark-300 dark:hover:bg-dark-700"
+                ? "bg-primary-500 text-white shadow-lg shadow-primary-500/30"
+                : "bg-dark-100/50 dark:bg-dark-700/50 text-dark-500 dark:text-dark-400 hover:bg-dark-200/50 dark:hover:bg-dark-600/50"
             )}
           >
             <MessageCircle className="h-5 w-5" />
             {unreadChatCount > 0 && !chatOpen && (
-              <span className="absolute top-1 right-1 h-4 w-4 bg-red-500 text-white text-[10px] font-medium rounded-full flex items-center justify-center">
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-lg"
+              >
                 {unreadChatCount > 9 ? "9+" : unreadChatCount}
-              </span>
+              </motion.span>
             )}
           </button>
 
-          {/* Notifications */}
+          {/* Notifications with enhanced styling */}
           <div className="relative" ref={notifRef}>
             <button
               onClick={() => setShowNotifications(!showNotifications)}
               className={cn(
-                "relative p-2 rounded-lg transition-colors",
+                "relative p-2.5 rounded-xl transition-all duration-200",
                 showNotifications
-                  ? "bg-primary-100 text-primary-600 dark:bg-primary-900/50 dark:text-primary-400"
-                  : "text-dark-500 hover:bg-dark-100 dark:text-dark-300 dark:hover:bg-dark-700"
+                  ? "bg-primary-500 text-white shadow-lg shadow-primary-500/30"
+                  : "bg-dark-100/50 dark:bg-dark-700/50 text-dark-500 dark:text-dark-400 hover:bg-dark-200/50 dark:hover:bg-dark-600/50"
               )}
             >
               <Bell className="h-5 w-5" />
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 h-4 w-4 bg-red-500 text-white text-[10px] font-medium rounded-full flex items-center justify-center">
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-lg"
+                >
                   {unreadCount > 9 ? "9+" : unreadCount}
-                </span>
+                </motion.span>
               )}
             </button>
 
-            {/* Notification Panel */}
+            {/* Improved Notification Panel */}
             <AnimatePresence>
               {showNotifications && (
                 <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  className="absolute right-0 mt-2 w-80 bg-white dark:bg-dark-800 rounded-xl shadow-lg border border-dark-100 dark:border-dark-700 z-50 overflow-hidden"
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute right-0 mt-2 w-80 sm:w-96 bg-white/95 dark:bg-dark-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-dark-100/50 dark:border-dark-700/50 z-50 overflow-hidden"
                 >
-                  <div className="px-4 py-3 border-b border-dark-100 dark:border-dark-700 flex items-center justify-between">
-                    <h3 className="font-semibold text-dark-900 dark:text-white">
+                  <div className="px-4 py-3 border-b border-dark-100/50 dark:border-dark-700/50 flex items-center justify-between bg-gradient-to-r from-dark-50/50 to-transparent dark:from-dark-900/50">
+                    <h3 className="font-bold text-dark-900 dark:text-white flex items-center gap-2">
+                      <Bell className="h-4 w-4 text-primary-500" />
                       Notifikasi
                     </h3>
                     {unreadCount > 0 && (
@@ -1453,39 +1557,64 @@ const Header = () => {
             </AnimatePresence>
           </div>
 
-          {/* User menu */}
+          {/* User menu with enhanced profile styling */}
           <div className="relative">
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center gap-3 px-3 py-2 hover:bg-dark-50 dark:hover:bg-dark-700 rounded-xl transition-colors"
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200",
+                "bg-gradient-to-r from-dark-50/50 to-dark-100/50 dark:from-dark-700/50 dark:to-dark-600/50",
+                "hover:shadow-md hover:scale-[1.02]",
+                showUserMenu && "ring-2 ring-primary-500/30"
+              )}
             >
-              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center">
-                <User className="h-4 w-4 text-white" />
+              {/* Avatar with initials and status indicator */}
+              <div className="relative">
+                <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center shadow-lg shadow-primary-500/25">
+                  <span className="text-white font-bold text-sm">
+                    {(user?.namaLengkap || user?.username || "U").charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 border-2 border-white dark:border-dark-800 rounded-full" />
               </div>
               <div className="hidden md:block text-left">
-                <p className="text-sm font-medium text-dark-900 dark:text-white">
+                <p className="text-sm font-semibold text-dark-900 dark:text-white leading-tight">
                   {user?.namaLengkap}
                 </p>
-                <p className="text-xs text-dark-500 dark:text-dark-400 capitalize">
-                  {user?.role}
+                <p className="text-xs text-dark-500 dark:text-dark-400 capitalize flex items-center gap-1">
+                  <span className={cn(
+                    "inline-block h-1.5 w-1.5 rounded-full",
+                    user?.role === "admin" ? "bg-red-500" :
+                    user?.role === "supervisor" ? "bg-blue-500" :
+                    user?.role === "manager" ? "bg-purple-500" :
+                    user?.role === "avp" ? "bg-emerald-500" : "bg-gray-500"
+                  )} />
+                  {user?.role} • {user?.plant}
                 </p>
               </div>
-              <ChevronDown className="h-4 w-4 text-dark-400" />
+              <ChevronDown className={cn(
+                "h-4 w-4 text-dark-400 transition-transform duration-200",
+                showUserMenu && "rotate-180"
+              )} />
             </button>
 
             <AnimatePresence>
               {showUserMenu && (
                 <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  className="absolute right-0 mt-2 w-48 bg-white dark:bg-dark-800 rounded-xl shadow-lg border border-dark-100 dark:border-dark-700 py-2 z-50"
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute right-0 mt-2 w-56 bg-white/95 dark:bg-dark-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-dark-100/50 dark:border-dark-700/50 py-2 z-50 overflow-hidden"
                 >
-                  <div className="px-4 py-2 border-b border-dark-100 dark:border-dark-700">
-                    <p className="text-sm font-medium text-dark-900 dark:text-white">
+                  <div className="px-4 py-3 border-b border-dark-100/50 dark:border-dark-700/50 bg-gradient-to-r from-dark-50/50 to-transparent dark:from-dark-900/50">
+                    <p className="text-sm font-bold text-dark-900 dark:text-white">
                       {user?.namaLengkap}
                     </p>
-                    <div className="flex items-center gap-2 mt-1">
+                    <p className="text-xs text-dark-500 dark:text-dark-400 mt-0.5">
+                      @{user?.username}
+                    </p>
+                    <div className="flex items-center gap-2 mt-2">
                       <Badge variant="primary" size="sm">
                         {user?.role}
                       </Badge>
@@ -1823,23 +1952,40 @@ const ChatPanel = () => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      className="fixed left-4 bottom-4 z-50 w-80 bg-white dark:bg-dark-800 rounded-2xl shadow-2xl border border-dark-100 dark:border-dark-700 overflow-hidden"
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 20, scale: 0.95 }}
+      transition={{ type: "spring", damping: 20, stiffness: 300 }}
+      className={cn(
+        "fixed left-4 bottom-4 z-50 w-80 md:w-96",
+        "bg-white/95 dark:bg-dark-800/95 backdrop-blur-xl",
+        "rounded-2xl shadow-2xl shadow-dark-200/30 dark:shadow-dark-900/50",
+        "border border-dark-100/50 dark:border-dark-700/50",
+        "overflow-hidden"
+      )}
     >
-      {/* Header */}
-      <div className="px-4 py-3 bg-gradient-to-r from-primary-600 to-primary-500 text-white flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <MessageCircle className="h-5 w-5" />
-          <span className="font-semibold">Chat Tim</span>
+      {/* Header with gradient */}
+      <div className="relative px-4 py-4 bg-gradient-to-r from-primary-600 via-primary-500 to-secondary-500 text-white">
+        <div className="absolute inset-0 bg-grid-pattern opacity-10" />
+        <div className="relative flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-white/20 rounded-xl">
+              <MessageCircle className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-bold">Chat Tim</h3>
+              <p className="text-xs text-white/70">
+                {messages.length} pesan
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={toggleChat}
+            className="p-2 hover:bg-white/20 rounded-xl transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
-        <button
-          onClick={toggleChat}
-          className="p-1 hover:bg-white/20 rounded-lg transition-colors"
-        >
-          <X className="h-4 w-4" />
-        </button>
       </div>
 
       {/* Context Menu */}
@@ -1869,73 +2015,89 @@ const ChatPanel = () => {
         </div>
       )}
 
-      {/* Messages */}
+      {/* Messages with improved styling */}
       <div
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className="h-80 overflow-y-auto p-4 space-y-3 bg-dark-50 dark:bg-dark-900"
+        className="h-80 overflow-y-auto p-4 space-y-3 bg-gradient-to-b from-dark-50/50 to-white dark:from-dark-900/50 dark:to-dark-800"
       >
         {messages.length === 0 ? (
-          <div className="text-center text-dark-400 py-8">
-            <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">Belum ada pesan</p>
+          <div className="text-center text-dark-400 py-12">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-dark-100 dark:bg-dark-700 flex items-center justify-center">
+              <MessageCircle className="h-8 w-8 opacity-50" />
+            </div>
+            <p className="text-sm font-medium">Belum ada pesan</p>
+            <p className="text-xs mt-1">Mulai percakapan dengan tim!</p>
           </div>
         ) : (
           messages.map((msg, index) => {
             const isOwn =
               msg.sender ===
               (user?.namaLengkap || user?.nama || user?.username);
+            const showAvatar = index === 0 || messages[index - 1].sender !== msg.sender;
             return (
-              <div
+              <motion.div
                 key={msg.id || index}
-                className={cn("flex", isOwn ? "justify-end" : "justify-start")}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={cn("flex gap-2", isOwn ? "justify-end" : "justify-start")}
               >
+                {/* Avatar for others */}
+                {!isOwn && showAvatar && (
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-secondary-400 to-secondary-600 flex items-center justify-center text-white text-xs font-bold shadow-md">
+                    {msg.sender.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                {!isOwn && !showAvatar && <div className="w-8" />}
                 <div
                   onContextMenu={(e) => handleContextMenu(e, msg, isOwn)}
                   onTouchStart={() => handleTouchStart(msg, isOwn)}
                   onTouchEnd={handleTouchEnd}
                   onTouchMove={handleTouchEnd}
                   className={cn(
-                    "max-w-[80%] rounded-2xl px-4 py-2 select-none",
+                    "max-w-[75%] rounded-2xl px-4 py-2.5 select-none shadow-sm",
+                    "transition-all duration-200 hover:shadow-md",
                     isOwn
-                      ? "bg-primary-500 text-white rounded-br-md cursor-pointer"
-                      : "bg-white dark:bg-dark-800 text-dark-700 dark:text-dark-200 rounded-bl-md shadow-sm"
+                      ? "bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-br-md cursor-pointer"
+                      : "bg-white dark:bg-dark-700 text-dark-700 dark:text-dark-200 rounded-bl-md"
                   )}
                 >
-                  {/* Always show sender name and role */}
-                  <p
-                    className={cn(
-                      "text-xs font-medium mb-1",
-                      isOwn
-                        ? "text-white/90"
-                        : "text-primary-600 dark:text-primary-400"
-                    )}
-                  >
-                    {msg.sender}
-                    <span
+                  {/* Sender name for others */}
+                  {!isOwn && showAvatar && (
+                    <p className="text-xs font-semibold text-primary-600 dark:text-primary-400 mb-1">
+                      {msg.sender}
+                      <span className="ml-1 font-normal text-dark-400 capitalize">
+                        • {msg.role}
+                      </span>
+                    </p>
+                  )}
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.message}</p>
+                  <div className={cn(
+                    "flex items-center gap-1 mt-1",
+                    isOwn ? "justify-end" : "justify-start"
+                  )}>
+                    <p
                       className={cn(
-                        "ml-1 font-normal capitalize",
-                        isOwn ? "text-white/70" : "text-dark-400"
+                        "text-[10px]",
+                        isOwn ? "text-white/60" : "text-dark-400"
                       )}
                     >
-                      ({msg.role})
-                    </span>
-                  </p>
-                  <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
-                  <p
-                    className={cn(
-                      "text-[10px] mt-1 flex items-center gap-1",
-                      isOwn ? "text-white/70" : "text-dark-400"
+                      {new Date(msg.timestamp).toLocaleTimeString("id-ID", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                    {msg.edited && (
+                      <span className={cn(
+                        "text-[10px] italic",
+                        isOwn ? "text-white/50" : "text-dark-300"
+                      )}>
+                        (diedit)
+                      </span>
                     )}
-                  >
-                    {new Date(msg.timestamp).toLocaleTimeString("id-ID", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                    {msg.edited && <span className="italic">(diedit)</span>}
-                  </p>
+                  </div>
                 </div>
-              </div>
+              </motion.div>
             );
           })
         )}
@@ -1958,27 +2120,33 @@ const ChatPanel = () => {
         </div>
       )}
 
-      {/* Input */}
-      <div className="p-3 border-t border-dark-100 dark:border-dark-700 bg-white dark:bg-dark-800">
+      {/* Input with modern styling */}
+      <div className="p-4 border-t border-dark-100/50 dark:border-dark-700/50 bg-white/80 dark:bg-dark-800/80 backdrop-blur-sm">
         <div className="flex items-center gap-2">
-          <input
-            type="text"
-            value={editingMessage ? editingMessage.text : newMessage}
-            onChange={(e) =>
-              editingMessage
-                ? setEditingMessage({ ...editingMessage, text: e.target.value })
-                : setNewMessage(e.target.value)
-            }
-            onKeyDown={handleKeyPress}
-            placeholder={editingMessage ? "Edit pesan..." : "Ketik pesan..."}
-            className={cn(
-              "flex-1 px-4 py-2 bg-dark-50 dark:bg-dark-900 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:border-transparent text-dark-900 dark:text-dark-100",
-              editingMessage
-                ? "border-amber-300 dark:border-amber-600 focus:ring-amber-500"
-                : "border-dark-100 dark:border-dark-600 focus:ring-primary-500"
-            )}
-          />
-          <button
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              value={editingMessage ? editingMessage.text : newMessage}
+              onChange={(e) =>
+                editingMessage
+                  ? setEditingMessage({ ...editingMessage, text: e.target.value })
+                  : setNewMessage(e.target.value)
+              }
+              onKeyDown={handleKeyPress}
+              placeholder={editingMessage ? "Edit pesan..." : "Ketik pesan..."}
+              className={cn(
+                "w-full px-4 py-3 bg-dark-50 dark:bg-dark-900 border-2 rounded-xl text-sm",
+                "focus:outline-none focus:ring-0 transition-all duration-200",
+                "text-dark-900 dark:text-dark-100 placeholder-dark-400",
+                editingMessage
+                  ? "border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20"
+                  : "border-transparent focus:border-primary-500"
+              )}
+            />
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={editingMessage ? handleEditMessage : handleSendMessage}
             disabled={
               editingMessage
@@ -1986,18 +2154,20 @@ const ChatPanel = () => {
                 : !newMessage.trim() || loading
             }
             className={cn(
-              "p-2 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-colors",
+              "p-3 text-white rounded-xl transition-all duration-200",
+              "disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100",
+              "shadow-lg",
               editingMessage
-                ? "bg-amber-500 hover:bg-amber-600"
-                : "bg-primary-500 hover:bg-primary-600"
+                ? "bg-gradient-to-r from-amber-500 to-amber-600 shadow-amber-500/30"
+                : "bg-gradient-to-r from-primary-500 to-primary-600 shadow-primary-500/30"
             )}
           >
             {editingMessage ? (
-              <Pencil className="h-4 w-4" />
+              <Pencil className="h-5 w-5" />
             ) : (
-              <Send className="h-4 w-4" />
+              <Send className="h-5 w-5" />
             )}
-          </button>
+          </motion.button>
         </div>
       </div>
     </motion.div>
