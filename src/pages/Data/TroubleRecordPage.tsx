@@ -506,14 +506,14 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
         </Card>
         <Card className="p-4 border-l-4 border-l-gray-500">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gray-100 rounded-lg">
-              <AlertCircle className="h-5 w-5 text-gray-600" />
+            <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
+              <AlertCircle className="h-5 w-5 text-gray-600 dark:text-gray-400" />
             </div>
             <div>
               <p className="text-sm text-dark-500 dark:text-dark-400">
                 Pending
               </p>
-              <p className="text-2xl font-bold text-gray-600">
+              <p className="text-2xl font-bold text-gray-600 dark:text-gray-400">
                 {statusCounts.pending}
               </p>
             </div>

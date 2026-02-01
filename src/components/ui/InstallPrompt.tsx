@@ -54,16 +54,16 @@ export function InstallPrompt() {
     <>
       {/* Install Banner */}
       <div className="fixed bottom-4 left-4 right-4 z-50 animate-slide-up">
-        <div className="bg-white rounded-xl shadow-2xl border border-gray-200 p-4 max-w-md mx-auto">
+        <div className="bg-white dark:bg-dark-800 rounded-xl shadow-2xl border border-gray-200 dark:border-dark-600 p-4 max-w-md mx-auto">
           <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-              <Smartphone className="w-6 h-6 text-green-600" />
+            <div className="flex-shrink-0 w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
+              <Smartphone className="w-6 h-6 text-green-600 dark:text-green-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-gray-900 text-sm">
+              <h3 className="font-semibold text-gray-900 dark:text-white text-sm">
                 Install PlantIQ
               </h3>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                 Akses lebih cepat langsung dari layar utama HP Anda
               </p>
               <div className="flex gap-2 mt-3">
@@ -76,7 +76,7 @@ export function InstallPrompt() {
                 </button>
                 <button
                   onClick={handleDismiss}
-                  className="px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="px-3 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
                 >
                   Nanti
                 </button>
@@ -84,7 +84,7 @@ export function InstallPrompt() {
             </div>
             <button
               onClick={handleDismiss}
-              className="flex-shrink-0 text-gray-400 hover:text-gray-600 p-1"
+              className="flex-shrink-0 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-1"
             >
               <X className="w-4 h-4" />
             </button>
@@ -95,30 +95,30 @@ export function InstallPrompt() {
       {/* iOS Installation Guide Modal */}
       {showIOSGuide && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-scale-up">
+          <div className="bg-white dark:bg-dark-800 rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-scale-up">
             <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <img
                   src="/icons/icon-96x96.png"
                   alt="PlantIQ"
                   className="w-10 h-10 rounded-lg"
                 />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                 Install PlantIQ di iPhone
               </h3>
-              <p className="text-sm text-gray-500 mb-6">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
                 Ikuti langkah berikut untuk menambahkan aplikasi ke layar utama:
               </p>
             </div>
 
             <div className="space-y-4 mb-6">
               <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold text-sm">
+                <div className="flex-shrink-0 w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 font-semibold text-sm">
                   1
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-gray-700">
+                  <p className="text-sm text-gray-700 dark:text-gray-300">
                     Ketuk ikon <strong>Share</strong> (kotak dengan panah ke
                     atas) di bagian bawah Safari
                   </p>
@@ -126,11 +126,11 @@ export function InstallPrompt() {
               </div>
 
               <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold text-sm">
+                <div className="flex-shrink-0 w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 font-semibold text-sm">
                   2
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-gray-700">
+                  <p className="text-sm text-gray-700 dark:text-gray-300">
                     Scroll ke bawah dan ketuk{" "}
                     <strong>"Add to Home Screen"</strong>
                   </p>
@@ -138,11 +138,11 @@ export function InstallPrompt() {
               </div>
 
               <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold text-sm">
+                <div className="flex-shrink-0 w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 font-semibold text-sm">
                   3
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-gray-700">
+                  <p className="text-sm text-gray-700 dark:text-gray-300">
                     Ketuk <strong>"Add"</strong> di pojok kanan atas
                   </p>
                 </div>

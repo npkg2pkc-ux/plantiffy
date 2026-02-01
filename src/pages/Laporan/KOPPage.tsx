@@ -330,9 +330,9 @@ const ParameterInputRow = ({
   indikator: string;
   satuan: string;
 }) => (
-  <div className="grid grid-cols-7 gap-2 items-center py-2 border-b border-dark-100">
+  <div className="grid grid-cols-7 gap-2 items-center py-2 border-b border-dark-100 dark:border-dark-700">
     <div className="col-span-2">
-      <span className="text-sm font-medium text-dark-700">{label}</span>
+      <span className="text-sm font-medium text-dark-700 dark:text-dark-200">{label}</span>
       <p className="text-xs text-dark-400">
         {indikator} | {satuan}
       </p>
@@ -1668,15 +1668,15 @@ const KOPPage = ({ plant }: KOPPageProps) => {
       <Card>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-dark-50 border-b border-dark-100">
+            <thead className="bg-dark-50 dark:bg-dark-700 border-b border-dark-100 dark:border-dark-600">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-dark-600 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-dark-600 dark:text-dark-300 uppercase">
                   Tanggal
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-dark-600 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-dark-600 dark:text-dark-300 uppercase">
                   Jenis Operasi
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-dark-600 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-dark-600 dark:text-dark-300 uppercase">
                   Total Tonase
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-dark-600 uppercase">
@@ -1807,14 +1807,14 @@ const KOPPage = ({ plant }: KOPPageProps) => {
                             <>
                               <button
                                 onClick={() => handleEdit(item)}
-                                className="p-2 text-dark-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                className="p-2 text-dark-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
                                 title="Edit"
                               >
                                 <Edit2 className="h-4 w-4" />
                               </button>
                               <button
                                 onClick={() => handleDelete(item.id!)}
-                                className="p-2 text-dark-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                className="p-2 text-dark-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                                 title="Hapus"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -1906,8 +1906,8 @@ const KOPPage = ({ plant }: KOPPageProps) => {
               </div>
 
               {/* Shift Pagi */}
-              <div className="p-4 bg-amber-50 rounded-xl">
-                <h4 className="font-medium text-dark-700 mb-3 flex items-center gap-2">
+              <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
+                <h4 className="font-medium text-dark-700 dark:text-dark-200 mb-3 flex items-center gap-2">
                   <Calendar className="h-4 w-4" /> Pagi (07:00 - 15:00)
                 </h4>
                 <div className="space-y-3">
@@ -1991,10 +1991,10 @@ const KOPPage = ({ plant }: KOPPageProps) => {
             </div>
 
             {/* Kurs Dollar */}
-            <div className="mb-4 p-3 bg-amber-50 rounded-lg">
+            <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
-                <DollarSign className="h-4 w-4 text-amber-600" />
-                <label className="text-sm font-medium text-dark-700">
+                <DollarSign className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                <label className="text-sm font-medium text-dark-700 dark:text-dark-200">
                   Kurs Dollar (Rp)
                 </label>
               </div>
@@ -2441,18 +2441,18 @@ const KOPPage = ({ plant }: KOPPageProps) => {
 
             {/* Granulator Section - Flow Steam dari perhitungan */}
             <div className="mb-4">
-              <div className="bg-primary-50 text-primary-700 font-semibold px-3 py-2 rounded-lg mb-2">
+              <div className="bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 font-semibold px-3 py-2 rounded-lg mb-2">
                 1. Granulator
               </div>
-              <div className="grid grid-cols-7 gap-2 items-center py-2 border-b border-dark-100">
+              <div className="grid grid-cols-7 gap-2 items-center py-2 border-b border-dark-100 dark:border-dark-700">
                 <div className="col-span-2">
-                  <span className="text-sm font-medium text-dark-700">
+                  <span className="text-sm font-medium text-dark-700 dark:text-dark-200">
                     1.1. Flow Steam
                   </span>
                   <p className="text-xs text-dark-400">FI | M3/H</p>
                 </div>
                 <div className="text-center">
-                  <span className="text-xs text-dark-500 dark:text-dark-400 bg-dark-100 px-2 py-1 rounded">
+                  <span className="text-xs text-dark-500 dark:text-dark-400 bg-dark-100 dark:bg-dark-700 px-2 py-1 rounded">
                     {TARGETS.folwSteam.label}
                   </span>
                 </div>
@@ -2471,18 +2471,18 @@ const KOPPage = ({ plant }: KOPPageProps) => {
 
             {/* Dryer Section - Flow Gas dari perhitungan */}
             <div className="mb-4">
-              <div className="bg-secondary-50 text-secondary-700 font-semibold px-3 py-2 rounded-lg mb-2">
+              <div className="bg-secondary-50 dark:bg-secondary-900/20 text-secondary-700 dark:text-secondary-300 font-semibold px-3 py-2 rounded-lg mb-2">
                 2. Dryer
               </div>
-              <div className="grid grid-cols-7 gap-2 items-center py-2 border-b border-dark-100">
+              <div className="grid grid-cols-7 gap-2 items-center py-2 border-b border-dark-100 dark:border-dark-700">
                 <div className="col-span-2">
-                  <span className="text-sm font-medium text-dark-700">
+                  <span className="text-sm font-medium text-dark-700 dark:text-dark-200">
                     2.1. Flow Gas
                   </span>
                   <p className="text-xs text-dark-400">FT-202 | NM3/H</p>
                 </div>
                 <div className="text-center">
-                  <span className="text-xs text-dark-500 dark:text-dark-400 bg-dark-100 px-2 py-1 rounded">
+                  <span className="text-xs text-dark-500 dark:text-dark-400 bg-dark-100 dark:bg-dark-700 px-2 py-1 rounded">
                     {TARGETS.flowGas.label}
                   </span>
                 </div>
@@ -2511,7 +2511,7 @@ const KOPPage = ({ plant }: KOPPageProps) => {
 
             {/* Produk NPK Section */}
             <div className="mb-4">
-              <div className="bg-amber-50 text-amber-700 font-semibold px-3 py-2 rounded-lg mb-2">
+              <div className="bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 font-semibold px-3 py-2 rounded-lg mb-2">
                 3. Produk NPK (15-10-12)
               </div>
               <ParameterInputRow
@@ -2574,7 +2574,7 @@ const KOPPage = ({ plant }: KOPPageProps) => {
           </Card>
 
           {/* Actions */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-dark-100">
+          <div className="flex justify-end gap-3 pt-4 border-t border-dark-100 dark:border-dark-700">
             <Button
               type="button"
               variant="secondary"
@@ -2637,7 +2637,7 @@ const KOPPage = ({ plant }: KOPPageProps) => {
             <select
               value={printReportDate}
               onChange={(e) => setPrintReportDate(e.target.value)}
-              className="w-full px-3 py-2 border border-dark-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-800 text-dark-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <option value="">-- Pilih Tanggal --</option>
               {data
@@ -2654,8 +2654,8 @@ const KOPPage = ({ plant }: KOPPageProps) => {
             </select>
           </div>
           {printReportDate && (
-            <div className="p-3 bg-blue-50 rounded-lg">
-              <p className="text-sm text-blue-700">
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <p className="text-sm text-blue-700 dark:text-blue-300">
                 <strong>Preview:</strong> Laporan akan dicetak untuk tanggal{" "}
                 <strong>{formatDate(printReportDate)}</strong>
               </p>

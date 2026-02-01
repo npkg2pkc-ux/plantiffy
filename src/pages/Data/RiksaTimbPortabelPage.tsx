@@ -565,13 +565,13 @@ const RiksaTimbPortabelPage = () => {
         className={cn(
           "flex items-center justify-between p-3 rounded-lg",
           isGood
-            ? "bg-green-50 border border-green-200"
+            ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800"
             : isWarning
-            ? "bg-yellow-50 border border-yellow-200"
-            : "bg-red-50 border border-red-200"
+            ? "bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800"
+            : "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
         )}
       >
-        <span className="text-sm font-medium text-gray-700">{label}</span>
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
         <div className="flex items-center gap-2">
           {value >= 0 ? (
             <TrendingUp
@@ -688,9 +688,9 @@ const RiksaTimbPortabelPage = () => {
 
     const getRowBg = (selisih: number) => {
       const abs = Math.abs(selisih);
-      if (abs <= 0.5) return "bg-green-50";
-      if (abs <= 1) return "bg-yellow-50";
-      return "bg-red-50";
+      if (abs <= 0.5) return "bg-green-50 dark:bg-green-900/20";
+      if (abs <= 1) return "bg-yellow-50 dark:bg-yellow-900/20";
+      return "bg-red-50 dark:bg-red-900/20";
     };
 
     return (
@@ -737,15 +737,15 @@ const RiksaTimbPortabelPage = () => {
 
           {/* Summary Stats - Inline */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg p-3 text-center">
-              <p className="text-xs text-gray-600">Total Selisih Absolut</p>
-              <p className="text-lg font-bold text-indigo-700">
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg p-3 text-center">
+              <p className="text-xs text-gray-600 dark:text-gray-400">Total Selisih Absolut</p>
+              <p className="text-lg font-bold text-indigo-700 dark:text-indigo-400">
                 {formatWeight(calculated.totalSelisih)} kg
               </p>
             </div>
-            <div className="bg-gradient-to-br from-purple-50 to-pink-100 rounded-lg p-3 text-center">
-              <p className="text-xs text-gray-600">Rata-rata Selisih</p>
-              <p className="text-lg font-bold text-purple-700">
+            <div className="bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-lg p-3 text-center">
+              <p className="text-xs text-gray-600 dark:text-gray-400">Rata-rata Selisih</p>
+              <p className="text-lg font-bold text-purple-700 dark:text-purple-400">
                 {formatWeight(calculated.rataRataSelisih)} kg
               </p>
             </div>
@@ -761,8 +761,8 @@ const RiksaTimbPortabelPage = () => {
                   Uji Penambahan
                 </span>
               </div>
-              <div className="divide-y divide-gray-100">
-                <div className="grid grid-cols-3 gap-1 px-2 py-1 bg-gray-50 text-xs font-medium text-gray-500">
+              <div className="divide-y divide-gray-100 dark:divide-dark-700">
+                <div className="grid grid-cols-3 gap-1 px-2 py-1 bg-gray-50 dark:bg-dark-700 text-xs font-medium text-gray-500 dark:text-gray-400">
                   <span>Standar</span>
                   <span className="text-center">Hasil</span>
                   <span className="text-right">Selisih</span>
@@ -775,10 +775,10 @@ const RiksaTimbPortabelPage = () => {
                       getRowBg(item.selisih)
                     )}
                   >
-                    <span className="font-medium text-gray-700">
+                    <span className="font-medium text-gray-700 dark:text-gray-300">
                       {item.std} kg
                     </span>
-                    <span className="text-center font-semibold text-gray-800">
+                    <span className="text-center font-semibold text-gray-800 dark:text-gray-200">
                       {formatWeight(item.hasil)} kg
                     </span>
                     <span
@@ -803,8 +803,8 @@ const RiksaTimbPortabelPage = () => {
                   Uji Pengurangan
                 </span>
               </div>
-              <div className="divide-y divide-gray-100">
-                <div className="grid grid-cols-3 gap-1 px-2 py-1 bg-gray-50 text-xs font-medium text-gray-500">
+              <div className="divide-y divide-gray-100 dark:divide-dark-700">
+                <div className="grid grid-cols-3 gap-1 px-2 py-1 bg-gray-50 dark:bg-dark-700 text-xs font-medium text-gray-500 dark:text-gray-400">
                   <span>Standar</span>
                   <span className="text-center">Hasil</span>
                   <span className="text-right">Selisih</span>
@@ -817,10 +817,10 @@ const RiksaTimbPortabelPage = () => {
                       getRowBg(item.selisih)
                     )}
                   >
-                    <span className="font-medium text-gray-700">
+                    <span className="font-medium text-gray-700 dark:text-gray-300">
                       {item.std} kg
                     </span>
-                    <span className="text-center font-semibold text-gray-800">
+                    <span className="text-center font-semibold text-gray-800 dark:text-gray-200">
                       {formatWeight(item.hasil)} kg
                     </span>
                     <span
@@ -839,19 +839,19 @@ const RiksaTimbPortabelPage = () => {
           </div>
 
           {/* Compact Legend & Close */}
-          <div className="flex items-center justify-between pt-2 border-t">
+          <div className="flex items-center justify-between pt-2 border-t dark:border-dark-700">
             <div className="flex items-center gap-3 text-xs">
               <div className="flex items-center gap-1">
                 <div className="w-2.5 h-2.5 rounded-sm bg-green-500"></div>
-                <span className="text-gray-500">≤0.5kg</span>
+                <span className="text-gray-500 dark:text-gray-400">≤0.5kg</span>
               </div>
               <div className="flex items-center gap-1">
                 <div className="w-2.5 h-2.5 rounded-sm bg-yellow-500"></div>
-                <span className="text-gray-500">0.5-1kg</span>
+                <span className="text-gray-500 dark:text-gray-400">0.5-1kg</span>
               </div>
               <div className="flex items-center gap-1">
                 <div className="w-2.5 h-2.5 rounded-sm bg-red-500"></div>
-                <span className="text-gray-500">&gt;1kg</span>
+                <span className="text-gray-500 dark:text-gray-400">&gt;1kg</span>
               </div>
             </div>
             <Button size="sm" onClick={() => setShowViewModal(false)}>

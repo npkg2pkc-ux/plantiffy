@@ -32,10 +32,10 @@ interface LoaderProps {
 
 const Loader = ({ message = "Memuat..." }: LoaderProps) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 dark:bg-dark-900/80 backdrop-blur-sm">
       <div className="flex flex-col items-center gap-4">
         <Spinner size="lg" />
-        <p className="text-sm font-medium text-dark-600">{message}</p>
+        <p className="text-sm font-medium text-dark-600 dark:text-dark-300">{message}</p>
       </div>
     </div>
   );
@@ -47,7 +47,7 @@ interface SkeletonProps {
 }
 
 const Skeleton = ({ className }: SkeletonProps) => {
-  return <div className={cn("animate-pulse bg-dark-200 rounded", className)} />;
+  return <div className={cn("animate-pulse bg-dark-200 dark:bg-dark-700 rounded", className)} />;
 };
 
 // Card Skeleton
@@ -65,10 +65,10 @@ const CardSkeleton = () => {
 const TableSkeleton = ({ rows = 5 }: { rows?: number }) => {
   return (
     <div className="card">
-      <div className="px-6 py-4 border-b border-dark-100">
+      <div className="px-6 py-4 border-b border-dark-100 dark:border-dark-700">
         <Skeleton className="h-10 w-64" />
       </div>
-      <div className="divide-y divide-dark-100">
+      <div className="divide-y divide-dark-100 dark:divide-dark-700">
         {Array.from({ length: rows }).map((_, i) => (
           <div key={i} className="px-6 py-4 flex gap-4">
             <Skeleton className="h-4 w-1/6" />
@@ -114,10 +114,10 @@ const SuccessOverlay = ({
       className="fixed inset-0 z-50 flex items-center justify-center bg-dark-900/60 backdrop-blur-sm"
       onClick={onClose}
     >
-      <div className="bg-white rounded-2xl p-8 shadow-xl text-center animate-scale-in">
-        <div className="w-16 h-16 mx-auto mb-4 bg-secondary-100 rounded-full flex items-center justify-center">
+      <div className="bg-white dark:bg-dark-800 rounded-2xl p-8 shadow-xl text-center animate-scale-in">
+        <div className="w-16 h-16 mx-auto mb-4 bg-secondary-100 dark:bg-secondary-900/30 rounded-full flex items-center justify-center">
           <svg
-            className="w-8 h-8 text-secondary-600"
+            className="w-8 h-8 text-secondary-600 dark:text-secondary-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -130,7 +130,7 @@ const SuccessOverlay = ({
             />
           </svg>
         </div>
-        <p className="text-lg font-semibold text-dark-900">{message}</p>
+        <p className="text-lg font-semibold text-dark-900 dark:text-white">{message}</p>
       </div>
     </div>
   );

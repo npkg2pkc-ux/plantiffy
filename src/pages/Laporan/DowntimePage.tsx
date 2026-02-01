@@ -579,8 +579,8 @@ const DowntimePage = ({ plant }: DowntimePageProps) => {
             />
           </div>
 
-          <div className="p-4 bg-amber-50 rounded-xl">
-            <p className="text-sm text-amber-800">
+          <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
+            <p className="text-sm text-amber-800 dark:text-amber-300">
               <span className="font-medium">Downtime (Auto):</span>{" "}
               {formatNumber(form.downtime || 0)} Jam
             </p>

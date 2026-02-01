@@ -224,7 +224,7 @@ const MonthlyDowntimeModal = ({
             onClick={onClose}
             className="p-2 hover:bg-dark-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
           >
-            <X className="h-5 w-5 text-dark-500" />
+            <X className="h-5 w-5 text-dark-500 dark:text-dark-400" />
           </button>
         </div>
 
@@ -492,7 +492,7 @@ const MonthlyDowntimeModal = ({
                   <tr>
                     <td
                       colSpan={7}
-                      className="px-4 py-3 text-center text-dark-500"
+                      className="px-4 py-3 text-center text-dark-500 dark:text-dark-400"
                     >
                       ... dan {details.length - 20} record lainnya
                     </td>
@@ -777,7 +777,7 @@ const MonthlyDowntimeChart = ({
                           </div>
                           <div className="space-y-1">
                             <p className="text-sm">
-                              <span className="text-dark-500">
+                              <span className="text-dark-500 dark:text-dark-400">
                                 Total Downtime:
                               </span>
                               <span
@@ -792,7 +792,7 @@ const MonthlyDowntimeChart = ({
                               </span>
                             </p>
                             <p className="text-sm">
-                              <span className="text-dark-500">
+                              <span className="text-dark-500 dark:text-dark-400">
                                 Jumlah Kejadian:
                               </span>
                               <span className="ml-2 font-medium text-dark-700 dark:text-dark-200">
@@ -801,7 +801,7 @@ const MonthlyDowntimeChart = ({
                             </p>
                             {data.rank > 0 && (
                               <p className="text-sm">
-                                <span className="text-dark-500">
+                                <span className="text-dark-500 dark:text-dark-400">
                                   Peringkat:
                                 </span>
                                 <span className="ml-2 font-medium text-dark-700 dark:text-dark-200">

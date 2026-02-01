@@ -463,7 +463,7 @@ const UsersPage = () => {
                       }}
                       title="Lihat Log Aktivitas"
                     >
-                      <History className="h-4 w-4 text-gray-600" />
+                      <History className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                     </Button>
                     <Button
                       variant="ghost"

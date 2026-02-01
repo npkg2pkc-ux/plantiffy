@@ -290,12 +290,12 @@ const ApprovalPage = () => {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card
-          className="p-4 border-l-4 border-l-amber-500 cursor-pointer hover:bg-amber-50 transition-colors"
+          className="p-4 border-l-4 border-l-amber-500 cursor-pointer hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
           onClick={() => setStatusFilter("pending")}
         >
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-amber-100 rounded-xl">
-              <Clock className="h-6 w-6 text-amber-600" />
+            <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-xl">
+              <Clock className="h-6 w-6 text-amber-600 dark:text-amber-400" />
             </div>
             <div>
               <p className="text-sm text-dark-500 dark:text-dark-400">
@@ -308,12 +308,12 @@ const ApprovalPage = () => {
           </div>
         </Card>
         <Card
-          className="p-4 border-l-4 border-l-green-500 cursor-pointer hover:bg-green-50 transition-colors"
+          className="p-4 border-l-4 border-l-green-500 cursor-pointer hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
           onClick={() => setStatusFilter("approved")}
         >
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-green-100 rounded-xl">
-              <CheckCircle className="h-6 w-6 text-green-600" />
+            <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-xl">
+              <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
             <div>
               <p className="text-sm text-dark-500 dark:text-dark-400">
@@ -326,12 +326,12 @@ const ApprovalPage = () => {
           </div>
         </Card>
         <Card
-          className="p-4 border-l-4 border-l-red-500 cursor-pointer hover:bg-red-50 transition-colors"
+          className="p-4 border-l-4 border-l-red-500 cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
           onClick={() => setStatusFilter("rejected")}
         >
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-red-100 rounded-xl">
-              <XCircle className="h-6 w-6 text-red-600" />
+            <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-xl">
+              <XCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
             </div>
             <div>
               <p className="text-sm text-dark-500 dark:text-dark-400">

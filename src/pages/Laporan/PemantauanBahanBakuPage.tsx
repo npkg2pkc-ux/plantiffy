@@ -671,7 +671,7 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
               />
               {/* Filter Bahan Baku */}
               <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-gray-500" />
+                <Filter className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                 <select
                   value={filterBahanBaku}
                   onChange={(e) => setFilterBahanBaku(e.target.value)}
@@ -699,7 +699,7 @@ const PemantauanBahanBakuPage = ({ plant }: PemantauanBahanBakuPageProps) => {
                     </span>
                   </span>
                 </div>
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-gray-500 dark:text-gray-400">
                   {filteredStats.totalRecords} data tercatat
                 </span>
               </div>

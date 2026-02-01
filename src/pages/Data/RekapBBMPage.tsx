@@ -403,7 +403,7 @@ const RekapBBMPage = ({ plant }: RekapBBMPageProps) => {
           (userCanDeleteDirect || userNeedsApprovalDelete) && (
             <button
               onClick={() => handleDelete(row.id || "")}
-              className="p-1.5 text-dark-500 dark:text-dark-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              className="p-1.5 text-dark-500 dark:text-dark-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
               title={userNeedsApprovalDelete ? "Ajukan Hapus" : "Hapus"}
             >
               <Trash2 className="h-4 w-4" />
@@ -417,36 +417,36 @@ const RekapBBMPage = ({ plant }: RekapBBMPageProps) => {
     <div className="space-y-6">
       {/* Summary Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-5 border border-amber-200">
+        <div className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-900/20 rounded-xl p-5 border border-amber-200 dark:border-amber-800">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-amber-500 rounded-lg">
               <Fuel className="h-5 w-5 text-white" />
             </div>
             <div>
-              <p className="text-xs font-medium text-amber-700 uppercase tracking-wider">
+              <p className="text-xs font-medium text-amber-700 dark:text-amber-300 uppercase tracking-wider">
                 Total Pengajuan
               </p>
-              <p className="text-2xl font-bold text-amber-900">
+              <p className="text-2xl font-bold text-amber-900 dark:text-amber-100">
                 {formatNumber(summaryStats.totalPengajuan)}
               </p>
-              <p className="text-xs text-amber-600">Liter</p>
+              <p className="text-xs text-amber-600 dark:text-amber-400">Liter</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 border border-blue-200">
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-900/20 rounded-xl p-5 border border-blue-200 dark:border-blue-800">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-blue-500 rounded-lg">
               <TrendingUp className="h-5 w-5 text-white" />
             </div>
             <div>
-              <p className="text-xs font-medium text-blue-700 uppercase tracking-wider">
+              <p className="text-xs font-medium text-blue-700 dark:text-blue-300 uppercase tracking-wider">
                 Total Realisasi
               </p>
-              <p className="text-2xl font-bold text-blue-900">
+              <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
                 {formatNumber(summaryStats.totalRealisasi)}
               </p>
-              <p className="text-xs text-blue-600">Liter</p>
+              <p className="text-xs text-blue-600 dark:text-blue-400">Liter</p>
             </div>
           </div>
         </div>
@@ -454,8 +454,8 @@ const RekapBBMPage = ({ plant }: RekapBBMPageProps) => {
         <div
           className={`bg-gradient-to-br rounded-xl p-5 border ${
             summaryStats.totalSelisih >= 0
-              ? "from-green-50 to-green-100 border-green-200"
-              : "from-red-50 to-red-100 border-red-200"
+              ? "from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-900/20 border-green-200 dark:border-green-800"
+              : "from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-900/20 border-red-200 dark:border-red-800"
           }`}
         >
           <div className="flex items-center gap-3">
@@ -470,8 +470,8 @@ const RekapBBMPage = ({ plant }: RekapBBMPageProps) => {
               <p
                 className={`text-xs font-medium uppercase tracking-wider ${
                   summaryStats.totalSelisih >= 0
-                    ? "text-green-700"
-                    : "text-red-700"
+                    ? "text-green-700 dark:text-green-300"
+                    : "text-red-700 dark:text-red-300"
                 }`}
               >
                 Total Selisih
@@ -479,8 +479,8 @@ const RekapBBMPage = ({ plant }: RekapBBMPageProps) => {
               <p
                 className={`text-2xl font-bold ${
                   summaryStats.totalSelisih >= 0
-                    ? "text-green-900"
-                    : "text-red-900"
+                    ? "text-green-900 dark:text-green-100"
+                    : "text-red-900 dark:text-red-100"
                 }`}
               >
                 {summaryStats.totalSelisih >= 0 ? "+" : ""}
@@ -489,8 +489,8 @@ const RekapBBMPage = ({ plant }: RekapBBMPageProps) => {
               <p
                 className={`text-xs ${
                   summaryStats.totalSelisih >= 0
-                    ? "text-green-600"
-                    : "text-red-600"
+                    ? "text-green-600 dark:text-green-400"
+                    : "text-red-600 dark:text-red-400"
                 }`}
               >
                 Liter{" "}
@@ -500,19 +500,19 @@ const RekapBBMPage = ({ plant }: RekapBBMPageProps) => {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-5 border border-slate-200">
+        <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/30 dark:to-slate-900/20 rounded-xl p-5 border border-slate-200 dark:border-slate-700">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-slate-500 rounded-lg">
               <BarChart3 className="h-5 w-5 text-white" />
             </div>
             <div>
-              <p className="text-xs font-medium text-slate-700 uppercase tracking-wider">
+              <p className="text-xs font-medium text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                 Total Record
               </p>
-              <p className="text-2xl font-bold text-slate-900">
+              <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                 {summaryStats.totalRecord}
               </p>
-              <p className="text-xs text-slate-600">
+              <p className="text-xs text-slate-600 dark:text-slate-400">
                 {selectedYear === "all"
                   ? "Semua tahun"
                   : `Tahun ${selectedYear}`}
@@ -527,8 +527,8 @@ const RekapBBMPage = ({ plant }: RekapBBMPageProps) => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-amber-100 rounded-lg">
-              <Fuel className="h-6 w-6 text-amber-600" />
+            <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+              <Fuel className="h-6 w-6 text-amber-600 dark:text-amber-400" />
             </div>
             <div>
               <CardTitle>Rekap Pengajuan BBM Alat Berat</CardTitle>
@@ -553,7 +553,7 @@ const RekapBBMPage = ({ plant }: RekapBBMPageProps) => {
             <Button
               variant="secondary"
               onClick={() => setShowPrintModal(true)}
-              className="border-amber-300 text-amber-700 hover:bg-amber-50"
+              className="border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-900/20"
             >
               <Printer className="h-4 w-4 mr-2" />
               Cetak

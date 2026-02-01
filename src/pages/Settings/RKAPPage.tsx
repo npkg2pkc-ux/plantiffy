@@ -785,20 +785,20 @@ const RKAPPage = () => {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-dark-200">
-                      <th className="text-left py-3 px-4 font-semibold text-dark-600">
+                    <tr className="border-b border-dark-200 dark:border-dark-700">
+                      <th className="text-left py-3 px-4 font-semibold text-dark-600 dark:text-dark-300">
                         Bulan
                       </th>
-                      <th className="text-right py-3 px-4 font-semibold text-blue-600">
+                      <th className="text-right py-3 px-4 font-semibold text-blue-600 dark:text-blue-400">
                         Target NPK 1 (Ton)
                       </th>
-                      <th className="text-right py-3 px-4 font-semibold text-dark-600">
+                      <th className="text-right py-3 px-4 font-semibold text-dark-600 dark:text-dark-300">
                         Realisasi (Ton)
                       </th>
-                      <th className="text-right py-3 px-4 font-semibold text-dark-600">
+                      <th className="text-right py-3 px-4 font-semibold text-dark-600 dark:text-dark-300">
                         Selisih (Ton)
                       </th>
-                      <th className="text-right py-3 px-4 font-semibold text-dark-600">
+                      <th className="text-right py-3 px-4 font-semibold text-dark-600 dark:text-dark-300">
                         Pencapaian
                       </th>
                     </tr>
@@ -818,7 +818,7 @@ const RKAPPage = () => {
                       return (
                         <tr
                           key={month.key}
-                          className="border-b border-dark-100 hover:bg-blue-50 dark:hover:bg-blue-900/10"
+                          className="border-b border-dark-100 dark:border-dark-700 hover:bg-blue-50 dark:hover:bg-blue-900/10"
                         >
                           <td className="py-3 px-4 font-medium">
                             {month.label}
@@ -907,20 +907,20 @@ const RKAPPage = () => {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-dark-200">
-                      <th className="text-left py-3 px-4 font-semibold text-dark-600">
+                    <tr className="border-b border-dark-200 dark:border-dark-700">
+                      <th className="text-left py-3 px-4 font-semibold text-dark-600 dark:text-dark-300">
                         Bulan
                       </th>
-                      <th className="text-right py-3 px-4 font-semibold text-amber-600">
+                      <th className="text-right py-3 px-4 font-semibold text-amber-600 dark:text-amber-400">
                         Target NPK 2 (Ton)
                       </th>
-                      <th className="text-right py-3 px-4 font-semibold text-dark-600">
+                      <th className="text-right py-3 px-4 font-semibold text-dark-600 dark:text-dark-300">
                         Realisasi (Ton)
                       </th>
-                      <th className="text-right py-3 px-4 font-semibold text-dark-600">
+                      <th className="text-right py-3 px-4 font-semibold text-dark-600 dark:text-dark-300">
                         Selisih (Ton)
                       </th>
-                      <th className="text-right py-3 px-4 font-semibold text-dark-600">
+                      <th className="text-right py-3 px-4 font-semibold text-dark-600 dark:text-dark-300">
                         Pencapaian
                       </th>
                     </tr>
@@ -940,7 +940,7 @@ const RKAPPage = () => {
                       return (
                         <tr
                           key={month.key}
-                          className="border-b border-dark-100 hover:bg-amber-50 dark:hover:bg-amber-900/10"
+                          className="border-b border-dark-100 dark:border-dark-700 hover:bg-amber-50 dark:hover:bg-amber-900/10"
                         >
                           <td className="py-3 px-4 font-medium">
                             {month.label}
@@ -1029,20 +1029,20 @@ const RKAPPage = () => {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-dark-200">
-                    <th className="text-left py-3 px-4 font-semibold text-dark-600">
+                  <tr className="border-b border-dark-200 dark:border-dark-700">
+                    <th className="text-left py-3 px-4 font-semibold text-dark-600 dark:text-dark-300">
                       Bulan
                     </th>
-                    <th className="text-right py-3 px-4 font-semibold text-dark-600">
+                    <th className="text-right py-3 px-4 font-semibold text-dark-600 dark:text-dark-300">
                       Target RKAP (Ton)
                     </th>
-                    <th className="text-right py-3 px-4 font-semibold text-dark-600">
+                    <th className="text-right py-3 px-4 font-semibold text-dark-600 dark:text-dark-300">
                       Realisasi (Ton)
                     </th>
-                    <th className="text-right py-3 px-4 font-semibold text-dark-600">
+                    <th className="text-right py-3 px-4 font-semibold text-dark-600 dark:text-dark-300">
                       Selisih (Ton)
                     </th>
-                    <th className="text-right py-3 px-4 font-semibold text-dark-600">
+                    <th className="text-right py-3 px-4 font-semibold text-dark-600 dark:text-dark-300">
                       Pencapaian
                     </th>
                   </tr>
@@ -1061,7 +1061,7 @@ const RKAPPage = () => {
                     return (
                       <tr
                         key={month.key}
-                        className="border-b border-dark-100 hover:bg-dark-50"
+                        className="border-b border-dark-100 dark:border-dark-700 hover:bg-dark-50 dark:hover:bg-dark-700/50"
                       >
                         <td className="py-3 px-4 font-medium">{month.label}</td>
                         <td className="py-3 px-4 text-right text-primary-600 font-semibold">

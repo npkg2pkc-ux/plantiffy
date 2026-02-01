@@ -180,7 +180,7 @@ const AkunPage = () => {
       </div>
 
       {/* User Info Card */}
-      <Card className="p-6 bg-gradient-to-r from-primary-50 to-indigo-50 border-primary-200">
+      <Card className="p-6 bg-gradient-to-r from-primary-50 to-indigo-50 dark:from-primary-900/30 dark:to-indigo-900/30 border-primary-200 dark:border-primary-800">
         <div className="flex items-center gap-6">
           <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white text-2xl font-bold">
             {user?.nama?.charAt(0).toUpperCase() || "U"}
@@ -214,8 +214,8 @@ const AkunPage = () => {
                 onClick={() => setActiveTab(tab.id as typeof activeTab)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors ${
                   activeTab === tab.id
-                    ? "bg-primary-100 text-primary-700 font-medium"
-                    : "text-dark-600 hover:bg-dark-50"
+                    ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 font-medium"
+                    : "text-dark-600 dark:text-dark-300 hover:bg-dark-50 dark:hover:bg-dark-700"
                 }`}
               >
                 <tab.icon className="h-5 w-5" />
@@ -347,8 +347,8 @@ const AkunPage = () => {
                     }
                     required
                   />
-                  <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
-                    <p className="text-sm text-amber-800">
+                  <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800">
+                    <p className="text-sm text-amber-800 dark:text-amber-300">
                       <strong>Tips:</strong> Password minimal 8 karakter,
                       kombinasi huruf besar, huruf kecil, dan angka.
                     </p>
@@ -378,7 +378,7 @@ const AkunPage = () => {
                     <h3 className="font-semibold text-dark-900 dark:text-white">
                       Notifikasi Umum
                     </h3>
-                    <label className="flex items-center justify-between p-4 bg-dark-50 rounded-xl cursor-pointer">
+                    <label className="flex items-center justify-between p-4 bg-dark-50 dark:bg-dark-700 rounded-xl cursor-pointer">
                       <div>
                         <p className="font-medium text-dark-900 dark:text-white">
                           Email Notifications
@@ -396,10 +396,10 @@ const AkunPage = () => {
                             emailNotifications: e.target.checked,
                           }))
                         }
-                        className="w-5 h-5 text-primary-600 rounded"
+                        className="w-5 h-5 text-primary-600 rounded dark:bg-dark-600 dark:border-dark-500"
                       />
                     </label>
-                    <label className="flex items-center justify-between p-4 bg-dark-50 rounded-xl cursor-pointer">
+                    <label className="flex items-center justify-between p-4 bg-dark-50 dark:bg-dark-700 rounded-xl cursor-pointer">
                       <div>
                         <p className="font-medium text-dark-900 dark:text-white">
                           Push Notifications
@@ -417,14 +417,14 @@ const AkunPage = () => {
                             pushNotifications: e.target.checked,
                           }))
                         }
-                        className="w-5 h-5 text-primary-600 rounded"
+                        className="w-5 h-5 text-primary-600 rounded dark:bg-dark-600 dark:border-dark-500"
                       />
                     </label>
                   </div>
 
                   <div className="space-y-4">
                     <h3 className="font-semibold text-dark-900 dark:text-white">Laporan</h3>
-                    <label className="flex items-center justify-between p-4 bg-dark-50 rounded-xl cursor-pointer">
+                    <label className="flex items-center justify-between p-4 bg-dark-50 dark:bg-dark-700 rounded-xl cursor-pointer">
                       <div>
                         <p className="font-medium text-dark-900 dark:text-white">
                           Laporan Harian
@@ -442,10 +442,10 @@ const AkunPage = () => {
                             dailyReport: e.target.checked,
                           }))
                         }
-                        className="w-5 h-5 text-primary-600 rounded"
+                        className="w-5 h-5 text-primary-600 rounded dark:bg-dark-600 dark:border-dark-500"
                       />
                     </label>
-                    <label className="flex items-center justify-between p-4 bg-dark-50 rounded-xl cursor-pointer">
+                    <label className="flex items-center justify-between p-4 bg-dark-50 dark:bg-dark-700 rounded-xl cursor-pointer">
                       <div>
                         <p className="font-medium text-dark-900 dark:text-white">
                           Laporan Mingguan
@@ -463,14 +463,14 @@ const AkunPage = () => {
                             weeklyReport: e.target.checked,
                           }))
                         }
-                        className="w-5 h-5 text-primary-600 rounded"
+                        className="w-5 h-5 text-primary-600 rounded dark:bg-dark-600 dark:border-dark-500"
                       />
                     </label>
                   </div>
 
                   <div className="space-y-4">
                     <h3 className="font-semibold text-dark-900 dark:text-white">Alert</h3>
-                    <label className="flex items-center justify-between p-4 bg-dark-50 rounded-xl cursor-pointer">
+                    <label className="flex items-center justify-between p-4 bg-dark-50 dark:bg-dark-700 rounded-xl cursor-pointer">
                       <div>
                         <p className="font-medium text-dark-900 dark:text-white">
                           Alert Downtime
@@ -488,10 +488,10 @@ const AkunPage = () => {
                             alertDowntime: e.target.checked,
                           }))
                         }
-                        className="w-5 h-5 text-primary-600 rounded"
+                        className="w-5 h-5 text-primary-600 rounded dark:bg-dark-600 dark:border-dark-500"
                       />
                     </label>
-                    <label className="flex items-center justify-between p-4 bg-dark-50 rounded-xl cursor-pointer">
+                    <label className="flex items-center justify-between p-4 bg-dark-50 dark:bg-dark-700 rounded-xl cursor-pointer">
                       <div>
                         <p className="font-medium text-dark-900 dark:text-white">
                           Alert Work Request
@@ -509,7 +509,7 @@ const AkunPage = () => {
                             alertWorkRequest: e.target.checked,
                           }))
                         }
-                        className="w-5 h-5 text-primary-600 rounded"
+                        className="w-5 h-5 text-primary-600 rounded dark:bg-dark-600 dark:border-dark-500"
                       />
                     </label>
                   </div>
