@@ -1112,7 +1112,7 @@ const Sidebar = () => {
         {(!sidebarCollapsed || effectiveMobile) && (
           <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-dark-100/50 dark:border-dark-700/50 bg-white/50 dark:bg-dark-800/50 backdrop-blur-sm">
             <div className="flex items-center justify-between text-xs text-dark-400">
-              <span>© 2026 Plantiffy</span>
+              <span>© 2025 Plantiffy</span>
               <span className="px-2 py-0.5 bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-400 rounded-full font-medium">
                 v2.4.0
               </span>
