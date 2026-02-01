@@ -71,23 +71,14 @@ const formatMarqueeNumber = (num: number): string => {
   return num.toLocaleString("id-ID", { maximumFractionDigits: 0 });
 };
 
-// Global function to set user offline - can be called from logout
-export const setUserOffline = async (username: string) => {
-  try {
-    const { readData, updateData, SHEETS } = await import("@/services/api");
-    const result = await readData(SHEETS.ACTIVE_USERS);
-    const existingUsers = (result.data as ActiveUser[]) || [];
-    const existingUser = existingUsers.find((u) => u.username === username);
-    if (existingUser) {
-      await updateData(SHEETS.ACTIVE_USERS, {
-        id: existingUser.id,
-        status: "offline",
-        lastActive: new Date(0).toISOString(), // Set to old date to ensure removal
-      });
-    }
-  } catch (error) {
+// Global function to set user offline - FAST: fire and forget, no blocking
+export const setUserOffline = (username: string) => {
+  // Import and execute in background without blocking
+  import("@/services/api").then(({ setUserOfflineBackground }) => {
+    setUserOfflineBackground(username);
+  }).catch((error) => {
     console.error("Error setting offline status:", error);
-  }
+  });
 };
 
 const ActiveUsersMarquee = () => {
@@ -1334,11 +1325,12 @@ const Header = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleLogout = async () => {
-    // Set user offline before logout
+  const handleLogout = () => {
+    // Set user offline in background (non-blocking)
     if (user && user.username) {
-      await setUserOffline(user.username);
+      setUserOffline(user.username);
     }
+    // Immediately logout and navigate - don't wait for API
     logout();
     navigate("/login");
   };

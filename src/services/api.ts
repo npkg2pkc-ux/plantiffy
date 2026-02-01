@@ -1,17 +1,47 @@
 /// <reference types="vite/client" />
 import type { ApiResponse, DokumentasiFoto } from "@/types";
+import {
+  cachedFetch,
+  invalidateOnMutation,
+  CACHE_TTL,
+  CACHE_KEYS,
+} from "./cache";
 
 // API Base URL - ganti dengan URL deployment Google Apps Script Anda
 const API_BASE =
   import.meta.env.VITE_API_URL ||
   "https://script.google.com/macros/s/AKfycbwhf1qqyKphj6flFppZSczHJDqERKyfn6qoh-LVhfS8thGvZw085lqDGMKKHyt_uYcwEw/exec";
 
-// Generic fetch function for GET requests
-async function fetchGET<T>(endpoint: string): Promise<ApiResponse<T>> {
+// ============================================
+// PERFORMANCE OPTIMIZATION CONSTANTS
+// ============================================
+const DEFAULT_TIMEOUT = 30000; // 30 seconds for normal operations
+const FAST_TIMEOUT = 15000; // 15 seconds for login/logout
+const BACKGROUND_TIMEOUT = 60000; // 60 seconds for background ops
+
+// Create abort controller with timeout
+function createAbortController(timeout: number): AbortController {
+  const controller = new AbortController();
+  setTimeout(() => controller.abort(), timeout);
+  return controller;
+}
+
+// ============================================
+// OPTIMIZED FETCH FUNCTIONS
+// ============================================
+
+// Generic fetch function for GET requests with timeout
+async function fetchGET<T>(
+  endpoint: string,
+  timeout: number = DEFAULT_TIMEOUT
+): Promise<ApiResponse<T>> {
+  const controller = createAbortController(timeout);
+
   try {
     const response = await fetch(`${API_BASE}${endpoint}`, {
       method: "GET",
       redirect: "follow",
+      signal: controller.signal,
     });
 
     if (!response.ok) {
@@ -21,6 +51,10 @@ async function fetchGET<T>(endpoint: string): Promise<ApiResponse<T>> {
     const result = await response.json();
     return { success: true, data: result.data || result };
   } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      console.error("API GET Timeout:", endpoint);
+      return { success: false, error: "Request timeout - silakan coba lagi" };
+    }
     console.error("API GET Error:", error);
     return {
       success: false,
@@ -29,9 +63,14 @@ async function fetchGET<T>(endpoint: string): Promise<ApiResponse<T>> {
   }
 }
 
-// Generic fetch function for POST requests
+// Generic fetch function for POST requests with timeout
 // IMPORTANT: Google Apps Script requires text/plain content-type to avoid CORS preflight
-async function fetchPOST<T>(data: object): Promise<ApiResponse<T>> {
+async function fetchPOST<T>(
+  data: object,
+  timeout: number = DEFAULT_TIMEOUT
+): Promise<ApiResponse<T>> {
+  const controller = createAbortController(timeout);
+
   try {
     const response = await fetch(API_BASE, {
       method: "POST",
@@ -40,6 +79,7 @@ async function fetchPOST<T>(data: object): Promise<ApiResponse<T>> {
         "Content-Type": "text/plain;charset=utf-8",
       },
       body: JSON.stringify(data),
+      signal: controller.signal,
     });
 
     if (!response.ok) {
@@ -58,6 +98,10 @@ async function fetchPOST<T>(data: object): Promise<ApiResponse<T>> {
       data: result.data !== undefined ? result.data : result,
     };
   } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      console.error("API POST Timeout");
+      return { success: false, error: "Request timeout - silakan coba lagi" };
+    }
     console.error("API POST Error:", error);
     return {
       success: false,
@@ -66,99 +110,199 @@ async function fetchPOST<T>(data: object): Promise<ApiResponse<T>> {
   }
 }
 
-// Read data from sheet
-export async function readData<T>(
+// Fast POST for login/logout operations
+async function fetchPOSTFast<T>(data: object): Promise<ApiResponse<T>> {
+  return fetchPOST<T>(data, FAST_TIMEOUT);
+}
+
+// Background POST - fire and forget with longer timeout
+function fetchPOSTBackground<T>(data: object): Promise<ApiResponse<T>> {
+  return fetchPOST<T>(data, BACKGROUND_TIMEOUT);
+}
+
+// ============================================
+// CACHED DATA OPERATIONS
+// ============================================
+
+// Internal uncached read for use in cached wrappers
+async function readDataUncached<T>(
   sheetName: string
 ): Promise<ApiResponse<T[]>> {
   return fetchGET<T[]>(`?action=read&sheet=${sheetName}`);
 }
 
-// Create data
+// Read data from sheet WITH CACHING
+export async function readData<T>(
+  sheetName: string,
+  useCache: boolean = true
+): Promise<ApiResponse<T[]>> {
+  if (!useCache) {
+    return readDataUncached<T>(sheetName);
+  }
+
+  const cacheKey = CACHE_KEYS.readData(sheetName);
+  return cachedFetch<T[]>(
+    cacheKey,
+    () => readDataUncached<T>(sheetName),
+    CACHE_TTL.DEFAULT
+  );
+}
+
+// Read data with forced fresh fetch (bypasses cache)
+export async function readDataFresh<T>(
+  sheetName: string
+): Promise<ApiResponse<T[]>> {
+  return readData<T>(sheetName, false);
+}
+
+// Create data - invalidates cache
 export async function createData<T>(
   sheetName: string,
   data: Partial<T>
 ): Promise<ApiResponse<T>> {
-  return fetchPOST<T>({
+  const result = await fetchPOST<T>({
     action: "create",
     sheet: sheetName,
     data,
   });
+
+  // Invalidate cache on successful mutation
+  if (result.success) {
+    invalidateOnMutation(sheetName);
+  }
+
+  return result;
 }
 
-// Update data
+// Update data - invalidates cache
 export async function updateData<T>(
   sheetName: string,
   data: Partial<T>
 ): Promise<ApiResponse<T>> {
-  return fetchPOST<T>({
+  const result = await fetchPOST<T>({
     action: "update",
     sheet: sheetName,
     data,
   });
+
+  // Invalidate cache on successful mutation
+  if (result.success) {
+    invalidateOnMutation(sheetName);
+  }
+
+  return result;
 }
 
-// Delete data
+// Delete data - invalidates cache
 export async function deleteData(
   sheetName: string,
   id: string
 ): Promise<ApiResponse<boolean>> {
-  return fetchPOST<boolean>({
+  const result = await fetchPOST<boolean>({
     action: "delete",
     sheet: sheetName,
     data: { id },
   });
+
+  // Invalidate cache on successful mutation
+  if (result.success) {
+    invalidateOnMutation(sheetName);
+  }
+
+  return result;
 }
 
-// Login user
+// Login user - optimized with fast timeout
 export async function loginUser(
   username: string,
   password: string
 ): Promise<ApiResponse<{ user: unknown; session: unknown }>> {
-  return fetchPOST<{ user: unknown; session: unknown }>({
+  return fetchPOSTFast<{ user: unknown; session: unknown }>({
     action: "login",
     data: { username, password },
   });
 }
 
-// Check session
+// Check session - with fast timeout
 export async function checkSession(
   sessionId: string
 ): Promise<
   ApiResponse<{ valid: boolean; deviceId?: string; browser?: string }>
 > {
   return fetchGET<{ valid: boolean; deviceId?: string; browser?: string }>(
-    `?action=checkSession&sessionId=${sessionId}`
+    `?action=checkSession&sessionId=${sessionId}`,
+    FAST_TIMEOUT
   );
 }
 
-// Create session
+// Create session - fast timeout
 export async function createSession(data: {
   username: string;
   deviceId: string;
   browser: string;
 }): Promise<ApiResponse<{ sessionId: string }>> {
-  return fetchPOST<{ sessionId: string }>({
+  return fetchPOSTFast<{ sessionId: string }>({
     action: "createSession",
     data,
   });
 }
 
-// Delete session (logout)
+// Delete session (logout) - fast timeout
 export async function deleteSession(
   sessionId: string
 ): Promise<ApiResponse<boolean>> {
-  return fetchPOST<boolean>({
+  return fetchPOSTFast<boolean>({
     action: "deleteSession",
     data: { sessionId },
   });
 }
 
-// Plant-aware fetch wrapper
+// Set user offline (background operation - fire and forget)
+export function setUserOfflineBackground(
+  username: string,
+  existingUserId?: string
+): void {
+  // Fire and forget - don't await
+  fetchPOSTBackground({
+    action: "update",
+    sheet: SHEETS.ACTIVE_USERS,
+    data: {
+      id: existingUserId || "",
+      username,
+      status: "offline",
+      lastActive: new Date(0).toISOString(),
+    },
+  }).catch((err) => console.error("Background offline update failed:", err));
+}
+
+// Plant-aware fetch wrapper - WITH CACHING for speed
 export async function fetchDataByPlant<T>(
+  baseSheet: string,
+  useCache: boolean = true
+): Promise<ApiResponse<T[]>> {
+  const cacheKey = CACHE_KEYS.fetchByPlant(baseSheet);
+
+  // Use cached fetch wrapper
+  if (useCache) {
+    return cachedFetch<T[]>(
+      cacheKey,
+      () => fetchDataByPlantUncached<T>(baseSheet),
+      CACHE_TTL.DEFAULT
+    );
+  }
+
+  return fetchDataByPlantUncached<T>(baseSheet);
+}
+
+// Internal uncached version
+async function fetchDataByPlantUncached<T>(
   baseSheet: string
 ): Promise<ApiResponse<T[]>> {
-  const npk2Result = await readData<T>(baseSheet);
-  const npk1Result = await readData<T>(`${baseSheet}_NPK1`);
+  // Fetch both plants in parallel for speed
+  const [npk2Result, npk1Result] = await Promise.all([
+    readDataUncached<T>(baseSheet),
+    readDataUncached<T>(`${baseSheet}_NPK1`),
+  ]);
 
   const allData: T[] = [];
 
@@ -183,31 +327,52 @@ export async function fetchDataByPlant<T>(
   return { success: true, data: allData };
 }
 
-// Plant-aware save wrapper
+// Plant-aware save wrapper - invalidates cache
 export async function saveDataByPlant<T extends { _plant?: string }>(
   baseSheet: string,
   data: T
 ): Promise<ApiResponse<T>> {
   const targetSheet = data._plant === "NPK1" ? `${baseSheet}_NPK1` : baseSheet;
-  return createData<T>(targetSheet, data);
+  const result = await createData<T>(targetSheet, data);
+  
+  // Invalidate plant cache
+  if (result.success) {
+    invalidateOnMutation(baseSheet);
+  }
+  
+  return result;
 }
 
-// Plant-aware update wrapper
+// Plant-aware update wrapper - invalidates cache
 export async function updateDataByPlant<T extends { _plant?: string }>(
   baseSheet: string,
   data: T
 ): Promise<ApiResponse<T>> {
   const targetSheet = data._plant === "NPK1" ? `${baseSheet}_NPK1` : baseSheet;
-  return updateData<T>(targetSheet, data);
+  const result = await updateData<T>(targetSheet, data);
+  
+  // Invalidate plant cache
+  if (result.success) {
+    invalidateOnMutation(baseSheet);
+  }
+  
+  return result;
 }
 
-// Plant-aware delete wrapper
+// Plant-aware delete wrapper - invalidates cache
 export async function deleteDataByPlant(
   baseSheet: string,
   data: { id: string; _plant?: string }
 ): Promise<ApiResponse<boolean>> {
   const targetSheet = data._plant === "NPK1" ? `${baseSheet}_NPK1` : baseSheet;
-  return deleteData(targetSheet, data.id);
+  const result = await deleteData(targetSheet, data.id);
+  
+  // Invalidate plant cache
+  if (result.success) {
+    invalidateOnMutation(baseSheet);
+  }
+  
+  return result;
 }
 
 // Helper to get sheet name by plant
@@ -605,3 +770,8 @@ export async function updateStockKeluarWithLog(
     userInfo,
   });
 }
+
+// ============================================
+// CACHE EXPORTS
+// ============================================
+export { clearAllCache, clearCache, clearCacheByPattern } from "./cache";

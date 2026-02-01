@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Plus, Edit2, Trash2, Search, Package, History, X } from "lucide-react";
-import { useSaveShortcut, useDataWithLogging } from "@/hooks";
+import { useSaveShortcut, useDataWithLogging, useOptimisticList, generateTempId } from "@/hooks";
 import {
   Button,
   Card,
@@ -42,6 +42,7 @@ interface BahanBakuNPK {
   entries: BahanBakuNPKEntry[]; // Array of berat and unit
   totalBerat: number;
   _plant?: PlantType;
+  _isPending?: boolean; // For optimistic updates
 }
 
 // Generate year options from 2023 to current year + 1
@@ -87,6 +88,7 @@ interface BahanBakuNPKPageProps {
 const BahanBakuNPKPage = ({ plant }: BahanBakuNPKPageProps) => {
   const { user } = useAuthStore();
   const { createWithLog, updateWithLog, deleteWithLog } = useDataWithLogging();
+  const { optimisticAdd, optimisticUpdate, optimisticDelete, confirmAdd, confirmUpdate } = useOptimisticList<BahanBakuNPK>();
   const [data, setData] = useState<BahanBakuNPK[]>([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -243,76 +245,84 @@ const BahanBakuNPKPage = ({ plant }: BahanBakuNPKPageProps) => {
       return;
     }
 
-    setLoading(true);
+    // Close form immediately for faster UX
+    setShowForm(false);
+    setShowSuccess(true);
 
-    try {
-      // Prepare data with entries as JSON string for storage
-      const dataToSave = {
+    // Prepare data with entries as JSON string for storage
+    const dataToSave = {
+      ...form,
+      entries: JSON.stringify(form.entries),
+      totalBerat: calculateTotalBerat(form.entries),
+      _plant: currentPlant,
+    };
+
+    if (editingId) {
+      // OPTIMISTIC UPDATE - Update UI immediately
+      const itemToUpdate: BahanBakuNPK = {
         ...form,
-        entries: JSON.stringify(form.entries),
-        totalBerat: calculateTotalBerat(form.entries),
+        id: editingId,
         _plant: currentPlant,
+        totalBerat: calculateTotalBerat(form.entries),
       };
-
-      console.log("Sending data to save:", dataToSave);
-
-      if (editingId) {
-        // Update with logging
-        const dataToUpdate = { ...dataToSave, id: editingId };
-        const updateResult = await updateWithLog<typeof dataToUpdate>(
-          SHEETS.BAHAN_BAKU_NPK,
-          dataToUpdate
-        );
-        if (updateResult.success) {
-          setData((prev) =>
-            prev.map((item) =>
-              item.id === editingId
-                ? {
-                    ...form,
-                    id: editingId,
-                    _plant: currentPlant,
-                    totalBerat: calculateTotalBerat(form.entries),
-                  }
-                : item
-            )
-          );
-        } else {
-          throw new Error(updateResult.error || "Gagal mengupdate data");
-        }
-      } else {
-        // Create with logging
-        const createResult = await createWithLog<typeof dataToSave>(
-          SHEETS.BAHAN_BAKU_NPK,
-          dataToSave
-        );
-        if (createResult.success && createResult.data) {
-          const newItem: BahanBakuNPK = {
-            ...form,
-            id: createResult.data.id,
-            _plant: currentPlant,
-            totalBerat: calculateTotalBerat(form.entries),
-          };
-          setData((prev) => [newItem, ...prev]);
-        } else {
-          throw new Error(createResult.error || "Gagal menyimpan data");
-        }
-      }
-
-      setShowForm(false);
-      setForm(initialFormState);
-      setEditingId(null);
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 2000);
-    } catch (error) {
-      console.error("Error saving data:", error);
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Terjadi kesalahan saat menyimpan data"
+      const { rollback } = optimisticUpdate(data, itemToUpdate);
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === editingId ? { ...itemToUpdate, _isPending: true } : item
+        )
       );
-    } finally {
-      setLoading(false);
+
+      // Update in background
+      const dataToUpdate = { ...dataToSave, id: editingId };
+      updateWithLog<typeof dataToUpdate>(SHEETS.BAHAN_BAKU_NPK, dataToUpdate)
+        .then((result) => {
+          if (result.success) {
+            // Confirm update - remove pending state
+            setData((prev) => confirmUpdate(prev, editingId));
+          } else {
+            // Rollback on error
+            setData(rollback());
+            alert(result.error || "Gagal mengupdate data");
+          }
+        })
+        .catch(() => {
+          setData(rollback());
+          alert("Terjadi kesalahan saat mengupdate data");
+        });
+    } else {
+      // OPTIMISTIC ADD - Add to UI immediately with temp ID
+      const tempId = generateTempId();
+      const newItem: BahanBakuNPK = {
+        ...form,
+        id: tempId,
+        _plant: currentPlant,
+        totalBerat: calculateTotalBerat(form.entries),
+        _isPending: true,
+      };
+      const { rollback } = optimisticAdd(data, newItem, tempId);
+      setData((prev) => [newItem, ...prev]);
+
+      // Create in background
+      createWithLog<typeof dataToSave>(SHEETS.BAHAN_BAKU_NPK, dataToSave)
+        .then((result) => {
+          if (result.success && result.data) {
+            // Replace temp ID with real ID
+            setData((prev) => confirmAdd(prev, tempId, result.data!.id || tempId));
+          } else {
+            // Rollback on error
+            setData(rollback());
+            alert(result.error || "Gagal menyimpan data");
+          }
+        })
+        .catch(() => {
+          setData(rollback());
+          alert("Terjadi kesalahan saat menyimpan data");
+        });
     }
+
+    setForm(initialFormState);
+    setEditingId(null);
+    setTimeout(() => setShowSuccess(false), 1500);
   };
 
   const handleEdit = (item: BahanBakuNPK) => {
@@ -385,34 +395,33 @@ const BahanBakuNPKPage = ({ plant }: BahanBakuNPKPageProps) => {
   const confirmDelete = async () => {
     if (!deleteId) return;
 
-    setLoading(true);
-    try {
-      const itemToDelete = data.find((item) => item.id === deleteId);
-
-      // Delete with logging
-      const deleteResult = await deleteWithLog(SHEETS.BAHAN_BAKU_NPK, {
-        id: deleteId,
-        _plant: itemToDelete?._plant,
+    const itemToDelete = data.find((item) => item.id === deleteId);
+    
+    // OPTIMISTIC DELETE - Remove from UI immediately
+    const { rollback } = optimisticDelete(data, deleteId);
+    setData((prev) => prev.filter((item) => item.id !== deleteId));
+    setShowDeleteConfirm(false);
+    setShowSuccess(true);
+    
+    // Delete in background
+    deleteWithLog(SHEETS.BAHAN_BAKU_NPK, {
+      id: deleteId,
+      _plant: itemToDelete?._plant,
+    })
+      .then((result) => {
+        if (!result.success) {
+          // Rollback on error
+          setData(rollback());
+          alert(result.error || "Gagal menghapus data");
+        }
+      })
+      .catch(() => {
+        setData(rollback());
+        alert("Terjadi kesalahan saat menghapus data");
       });
-      if (deleteResult.success) {
-        setData((prev) => prev.filter((item) => item.id !== deleteId));
-        setShowDeleteConfirm(false);
-        setDeleteId(null);
-        setShowSuccess(true);
-        setTimeout(() => setShowSuccess(false), 2000);
-      } else {
-        throw new Error(deleteResult.error || "Gagal menghapus data");
-      }
-    } catch (error) {
-      console.error("Error deleting data:", error);
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Terjadi kesalahan saat menghapus data"
-      );
-    } finally {
-      setLoading(false);
-    }
+
+    setDeleteId(null);
+    setTimeout(() => setShowSuccess(false), 1500);
   };
 
   const openAddForm = () => {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Factory, Eye, EyeOff, User, Lock } from "lucide-react";
@@ -7,6 +7,22 @@ import { useAuthStore } from "@/stores";
 import { generateId } from "@/lib/utils";
 import { loginUser } from "@/services/api";
 import type { User as UserType } from "@/types";
+
+// Prefetch dashboard data in background after login
+const prefetchDashboardData = () => {
+  // Import and prefetch in background - don't await
+  import("@/services/api").then(({ fetchDataByPlant, SHEETS }) => {
+    // Prefetch most important data for dashboard
+    Promise.all([
+      fetchDataByPlant(SHEETS.PRODUKSI_NPK),
+      fetchDataByPlant(SHEETS.PRODUKSI_BLENDING),
+      fetchDataByPlant(SHEETS.DOWNTIME),
+      fetchDataByPlant(SHEETS.WORK_REQUEST),
+    ]).catch(() => {
+      // Silent fail - cache will be populated on actual page load
+    });
+  });
+};
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -17,14 +33,22 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    
+    // Validate before setting loading
+    const trimmedUsername = username.trim();
+    if (!trimmedUsername || !password) {
+      setError("Username dan password harus diisi");
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
-      // Call API to login
-      const result = await loginUser(username.trim(), password);
+      // Call API to login with fast timeout
+      const result = await loginUser(trimmedUsername, password);
 
       if (result.success && result.data) {
         const userData = result.data.user as UserType;
@@ -35,17 +59,22 @@ const LoginPage = () => {
 
         // Login to store
         login(userData, sessionData.id, deviceId);
-        navigate("/dashboard");
+        
+        // Start prefetching dashboard data in background
+        prefetchDashboardData();
+        
+        // Navigate immediately after login - don't wait for prefetch
+        navigate("/dashboard", { replace: true });
       } else {
         setError(result.error || "Username atau password salah");
+        setIsLoading(false);
       }
     } catch (err) {
       console.error("Login error:", err);
       setError("Terjadi kesalahan. Silakan coba lagi.");
-    } finally {
       setIsLoading(false);
     }
-  };
+  }, [username, password, login, navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-dark-900 flex items-center justify-center p-4">

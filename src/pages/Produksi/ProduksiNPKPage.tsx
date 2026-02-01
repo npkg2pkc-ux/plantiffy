@@ -8,7 +8,7 @@ import {
   CalendarDays,
   History,
 } from "lucide-react";
-import { useSaveShortcut, useDataWithLogging } from "@/hooks";
+import { useSaveShortcut, useDataWithLogging, useOptimisticList, generateTempId } from "@/hooks";
 import {
   Button,
   Card,
@@ -58,6 +58,7 @@ interface ProduksiNPKPageProps {
 const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
   const { user } = useAuthStore();
   const { createWithLog, updateWithLog, deleteWithLog } = useDataWithLogging();
+  const { optimisticAdd, optimisticUpdate, optimisticDelete, confirmAdd, confirmUpdate } = useOptimisticList<ProduksiNPK>();
   const [data, setData] = useState<ProduksiNPK[]>([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -234,60 +235,65 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    
+    // Close form immediately for faster UX
+    setShowForm(false);
+    setShowSuccess(true);
 
-    try {
-      if (editingId) {
-        // Update existing
-        const updateResult = await updateWithLog<ProduksiNPK>("produksi_npk", {
-          ...form,
-          id: editingId,
-          _plant: plant,
-        });
-        if (updateResult.success) {
-          setData((prev) =>
-            prev.map((item) =>
-              item.id === editingId
-                ? { ...form, id: editingId, _plant: plant }
-                : item
-            )
-          );
-        } else {
-          throw new Error(updateResult.error || "Gagal mengupdate data");
-        }
-      } else {
-        // Add new
-        const newData = { ...form, _plant: plant };
-        const createResult = await createWithLog<ProduksiNPK>(
-          "produksi_npk",
-          newData
-        );
-        if (createResult.success && createResult.data) {
-          const newItem: ProduksiNPK = {
-            ...createResult.data,
-            _plant: plant,
-          };
-          setData((prev) => [newItem, ...prev]);
-        } else {
-          throw new Error(createResult.error || "Gagal menyimpan data");
-        }
-      }
-
-      setShowForm(false);
-      setForm(initialFormState);
-      setEditingId(null);
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 2000);
-    } catch (error) {
-      console.error("Error saving data:", error);
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Terjadi kesalahan saat menyimpan data"
+    if (editingId) {
+      // OPTIMISTIC UPDATE - Update UI immediately
+      const itemToUpdate: ProduksiNPK = { ...form, id: editingId, _plant: plant };
+      const { rollback } = optimisticUpdate(data, itemToUpdate);
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === editingId ? { ...itemToUpdate, _isPending: true } : item
+        )
       );
-    } finally {
-      setLoading(false);
+
+      // Update in background
+      updateWithLog<ProduksiNPK>("produksi_npk", {
+        ...form,
+        id: editingId,
+        _plant: plant,
+      })
+        .then((result) => {
+          if (result.success) {
+            setData((prev) => confirmUpdate(prev, editingId));
+          } else {
+            setData(rollback());
+            alert(result.error || "Gagal mengupdate data");
+          }
+        })
+        .catch(() => {
+          setData(rollback());
+          alert("Terjadi kesalahan saat mengupdate data");
+        });
+    } else {
+      // OPTIMISTIC ADD - Add to UI immediately with temp ID
+      const tempId = generateTempId();
+      const newItem: ProduksiNPK = { ...form, id: tempId, _plant: plant, _isPending: true };
+      const { rollback } = optimisticAdd(data, newItem, tempId);
+      setData((prev) => [newItem, ...prev]);
+
+      // Create in background
+      createWithLog<ProduksiNPK>("produksi_npk", { ...form, _plant: plant })
+        .then((result) => {
+          if (result.success && result.data) {
+            setData((prev) => confirmAdd(prev, tempId, result.data!.id || tempId));
+          } else {
+            setData(rollback());
+            alert(result.error || "Gagal menyimpan data");
+          }
+        })
+        .catch(() => {
+          setData(rollback());
+          alert("Terjadi kesalahan saat menyimpan data");
+        });
     }
+
+    setForm(initialFormState);
+    setEditingId(null);
+    setTimeout(() => setShowSuccess(false), 1500);
   };
 
   const handleEdit = (item: ProduksiNPK) => {
@@ -362,31 +368,30 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
   const confirmDelete = async () => {
     if (!deleteId) return;
 
-    setLoading(true);
-    try {
-      const deleteResult = await deleteWithLog("produksi_npk", {
-        id: deleteId,
-        _plant: plant,
+    // OPTIMISTIC DELETE - Remove from UI immediately
+    const { rollback } = optimisticDelete(data, deleteId);
+    setData((prev) => prev.filter((item) => item.id !== deleteId));
+    setShowDeleteConfirm(false);
+    setShowSuccess(true);
+
+    // Delete in background
+    deleteWithLog("produksi_npk", {
+      id: deleteId,
+      _plant: plant,
+    })
+      .then((result) => {
+        if (!result.success) {
+          setData(rollback());
+          alert(result.error || "Gagal menghapus data");
+        }
+      })
+      .catch(() => {
+        setData(rollback());
+        alert("Terjadi kesalahan saat menghapus data");
       });
-      if (deleteResult.success) {
-        setData((prev) => prev.filter((item) => item.id !== deleteId));
-        setShowDeleteConfirm(false);
-        setDeleteId(null);
-        setShowSuccess(true);
-        setTimeout(() => setShowSuccess(false), 2000);
-      } else {
-        throw new Error(deleteResult.error || "Gagal menghapus data");
-      }
-    } catch (error) {
-      console.error("Error deleting data:", error);
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Terjadi kesalahan saat menghapus data"
-      );
-    } finally {
-      setLoading(false);
-    }
+
+    setDeleteId(null);
+    setTimeout(() => setShowSuccess(false), 1500);
   };
 
   const openAddForm = () => {
