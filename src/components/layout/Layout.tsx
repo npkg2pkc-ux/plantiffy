@@ -759,12 +759,7 @@ const navItems: NavItemProps[] = [
 const Sidebar = () => {
   const location = useLocation();
   const { user } = useAuthStore();
-  const [expandedItems, setExpandedItems] = useState<string[]>([
-    "Produksi",
-    "Laporan",
-    "Data",
-    "Pengaturan",
-  ]);
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const {
     sidebarCollapsed,
     toggleSidebarCollapse,
