@@ -2464,10 +2464,10 @@ function updateStockMasukWithLog(materialId, jumlah, keterangan, userInfo) {
     return {
       success: true,
       data: {
-        id: materialId,
-        stok: newStok,
-        stok_sebelum: currentStok,
-        jumlah_masuk: amount,
+        material_id: materialId,
+        stok_lama: currentStok,
+        jumlah_ditambah: amount,
+        stok_baru: newStok,
       },
     };
   } catch (error) {
@@ -2571,10 +2571,10 @@ function updateStockKeluarWithLog(materialId, jumlah, keterangan, userInfo) {
     return {
       success: true,
       data: {
-        id: materialId,
-        stok: newStok,
-        stok_sebelum: currentStok,
-        jumlah_keluar: amount,
+        material_id: materialId,
+        stok_lama: currentStok,
+        jumlah_dikurangi: amount,
+        stok_baru: newStok,
       },
     };
   } catch (error) {
