@@ -1105,7 +1105,7 @@ const Sidebar = () => {
             <div className="flex items-center justify-between text-xs text-dark-400">
               <span>© 2025 Plantiffy</span>
               <span className="px-2 py-0.5 bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-400 rounded-full font-medium">
-                v2.4.0
+                v2.4.2
               </span>
             </div>
           </div>

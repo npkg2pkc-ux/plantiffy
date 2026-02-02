@@ -828,20 +828,23 @@ function updateRecord(sheetName, data) {
     const idIndex = headers.indexOf("id");
 
     if (idIndex === -1) {
-      return { success: false, error: "ID column not found" };
+      return { success: false, error: "ID column not found in sheet: " + sheetName };
     }
 
-    // Find row with matching ID
+    // Find row with matching ID - use string comparison to handle type mismatches
+    const searchId = String(data.id).trim();
     let rowIndex = -1;
     for (let i = 1; i < allData.length; i++) {
-      if (allData[i][idIndex] === data.id) {
+      const rowId = String(allData[i][idIndex] || "").trim();
+      if (rowId === searchId) {
         rowIndex = i + 1; // +1 because sheet rows are 1-indexed
         break;
       }
     }
 
     if (rowIndex === -1) {
-      return { success: false, error: "Record not found" };
+      Logger.log("updateRecord: Record not found. Sheet: " + sheetName + ", ID: " + searchId + ", Total rows: " + allData.length);
+      return { success: false, error: "Record not found (ID: " + searchId + " in " + sheetName + ")" };
     }
 
     // Update row
@@ -877,20 +880,23 @@ function deleteRecord(sheetName, data) {
     const idIndex = headers.indexOf("id");
 
     if (idIndex === -1) {
-      return { success: false, error: "ID column not found" };
+      return { success: false, error: "ID column not found in sheet: " + sheetName };
     }
 
-    // Find row with matching ID
+    // Find row with matching ID - use string comparison to handle type mismatches
+    const searchId = String(data.id).trim();
     let rowIndex = -1;
     for (let i = 1; i < allData.length; i++) {
-      if (allData[i][idIndex] === data.id) {
+      const rowId = String(allData[i][idIndex] || "").trim();
+      if (rowId === searchId) {
         rowIndex = i + 1;
         break;
       }
     }
 
     if (rowIndex === -1) {
-      return { success: false, error: "Record not found" };
+      Logger.log("deleteRecord: Record not found. Sheet: " + sheetName + ", ID: " + searchId);
+      return { success: false, error: "Record not found (ID: " + searchId + " in " + sheetName + ")" };
     }
 
     // Delete row
@@ -1042,8 +1048,11 @@ function checkSession(sessionId) {
     const deviceIdIndex = headers.indexOf("deviceId");
     const browserIndex = headers.indexOf("browser");
 
+    // Use string comparison for ID matching
+    const searchId = String(sessionId).trim();
     for (let i = 1; i < allData.length; i++) {
-      if (allData[i][idIndex] === sessionId) {
+      const rowId = String(allData[i][idIndex] || "").trim();
+      if (rowId === searchId) {
         // Update last activity
         const lastActivityIndex = headers.indexOf("lastActivity");
         if (lastActivityIndex !== -1) {
@@ -2344,8 +2353,9 @@ function deleteMaterialWithLog(materialId, userInfo) {
     // Get material info before deleting for log preview
     const materialsResult = readSheet("materials");
     let preview = materialId;
+    const searchId = String(materialId).trim();
     if (materialsResult.success && materialsResult.data) {
-      const material = materialsResult.data.find((m) => m.id === materialId);
+      const material = materialsResult.data.find((m) => String(m.id || "").trim() === searchId);
       if (material) {
         preview = `${material.kode_material} - ${material.nama_material}`;
       }
@@ -2411,8 +2421,11 @@ function updateStockMasukWithLog(materialId, jumlah, keterangan, userInfo) {
     let kodeMaterial = "";
     let namaMaterial = "";
 
+    // Use string comparison to handle type mismatches
+    const searchId = String(materialId).trim();
     for (let i = 1; i < allData.length; i++) {
-      if (allData[i][idIndex] === materialId) {
+      const rowId = String(allData[i][idIndex] || "").trim();
+      if (rowId === searchId) {
         materialRow = i + 1;
         currentStok = parseFloat(allData[i][stokIndex]) || 0;
         kodeMaterial = allData[i][kodeMaterialIndex] || "";
@@ -2422,7 +2435,8 @@ function updateStockMasukWithLog(materialId, jumlah, keterangan, userInfo) {
     }
 
     if (materialRow === -1) {
-      return { success: false, error: "Material tidak ditemukan" };
+      Logger.log("updateStockMasukWithLog: Material not found. ID: " + searchId);
+      return { success: false, error: "Material tidak ditemukan (ID: " + searchId + ")" };
     }
 
     const newStok = currentStok + amount;
@@ -2514,8 +2528,11 @@ function updateStockKeluarWithLog(materialId, jumlah, keterangan, userInfo) {
     let kodeMaterial = "";
     let namaMaterial = "";
 
+    // Use string comparison to handle type mismatches
+    const searchId = String(materialId).trim();
     for (let i = 1; i < allData.length; i++) {
-      if (allData[i][idIndex] === materialId) {
+      const rowId = String(allData[i][idIndex] || "").trim();
+      if (rowId === searchId) {
         materialRow = i + 1;
         currentStok = parseFloat(allData[i][stokIndex]) || 0;
         kodeMaterial = allData[i][kodeMaterialIndex] || "";
@@ -2525,7 +2542,8 @@ function updateStockKeluarWithLog(materialId, jumlah, keterangan, userInfo) {
     }
 
     if (materialRow === -1) {
-      return { success: false, error: "Material tidak ditemukan" };
+      Logger.log("updateStockKeluarWithLog: Material not found. ID: " + searchId);
+      return { success: false, error: "Material tidak ditemukan (ID: " + searchId + ")" };
     }
 
     if (currentStok < amount) {
@@ -2615,11 +2633,13 @@ function updateStockMasuk(materialId, jumlah, keterangan) {
     const stokIndex = headers.indexOf("stok");
     const updatedAtIndex = headers.indexOf("updated_at");
 
-    // Find material row
+    // Find material row - use string comparison
+    const searchId = String(materialId).trim();
     let materialRow = -1;
     let currentStok = 0;
     for (let i = 1; i < allData.length; i++) {
-      if (allData[i][idIndex] === materialId) {
+      const rowId = String(allData[i][idIndex] || "").trim();
+      if (rowId === searchId) {
         materialRow = i + 1;
         currentStok = parseFloat(allData[i][stokIndex]) || 0;
         break;
@@ -2627,7 +2647,7 @@ function updateStockMasuk(materialId, jumlah, keterangan) {
     }
 
     if (materialRow === -1) {
-      return { success: false, error: "Material tidak ditemukan" };
+      return { success: false, error: "Material tidak ditemukan (ID: " + searchId + ")" };
     }
 
     // Calculate new stock
@@ -2700,12 +2720,14 @@ function updateStockKeluar(materialId, jumlah, keterangan) {
     const namaIndex = headers.indexOf("nama_material");
     const updatedAtIndex = headers.indexOf("updated_at");
 
-    // Find material row
+    // Find material row - use string comparison
+    const searchId = String(materialId).trim();
     let materialRow = -1;
     let currentStok = 0;
     let namaMaterial = "";
     for (let i = 1; i < allData.length; i++) {
-      if (allData[i][idIndex] === materialId) {
+      const rowId = String(allData[i][idIndex] || "").trim();
+      if (rowId === searchId) {
         materialRow = i + 1;
         currentStok = parseFloat(allData[i][stokIndex]) || 0;
         namaMaterial = allData[i][namaIndex] || "";
@@ -2714,7 +2736,7 @@ function updateStockKeluar(materialId, jumlah, keterangan) {
     }
 
     if (materialRow === -1) {
-      return { success: false, error: "Material tidak ditemukan" };
+      return { success: false, error: "Material tidak ditemukan (ID: " + searchId + ")" };
     }
 
     // Validate stock won't go negative
@@ -3068,8 +3090,11 @@ function updateRecordWithLog(sheetName, data, userInfo) {
       const headers = allData[0];
       const idIndex = headers.indexOf("id");
 
+      // Use string comparison for ID matching
+      const searchId = String(data.id).trim();
       for (let i = 1; i < allData.length; i++) {
-        if (allData[i][idIndex] === data.id) {
+        const rowId = String(allData[i][idIndex] || "").trim();
+        if (rowId === searchId) {
           oldData = {};
           headers.forEach((h, idx) => {
             oldData[h] = allData[i][idx];
@@ -3148,8 +3173,11 @@ function deleteRecordWithLog(sheetName, data, userInfo) {
       const headers = allData[0];
       const idIndex = headers.indexOf("id");
 
+      // Use string comparison for ID matching
+      const searchId = String(data.id).trim();
       for (let i = 1; i < allData.length; i++) {
-        if (allData[i][idIndex] === data.id) {
+        const rowId = String(allData[i][idIndex] || "").trim();
+        if (rowId === searchId) {
           oldData = {};
           headers.forEach((h, idx) => {
             oldData[h] = allData[i][idx];
