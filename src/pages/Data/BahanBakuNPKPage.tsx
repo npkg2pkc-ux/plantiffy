@@ -55,6 +55,23 @@ const YEAR_OPTIONS = [
   { value: String(currentYear + 1), label: String(currentYear + 1) },
 ];
 
+// Month options
+const MONTH_OPTIONS = [
+  { value: "ALL", label: "Semua Bulan" },
+  { value: "1", label: "Januari" },
+  { value: "2", label: "Februari" },
+  { value: "3", label: "Maret" },
+  { value: "4", label: "April" },
+  { value: "5", label: "Mei" },
+  { value: "6", label: "Juni" },
+  { value: "7", label: "Juli" },
+  { value: "8", label: "Agustus" },
+  { value: "9", label: "September" },
+  { value: "10", label: "Oktober" },
+  { value: "11", label: "November" },
+  { value: "12", label: "Desember" },
+];
+
 const BAHAN_BAKU_OPTIONS = [
   { value: "Urea", label: "Urea" },
   { value: "DAP", label: "DAP" },
@@ -99,6 +116,9 @@ const BahanBakuNPKPage = ({ plant }: BahanBakuNPKPageProps) => {
   const [form, setForm] = useState<BahanBakuNPK>(initialFormState);
   const [selectedYear, setSelectedYear] = useState<string>(
     String(new Date().getFullYear())
+  );
+  const [selectedMonth, setSelectedMonth] = useState<string>(
+    String(new Date().getMonth() + 1)
   );
   const currentPlant = plant;
 
@@ -434,10 +454,13 @@ const BahanBakuNPKPage = ({ plant }: BahanBakuNPKPageProps) => {
     const matchesPlant = item._plant === currentPlant;
 
     // Filter by year
-    const itemYear = new Date(item.tanggal).getFullYear();
+    const itemDate = new Date(item.tanggal);
+    const itemYear = itemDate.getFullYear();
+    const itemMonth = itemDate.getMonth() + 1;
     const matchesYear = itemYear === parseInt(selectedYear);
+    const matchesMonth = selectedMonth === "ALL" || itemMonth === parseInt(selectedMonth);
 
-    return matchesPlant && matchesYear;
+    return matchesPlant && matchesYear && matchesMonth;
   });
 
   // Calculate totals per bahan baku
@@ -543,14 +566,24 @@ const BahanBakuNPKPage = ({ plant }: BahanBakuNPKPageProps) => {
       {/* Data Table */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Data Bahan Baku NPK - Tahun {selectedYear}</CardTitle>
-            <Select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value)}
-              options={YEAR_OPTIONS}
-              className="w-32"
-            />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <CardTitle>
+              Data Bahan Baku NPK - {selectedMonth === "ALL" ? "Tahun" : MONTH_OPTIONS.find(m => m.value === selectedMonth)?.label} {selectedYear}
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                options={MONTH_OPTIONS}
+                className="w-40"
+              />
+              <Select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(e.target.value)}
+                options={YEAR_OPTIONS}
+                className="w-28"
+              />
+            </div>
           </div>
         </CardHeader>
         <DataTable
