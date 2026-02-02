@@ -187,13 +187,13 @@ const PrintModal = ({
             text-transform: uppercase;
             margin-bottom: ${compactMode ? "3px" : "4px"};
             letter-spacing: 1px;
-            color: #800000;
+            color: #000;
           }
           .header .periode {
             font-size: ${compactMode ? "10pt" : "11pt"};
             font-weight: bold;
             text-transform: uppercase;
-            color: #c00000;
+            color: #000;
           }
           .filter-info {
             font-size: ${compactMode ? "8pt" : "9pt"};
