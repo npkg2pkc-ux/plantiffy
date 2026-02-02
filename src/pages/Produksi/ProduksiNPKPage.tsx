@@ -900,6 +900,7 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
         onClose={() => setShowPrintModal(false)}
         title={`Produksi NPK Granul ${plant === "NPK1" ? "1" : "2"}`}
         plant={plant === "NPK1" ? "NPK Plant 1" : "NPK Plant 2"}
+        compactMode={true}
         data={data as unknown as Record<string, unknown>[]}
         columns={[
           {
