@@ -4,7 +4,6 @@ import {
   Edit2,
   Trash2,
   Printer,
-  Search,
   CalendarDays,
   History,
 } from "lucide-react";
@@ -15,7 +14,6 @@ import {
   CardHeader,
   CardTitle,
   Input,
-  Select,
   Modal,
   ConfirmDialog,
   Badge,
@@ -62,8 +60,6 @@ const ProduksiNPKMiniPage = () => {
   const [selectedMonth, setSelectedMonth] = useState<number>(
     new Date().getMonth()
   );
-  const [isCustomFormulasi, setIsCustomFormulasi] = useState(false);
-  const [customFormulasiValue, setCustomFormulasiValue] = useState("");
 
   // Approval states
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
@@ -99,14 +95,6 @@ const ProduksiNPKMiniPage = () => {
   const userNeedsApprovalEdit = needsApprovalForEdit(userRole);
   const userNeedsApprovalDelete = needsApprovalForDelete(userRole);
   const userIsViewOnly = isViewOnly(userRole);
-
-  const formulasiOptions = [
-    { value: "NPK Mini 15-15-15", label: "NPK Mini 15-15-15" },
-    { value: "NPK Mini 16-16-16", label: "NPK Mini 16-16-16" },
-    { value: "NPK Mini 20-10-10", label: "NPK Mini 20-10-10" },
-    { value: "NPK Mini 12-12-17", label: "NPK Mini 12-12-17" },
-    { value: "Custom", label: "Custom" },
-  ];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -264,14 +252,6 @@ const ProduksiNPKMiniPage = () => {
     }
     setForm(item);
     setEditingId(item.id || null);
-    // Check if formulasi is custom (not in predefined options)
-    const isPredefined = formulasiOptions.some(
-      (opt) => opt.value === item.formulasi && opt.value !== "Custom"
-    );
-    setIsCustomFormulasi(!isPredefined && item.formulasi !== "");
-    setCustomFormulasiValue(
-      !isPredefined && item.formulasi !== "" ? item.formulasi : ""
-    );
     setShowForm(true);
   };
 
@@ -366,8 +346,6 @@ const ProduksiNPKMiniPage = () => {
   const openAddForm = () => {
     setForm(initialFormState);
     setEditingId(null);
-    setIsCustomFormulasi(false);
-    setCustomFormulasiValue("");
     setShowForm(true);
   };
 
@@ -609,37 +587,16 @@ const ProduksiNPKMiniPage = () => {
             required
           />
 
-          <Select
+          <Input
             label="Formulasi"
-            value={isCustomFormulasi ? "Custom" : form.formulasi}
-            onChange={(e) => {
-              const val = e.target.value;
-              if (val === "Custom") {
-                setIsCustomFormulasi(true);
-                setCustomFormulasiValue("");
-              } else {
-                setIsCustomFormulasi(false);
-                setForm((prev) => ({ ...prev, formulasi: val }));
-              }
-            }}
-            options={formulasiOptions}
-            placeholder="Pilih formulasi"
+            type="text"
+            value={form.formulasi}
+            onChange={(e) =>
+              setForm((prev) => ({ ...prev, formulasi: e.target.value }))
+            }
+            placeholder="Masukkan formulasi (contoh: NPK Mini 15-15-15)"
             required
           />
-
-          {isCustomFormulasi && (
-            <Input
-              label="Formulasi Custom"
-              type="text"
-              value={customFormulasiValue}
-              onChange={(e) => {
-                setCustomFormulasiValue(e.target.value);
-                setForm((prev) => ({ ...prev, formulasi: e.target.value }));
-              }}
-              placeholder="Masukkan formulasi custom (contoh: NPK Mini 18-18-18)"
-              required
-            />
-          )}
 
           <Input
             label="Tonase (Ton)"
