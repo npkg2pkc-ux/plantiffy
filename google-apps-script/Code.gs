@@ -2461,6 +2461,18 @@ function updateStockMasukWithLog(materialId, jumlah, keterangan, userInfo) {
 
     createRecord("stock_history", historyData);
 
+    // Create transaction record for Riwayat Transaksi
+    const transactionData = {
+      id: generateId(),
+      material_id: materialId,
+      tipe_transaksi: "masuk",
+      jumlah: amount,
+      keterangan: keterangan || "",
+      created_at: new Date().toISOString(),
+    };
+
+    createRecord("material_transactions", transactionData);
+
     // Log activity
     const preview = `Stock Masuk: ${kodeMaterial} - ${namaMaterial} (+${amount})`;
 
@@ -2571,6 +2583,18 @@ function updateStockKeluarWithLog(materialId, jumlah, keterangan, userInfo) {
     };
 
     createRecord("stock_history", historyData);
+
+    // Create transaction record for Riwayat Transaksi
+    const transactionData = {
+      id: generateId(),
+      material_id: materialId,
+      tipe_transaksi: "keluar",
+      jumlah: amount,
+      keterangan: keterangan || "",
+      created_at: new Date().toISOString(),
+    };
+
+    createRecord("material_transactions", transactionData);
 
     // Log activity
     const preview = `Stock Keluar: ${kodeMaterial} - ${namaMaterial} (-${amount})`;
