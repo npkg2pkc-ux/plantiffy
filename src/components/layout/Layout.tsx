@@ -58,6 +58,7 @@ interface ActiveUser {
 interface DashboardMetrics {
   totalProduksiNPK: number;
   totalProduksiBlending: number;
+  totalProduksiNPKMini: number;
   totalDowntime: number;
   workRequestPending: number;
   troubleRecordOpen: number;
@@ -87,6 +88,7 @@ const ActiveUsersMarquee = () => {
   const [dashboardMetrics, setDashboardMetrics] = useState<DashboardMetrics>({
     totalProduksiNPK: 0,
     totalProduksiBlending: 0,
+    totalProduksiNPKMini: 0,
     totalDowntime: 0,
     workRequestPending: 0,
     troubleRecordOpen: 0,
@@ -125,6 +127,7 @@ const ActiveUsersMarquee = () => {
       const [
         produksiNPKResult,
         produksiBlendingResult,
+        produksiNPKMiniResult,
         downtimeResult,
         workRequestResult,
         troubleRecordResult,
@@ -134,6 +137,7 @@ const ActiveUsersMarquee = () => {
       ] = await Promise.all([
         fetchDataByPlant(SHEETS.PRODUKSI_NPK),
         fetchDataByPlant(SHEETS.PRODUKSI_BLENDING),
+        fetchDataByPlant(SHEETS.PRODUKSI_NPK_MINI),
         fetchDataByPlant(SHEETS.DOWNTIME),
         fetchDataByPlant(SHEETS.WORK_REQUEST),
         fetchDataByPlant(SHEETS.TROUBLE_RECORD),
@@ -164,6 +168,9 @@ const ActiveUsersMarquee = () => {
       );
       const produksiBlending = filterByYear(
         (produksiBlendingResult.data as Array<{ tanggal?: string; tonase?: number }>) || []
+      );
+      const produksiNPKMini = filterByYear(
+        (produksiNPKMiniResult.data as Array<{ tanggal?: string; tonase?: number }>) || []
       );
       const downtime = filterByYear(
         (downtimeResult.data as Array<{ tanggal?: string; downtime?: number }>) || []
@@ -197,6 +204,11 @@ const ActiveUsersMarquee = () => {
         0
       );
 
+      const totalProduksiNPKMini = produksiNPKMini.reduce(
+        (sum, item) => sum + parseNum(item.tonase),
+        0
+      );
+
       const totalDowntime = downtime.reduce(
         (sum, item) => sum + parseNum(item.downtime),
         0
@@ -220,6 +232,7 @@ const ActiveUsersMarquee = () => {
       setDashboardMetrics({
         totalProduksiNPK,
         totalProduksiBlending,
+        totalProduksiNPKMini,
         totalDowntime,
         workRequestPending,
         troubleRecordOpen,
@@ -472,6 +485,17 @@ const ActiveUsersMarquee = () => {
       text: `Produksi Blending: ${formatMarqueeNumber(dashboardMetrics.totalProduksiBlending)} Ton`,
       bgColor: "bg-blue-500/20",
     },
+    // NPK Mini production
+    ...(dashboardMetrics.totalProduksiNPKMini > 0
+      ? [
+          {
+            id: "npkmini",
+            icon: "🧪",
+            text: `Produksi NPK Mini: ${formatMarqueeNumber(dashboardMetrics.totalProduksiNPKMini)} Ton`,
+            bgColor: "bg-teal-500/20",
+          },
+        ]
+      : []),
     // Downtime info
     ...(dashboardMetrics.totalDowntime > 0
       ? [
