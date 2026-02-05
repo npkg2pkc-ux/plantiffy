@@ -1,6 +1,6 @@
 {
-  "name": "PlantIQ - NPK Production Management",
-  "short_name": "PlantIQ",
+  "name": "Plantiffy - NPK Production Management",
+  "short_name": "Plantiffy",
   "description": "Sistem manajemen produksi NPK yang komprehensif",
   "start_url": "/",
   "display": "standalone",
@@ -65,7 +65,7 @@
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Dashboard PlantIQ"
+      "label": "Dashboard Plantiffy"
     }
   ]
 }

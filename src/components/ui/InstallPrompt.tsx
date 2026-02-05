@@ -61,7 +61,7 @@ export function InstallPrompt() {
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-gray-900 dark:text-white text-sm">
-                Install PlantIQ
+                Install Plantiffy
               </h3>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                 Akses lebih cepat langsung dari layar utama HP Anda
@@ -105,7 +105,7 @@ export function InstallPrompt() {
                 />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                Install PlantIQ di iPhone
+                Install Plantiffy di iPhone
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
                 Ikuti langkah berikut untuk menambahkan aplikasi ke layar utama:
