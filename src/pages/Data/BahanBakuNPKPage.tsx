@@ -190,6 +190,20 @@ const BahanBakuNPKPage = ({ plant }: BahanBakuNPKPageProps) => {
     }));
   };
 
+  // Handle Enter key to add new entry
+  const handleEntryKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (e.key === "Enter") {
+      e.preventDefault(); // Prevent form submission
+      addEntry();
+      // Focus on the new entry's input after render
+      setTimeout(() => {
+        const inputs = document.querySelectorAll<HTMLInputElement>('input[type="number"][placeholder="Berat"]');
+        const newInput = inputs[inputs.length - 1];
+        if (newInput) newInput.focus();
+      }, 50);
+    }
+  };
+
   // Remove entry
   const removeEntry = (index: number) => {
     if (form.entries.length <= 1) return;
@@ -423,10 +437,10 @@ const BahanBakuNPKPage = ({ plant }: BahanBakuNPKPageProps) => {
     setShowDeleteConfirm(false);
     setShowSuccess(true);
     
-    // Delete in background
+    // Delete in background - use currentPlant as fallback for safety
     deleteWithLog(SHEETS.BAHAN_BAKU_NPK, {
       id: deleteId,
-      _plant: itemToDelete?._plant,
+      _plant: itemToDelete?._plant || currentPlant,
     })
       .then((result) => {
         if (!result.success) {
@@ -716,6 +730,7 @@ const BahanBakuNPKPage = ({ plant }: BahanBakuNPKPageProps) => {
                       onChange={(e) =>
                         updateEntry(index, "berat", e.target.value)
                       }
+                      onKeyDown={(e) => handleEntryKeyDown(e, index)}
                       placeholder="Berat"
                       step="0.01"
                       min="0"

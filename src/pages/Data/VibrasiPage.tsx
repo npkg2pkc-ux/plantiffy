@@ -296,10 +296,10 @@ const VibrasiPage = ({ plant }: VibrasiPageProps) => {
     try {
       const itemToDelete = data.find((item) => item.id === deleteId);
 
-      // Delete with logging
+      // Delete with logging - use currentPlant as fallback
       const deleteResult = await deleteWithLog(SHEETS.VIBRASI, {
         id: deleteId,
-        _plant: itemToDelete?._plant,
+        _plant: itemToDelete?._plant || currentPlant,
       });
       if (deleteResult.success) {
         setData((prev) => prev.filter((item) => item.id !== deleteId));

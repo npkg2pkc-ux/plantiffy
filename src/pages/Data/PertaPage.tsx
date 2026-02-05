@@ -259,10 +259,12 @@ const PertaPage = () => {
     setLoading(true);
     try {
       const itemToDelete = data.find((item) => item.id === deleteId);
+      // Use user's plant as fallback (consistent with create/update)
+      const fallbackPlant = user?.plant === "ALL" ? "NPK2" : user?.plant;
 
       const deleteResult = await deleteWithLog("perta", {
         id: deleteId,
-        _plant: itemToDelete?._plant,
+        _plant: itemToDelete?._plant || fallbackPlant,
       });
       if (deleteResult.success) {
         setData((prev) => prev.filter((item) => item.id !== deleteId));

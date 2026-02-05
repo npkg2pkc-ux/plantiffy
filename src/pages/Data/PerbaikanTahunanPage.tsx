@@ -327,7 +327,7 @@ const PerbaikanTahunanPage = ({ plant }: PerbaikanTahunanPageProps) => {
 
       const deleteResult = await deleteWithLog("perbaikan_tahunan", {
         id: deleteId,
-        _plant: itemToDelete?._plant,
+        _plant: itemToDelete?._plant || currentPlant,
       });
       if (deleteResult.success) {
         setData((prev) => prev.filter((item) => item.id !== deleteId));

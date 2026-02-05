@@ -321,10 +321,10 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
     try {
       const itemToDelete = data.find((item) => item.id === deleteId);
 
-      // Delete with logging
+      // Delete with logging - use currentPlant as fallback
       const deleteResult = await deleteWithLog(SHEETS.TROUBLE_RECORD, {
         id: deleteId,
-        _plant: itemToDelete?._plant,
+        _plant: itemToDelete?._plant || currentPlant,
       });
       if (deleteResult.success) {
         setData((prev) => prev.filter((item) => item.id !== deleteId));

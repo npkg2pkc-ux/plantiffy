@@ -403,8 +403,10 @@ const RiksaTimbPortabelPage = () => {
     setLoading(true);
 
     try {
+      // riksa_timb_portabel is NPK2 only, but add _plant for consistency
       const result = await deleteWithLog("riksa_timb_portabel", {
         id: deleteId,
+        _plant: "NPK2",
       });
 
       if (result.success) {

@@ -251,7 +251,7 @@ const RekapBBMPage = ({ plant }: RekapBBMPageProps) => {
       const itemToDelete = data.find((d) => d.id === deleteId);
       const result = await deleteWithLog("rekap_bbm", {
         id: deleteId,
-        _plant: itemToDelete?._plant,
+        _plant: itemToDelete?._plant || currentPlant,
       });
 
       if (result.success) {
