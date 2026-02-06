@@ -25,6 +25,9 @@ import {
   Pencil,
   Trash2,
   Eye,
+  Volume2,
+  VolumeX,
+  History,
 } from "lucide-react";
 import {
   cn,
@@ -39,7 +42,8 @@ import {
   useNotificationStore,
   useChatStore,
 } from "@/stores";
-import { Badge, NotificationLogModal } from "@/components/ui";
+import { Badge, NotificationLogModal, VersionHistoryModal } from "@/components/ui";
+import { useNotificationSound } from "@/hooks/useNotificationSound";
 import type { Notification } from "@/types";
 
 // ============================================
@@ -765,6 +769,35 @@ const navItems: NavItemProps[] = [
   },
 ];
 
+// ============================================
+// VERSION BADGE COMPONENT (Clickable with History Modal)
+// ============================================
+const VersionBadge = () => {
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
+
+  return (
+    <>
+      <button
+        onClick={() => setShowVersionHistory(true)}
+        className={cn(
+          "px-2 py-0.5 rounded font-medium text-[10px] transition-all duration-200",
+          "bg-muted text-muted-foreground",
+          "hover:bg-primary-100 hover:text-primary-700 dark:hover:bg-primary-900/40 dark:hover:text-primary-400",
+          "cursor-pointer flex items-center gap-1"
+        )}
+        title="Klik untuk melihat perjalanan versi"
+      >
+        <History className="h-3 w-3" />
+        v2.5.0
+      </button>
+      <VersionHistoryModal
+        isOpen={showVersionHistory}
+        onClose={() => setShowVersionHistory(false)}
+      />
+    </>
+  );
+};
+
 const Sidebar = () => {
   const location = useLocation();
   const { user } = useAuthStore();
@@ -1120,9 +1153,7 @@ const Sidebar = () => {
           <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-border">
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>© 2025 Plantiffy</span>
-              <span className="px-2 py-0.5 bg-muted text-muted-foreground rounded font-medium text-[10px]">
-                v2.4.2
-              </span>
+              <VersionBadge />
             </div>
           </div>
         )}
@@ -1159,6 +1190,17 @@ const Header = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
+
+  // Notification sound hook
+  const { playSound, isSoundEnabled, toggleSound } = useNotificationSound();
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const prevUnreadCountRef = useRef(0);
+  const prevChatUnreadRef = useRef(0);
+
+  // Initialize sound toggle state
+  useEffect(() => {
+    setSoundEnabled(isSoundEnabled());
+  }, [isSoundEnabled]);
 
   // State for notification log modal
   const [showLogModal, setShowLogModal] = useState(false);
@@ -1256,6 +1298,13 @@ const Header = () => {
               new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
           );
           setNotifications(sorted);
+          
+          // Play notification sound if new unread notifications arrived
+          const newUnread = sorted.filter((n: any) => !n.read).length;
+          if (newUnread > prevUnreadCountRef.current && prevUnreadCountRef.current >= 0) {
+            playSound("notification");
+          }
+          prevUnreadCountRef.current = newUnread;
         }
       } catch (error) {
         console.error("Error loading notifications:", error);
@@ -1311,6 +1360,12 @@ const Header = () => {
             return msgTime > lastReadTime;
           }).length;
 
+          // Play message sound if new chat messages arrived (and chat is not open)
+          if (unreadCount > prevChatUnreadRef.current && prevChatUnreadRef.current >= 0 && !chatOpen) {
+            playSound("message");
+          }
+          prevChatUnreadRef.current = unreadCount;
+
           setUnreadChatCount(unreadCount);
         }
       } catch (error) {
@@ -1325,7 +1380,7 @@ const Header = () => {
       const interval = setInterval(loadChatMessages, 3000);
       return () => clearInterval(interval);
     }
-  }, [user, setUnreadChatCount]);
+  }, [user, setUnreadChatCount, chatOpen, playSound]);
 
   // Close notification panel on outside click
   useEffect(() => {
@@ -1380,6 +1435,30 @@ const Header = () => {
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Action Buttons Group */}
           <div className="flex items-center gap-1 p-0.5 bg-muted rounded-lg">
+            {/* Sound Toggle Button */}
+            <button
+              onClick={() => {
+                const newState = toggleSound();
+                setSoundEnabled(newState);
+                if (newState) {
+                  playSound("success");
+                }
+              }}
+              className={cn(
+                "p-2 rounded-md transition-all duration-150",
+                soundEnabled
+                  ? "text-primary-600 dark:text-primary-400"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+              title={soundEnabled ? "Suara notifikasi: Aktif" : "Suara notifikasi: Nonaktif"}
+            >
+              {soundEnabled ? (
+                <Volume2 className="h-4 w-4" />
+              ) : (
+                <VolumeX className="h-4 w-4" />
+              )}
+            </button>
+
             {/* Desktop/Mobile View Toggle - Only show on mobile devices */}
             {isMobileDevice && (
               <button

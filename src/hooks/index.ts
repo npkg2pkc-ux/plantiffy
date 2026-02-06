@@ -8,3 +8,4 @@ export {
   generateTempId,
 } from "./useOptimisticMutation";
 export { useFetchData, useParallelFetch, useLazyFetch } from "./useFetchData";
+export { useNotificationSound, playNotificationSoundStandalone } from "./useNotificationSound";

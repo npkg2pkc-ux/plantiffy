@@ -6,12 +6,14 @@ import {
   type UserInfoForLog,
 } from "@/services/api";
 import { useAuthStore } from "@/stores";
+import { playNotificationSoundStandalone } from "./useNotificationSound";
 import type { ApiResponse } from "@/types";
 
 /**
  * Custom hook for data operations with activity logging
  * Automatically sends notifications to supervisors, AVP, and admins
  * when data is created, updated, or deleted
+ * Now also plays notification sounds on successful operations
  */
 export function useDataWithLogging() {
   const { user } = useAuthStore();
@@ -37,7 +39,12 @@ export function useDataWithLogging() {
       data: T
     ): Promise<ApiResponse<T>> => {
       const userInfo = getUserInfo();
-      return createDataWithLog(baseSheet, data, userInfo);
+      const result = await createDataWithLog(baseSheet, data, userInfo);
+      // Play success sound on successful data creation
+      if (result.success) {
+        playNotificationSoundStandalone("success");
+      }
+      return result;
     },
     [getUserInfo]
   );
@@ -53,7 +60,12 @@ export function useDataWithLogging() {
       data: T
     ): Promise<ApiResponse<T>> => {
       const userInfo = getUserInfo();
-      return updateDataWithLog(baseSheet, data, userInfo);
+      const result = await updateDataWithLog(baseSheet, data, userInfo);
+      // Play success sound on successful data update
+      if (result.success) {
+        playNotificationSoundStandalone("success");
+      }
+      return result;
     },
     [getUserInfo]
   );
@@ -69,7 +81,12 @@ export function useDataWithLogging() {
       data: { id: string; _plant?: string }
     ): Promise<ApiResponse<boolean>> => {
       const userInfo = getUserInfo();
-      return deleteDataWithLog(baseSheet, data, userInfo);
+      const result = await deleteDataWithLog(baseSheet, data, userInfo);
+      // Play warning sound on successful data deletion
+      if (result.success) {
+        playNotificationSoundStandalone("warning");
+      }
+      return result;
     },
     [getUserInfo]
   );
