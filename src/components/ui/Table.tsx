@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { type ReactNode, useState } from "react";
 import { cn } from "@/lib/utils";
 import {
   ChevronUp,
@@ -26,7 +26,7 @@ const Table = ({ children, className }: TableProps) => {
 // Table Header
 const TableHeader = ({ children, className }: TableProps) => {
   return (
-    <thead className={cn("bg-dark-50 dark:bg-dark-800", className)}>
+    <thead className={cn("bg-muted/50 border-b border-border", className)}>
       {children}
     </thead>
   );
@@ -36,7 +36,7 @@ const TableHeader = ({ children, className }: TableProps) => {
 const TableBody = ({ children, className }: TableProps) => {
   return (
     <tbody
-      className={cn("divide-y divide-dark-100 dark:divide-dark-700", className)}
+      className={cn("divide-y divide-border", className)}
     >
       {children}
     </tbody>
@@ -59,8 +59,7 @@ const TableRow = ({
     <tr
       className={cn(
         "transition-colors",
-        isClickable &&
-          "cursor-pointer hover:bg-primary-50/50 dark:hover:bg-primary-900/20",
+        isClickable && "cursor-pointer hover:bg-muted/50",
         className
       )}
       onClick={onClick}
@@ -89,15 +88,14 @@ const TableHead = ({
   return (
     <th
       className={cn(
-        "px-6 py-4 text-left text-xs font-semibold text-dark-500 dark:text-dark-400 uppercase tracking-wider",
-        sortable &&
-          "cursor-pointer select-none hover:text-dark-700 dark:hover:text-dark-200",
+        "px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider",
+        sortable && "cursor-pointer select-none hover:text-foreground",
         className
       )}
       onClick={sortable ? onSort : undefined}
       style={style}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         {children}
         {sortable && (
           <span className="flex flex-col">
@@ -106,7 +104,7 @@ const TableHead = ({
                 "h-3 w-3 -mb-1",
                 sorted === "asc"
                   ? "text-primary-600"
-                  : "text-dark-300 dark:text-dark-500"
+                  : "text-muted-foreground/30"
               )}
             />
             <ChevronDown
@@ -114,7 +112,7 @@ const TableHead = ({
                 "h-3 w-3",
                 sorted === "desc"
                   ? "text-primary-600"
-                  : "text-dark-300 dark:text-dark-500"
+                  : "text-muted-foreground/30"
               )}
             />
           </span>
@@ -129,7 +127,7 @@ const TableCell = ({ children, className }: TableProps) => {
   return (
     <td
       className={cn(
-        "px-6 py-4 text-sm text-dark-700 dark:text-dark-200 whitespace-nowrap",
+        "px-4 py-3 text-sm text-foreground whitespace-nowrap",
         className
       )}
     >
@@ -147,8 +145,8 @@ interface TableEmptyProps {
 const TableEmpty = ({ message = "Tidak ada data", icon }: TableEmptyProps) => {
   return (
     <tr>
-      <td colSpan={100} className="px-6 py-12 text-center">
-        <div className="flex flex-col items-center gap-3 text-dark-400">
+      <td colSpan={100} className="px-4 py-12 text-center">
+        <div className="flex flex-col items-center gap-2 text-muted-foreground">
           {icon}
           <p className="text-sm">{message}</p>
         </div>
@@ -161,10 +159,10 @@ const TableEmpty = ({ message = "Tidak ada data", icon }: TableEmptyProps) => {
 const TableLoading = () => {
   return (
     <tr>
-      <td colSpan={100} className="px-6 py-12 text-center">
-        <div className="flex items-center justify-center gap-3">
-          <div className="h-5 w-5 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
-          <span className="text-sm text-dark-500 dark:text-dark-400">
+      <td colSpan={100} className="px-4 py-12 text-center">
+        <div className="flex items-center justify-center gap-2">
+          <div className="h-4 w-4 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
+          <span className="text-sm text-muted-foreground">
             Memuat data...
           </span>
         </div>
@@ -222,9 +220,9 @@ const Pagination = ({
   if (totalPages <= 1) return null;
 
   return (
-    <div className="flex items-center justify-between px-6 py-4 border-t border-dark-100 dark:border-dark-700">
+    <div className="flex items-center justify-between px-4 py-3 border-t border-border">
       {totalItems && (
-        <p className="text-sm text-dark-500 dark:text-dark-400">
+        <p className="text-sm text-muted-foreground">
           Menampilkan {startItem} - {endItem} dari {totalItems} data
         </p>
       )}
@@ -233,9 +231,9 @@ const Pagination = ({
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="p-2 text-dark-500 dark:text-dark-400 hover:text-dark-700 dark:hover:text-dark-200 hover:bg-dark-100 dark:hover:bg-dark-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <ChevronLeft className="h-5 w-5" />
+          <ChevronLeft className="h-4 w-4" />
         </button>
 
         {getPageNumbers().map((page, idx) => (
@@ -244,12 +242,12 @@ const Pagination = ({
             onClick={() => typeof page === "number" && onPageChange(page)}
             disabled={page === "..."}
             className={cn(
-              "min-w-[40px] h-10 px-3 text-sm font-medium rounded-lg transition-colors",
+              "min-w-[36px] h-9 px-2.5 text-sm font-medium rounded-lg transition-colors",
               page === currentPage
                 ? "bg-primary-600 text-white"
                 : page === "..."
-                ? "text-dark-400 cursor-default"
-                : "text-dark-600 dark:text-dark-300 hover:bg-dark-100 dark:hover:bg-dark-700"
+                ? "text-muted-foreground cursor-default"
+                : "text-foreground hover:bg-muted"
             )}
           >
             {page}
@@ -259,9 +257,9 @@ const Pagination = ({
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="p-2 text-dark-500 dark:text-dark-400 hover:text-dark-700 dark:hover:text-dark-200 hover:bg-dark-100 dark:hover:bg-dark-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <ChevronRight className="h-5 w-5" />
+          <ChevronRight className="h-4 w-4" />
         </button>
       </div>
     </div>
@@ -384,7 +382,7 @@ function DataTable<T extends object>({
   return (
     <div className="card">
       {searchable && (
-        <div className="px-6 py-4 border-b border-dark-100">
+        <div className="px-4 py-3 border-b border-border">
           <TableSearch
             value={search}
             onChange={setSearch}

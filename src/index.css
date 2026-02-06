@@ -2,163 +2,211 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================
+   DESIGN TOKENS — Enterprise Industrial Dashboard
+   Modern Control Room / SaaS (2025–2026)
+   ============================================ */
+
 @layer base {
+  :root {
+    /* Radius */
+    --radius: 0.5rem;
+
+    /* Light Mode — Neutral/Slate base, blue accent */
+    --background: 0 0% 98.5%;
+    --foreground: 220 15% 13%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 15% 13%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 15% 13%;
+    --primary: 211 90% 42%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 15% 20%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 220 14% 96%;
+    --accent-foreground: 220 15% 20%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 211 90% 42%;
+  }
+
+  .dark {
+    --background: 222 47% 6%;
+    --foreground: 210 20% 95%;
+    --card: 222 47% 9%;
+    --card-foreground: 210 20% 95%;
+    --popover: 222 47% 9%;
+    --popover-foreground: 210 20% 95%;
+    --primary: 211 90% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217 33% 14%;
+    --secondary-foreground: 210 20% 90%;
+    --muted: 217 33% 14%;
+    --muted-foreground: 215 20% 55%;
+    --accent: 217 33% 14%;
+    --accent-foreground: 210 20% 90%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 211 90% 50%;
+  }
+
   * {
-    @apply border-dark-200 dark:border-dark-700;
+    @apply border-border;
   }
 
   body {
-    @apply bg-dark-50 dark:bg-dark-900 text-dark-900 dark:text-dark-100 font-sans antialiased;
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
   html {
     scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
+/* ============================================
+   COMPONENT LAYER — Enterprise UI Classes
+   ============================================ */
+
 @layer components {
-  .glass {
-    @apply bg-white/80 backdrop-blur-xl border border-white/20 shadow-soft;
-  }
-
-  .glass-dark {
-    @apply bg-dark-900/80 backdrop-blur-xl border border-dark-700/50;
-  }
-
+  /* === Buttons (legacy compat) === */
   .btn-primary {
-    @apply inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium text-white 
-           bg-gradient-to-r from-primary-600 to-primary-500 rounded-xl
-           hover:from-primary-700 hover:to-primary-600 
-           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2
-           transition-all duration-200 shadow-lg shadow-primary-500/25
+    @apply inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium text-white
+           bg-primary-600 rounded-lg
+           hover:bg-primary-700
+           focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:ring-offset-2
+           transition-colors duration-150
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium 
-           text-dark-700 bg-white border border-dark-200 rounded-xl
-           hover:bg-dark-50 hover:border-dark-300
-           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2
-           transition-all duration-200
+    @apply inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium
+           text-foreground bg-secondary border border-border rounded-lg
+           hover:bg-muted
+           focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:ring-offset-2
+           transition-colors duration-150
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-danger {
-    @apply inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium text-white 
-           bg-gradient-to-r from-red-600 to-red-500 rounded-xl
-           hover:from-red-700 hover:to-red-600 
-           focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2
-           transition-all duration-200 shadow-lg shadow-red-500/25
+    @apply inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium text-white
+           bg-red-600 rounded-lg
+           hover:bg-red-700
+           focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:ring-offset-2
+           transition-colors duration-150
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-success {
-    @apply inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium text-white 
-           bg-gradient-to-r from-secondary-600 to-secondary-500 rounded-xl
-           hover:from-secondary-700 hover:to-secondary-600 
-           focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2
-           transition-all duration-200 shadow-lg shadow-secondary-500/25
+    @apply inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium text-white
+           bg-emerald-600 rounded-lg
+           hover:bg-emerald-700
+           focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:ring-offset-2
+           transition-colors duration-150
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
+  /* === Input (legacy compat) === */
   .input-field {
-    @apply w-full px-4 py-3 text-sm bg-white border border-dark-200 rounded-xl
-           placeholder:text-dark-400
-           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-           transition-all duration-200
-           disabled:bg-dark-100 disabled:cursor-not-allowed;
+    @apply w-full px-3.5 py-2.5 text-sm bg-background border border-input rounded-lg
+           placeholder:text-muted-foreground
+           focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary-500
+           transition-colors duration-150
+           disabled:bg-muted disabled:cursor-not-allowed;
   }
 
   .input-label {
-    @apply block text-sm font-medium text-dark-700 mb-1.5;
+    @apply block text-sm font-medium text-foreground mb-1.5;
   }
 
+  /* === Card (legacy compat) === */
   .card {
-    @apply bg-white dark:bg-dark-800 rounded-2xl border border-dark-100 dark:border-dark-700 shadow-soft overflow-hidden;
+    @apply bg-card rounded-lg border border-border shadow-soft overflow-hidden;
   }
 
   .card-header {
-    @apply px-6 py-4 border-b border-dark-100 dark:border-dark-700;
+    @apply px-5 py-4 border-b border-border;
   }
 
   .card-body {
-    @apply p-6;
+    @apply p-5;
   }
 
+  /* === Badge (legacy compat) === */
   .badge {
-    @apply inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full;
+    @apply inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-md;
   }
 
   .badge-primary {
-    @apply badge bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300;
+    @apply badge bg-primary-50 text-primary-700 dark:bg-primary-950/50 dark:text-primary-300;
   }
 
   .badge-success {
-    @apply badge bg-secondary-100 text-secondary-700 dark:bg-secondary-900/50 dark:text-secondary-300;
+    @apply badge bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300;
   }
 
   .badge-warning {
-    @apply badge bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300;
+    @apply badge bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300;
   }
 
   .badge-danger {
-    @apply badge bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300;
+    @apply badge bg-red-50 text-red-700 dark:bg-red-950/50 dark:text-red-300;
   }
 
   .badge-info {
-    @apply badge bg-cyan-100 text-cyan-700 dark:bg-cyan-900/50 dark:text-cyan-300;
+    @apply badge bg-cyan-50 text-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-300;
   }
 
+  /* === Sidebar Navigation (legacy compat) === */
   .sidebar-link {
-    @apply flex items-center gap-3 px-4 py-3 text-sm font-medium text-dark-600 dark:text-dark-300 rounded-xl
-           hover:bg-primary-50 dark:hover:bg-dark-700 hover:text-primary-700 dark:hover:text-primary-400
-           transition-all duration-200;
+    @apply flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-muted-foreground rounded-lg
+           hover:bg-accent hover:text-accent-foreground
+           transition-colors duration-150;
   }
 
   .sidebar-link-active {
-    @apply sidebar-link bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 shadow-sm;
+    @apply sidebar-link bg-primary-50 dark:bg-primary-950/30 text-primary-700 dark:text-primary-400;
   }
 
+  /* === Table (legacy compat) === */
   .table-header {
-    @apply px-6 py-4 text-left text-xs font-semibold text-dark-500 dark:text-dark-400 uppercase tracking-wider bg-dark-50 dark:bg-dark-800;
+    @apply px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider bg-muted/50;
   }
 
   .table-cell {
-    @apply px-6 py-4 text-sm text-dark-700 dark:text-dark-200 whitespace-nowrap;
+    @apply px-4 py-3 text-sm text-foreground whitespace-nowrap;
   }
 
+  /* === Metric Card === */
   .metric-card {
-    @apply card p-6 hover:shadow-lg transition-shadow duration-300;
+    @apply card p-5 hover:shadow-soft-md transition-shadow duration-200;
   }
 
+  /* === Page Structure === */
   .page-header {
-    @apply mb-8;
+    @apply mb-6;
   }
 
   .page-title {
-    @apply text-2xl font-display font-bold text-dark-900 dark:text-white;
+    @apply text-xl font-display font-semibold text-foreground tracking-tight;
   }
 
   .page-description {
-    @apply mt-1 text-sm text-dark-500 dark:text-dark-400;
-  }
-
-  .input-field {
-    @apply w-full px-4 py-3 text-sm bg-white dark:bg-dark-800 border border-dark-200 dark:border-dark-600 rounded-xl
-           placeholder:text-dark-400 dark:placeholder:text-dark-500 text-dark-900 dark:text-dark-100
-           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-           transition-all duration-200
-           disabled:bg-dark-100 dark:disabled:bg-dark-700 disabled:cursor-not-allowed;
-  }
-
-  .input-label {
-    @apply block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1.5;
+    @apply mt-0.5 text-sm text-muted-foreground;
   }
 }
 
 @layer utilities {
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-accent-600;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-400;
   }
 
   .scrollbar-hide {
@@ -171,11 +219,13 @@
   }
 
   .animate-in {
-    animation: fadeIn 0.5s ease-out forwards;
+    animation: fadeIn 0.3s ease-out forwards;
   }
 }
 
-/* Marquee Animation - Start from right edge */
+/* ============================================
+   MARQUEE (kept for backward compat)
+   ============================================ */
 .marquee-wrapper {
   position: relative;
   width: 100%;
@@ -194,51 +244,46 @@
 }
 
 @keyframes marquee-slide {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-100%);
-  }
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
 }
 
-/* Slow Slide Animation for Background Patterns */
 @keyframes slide-slow {
-  from {
-    background-position: 0 0;
-  }
-  to {
-    background-position: 50px 50px;
-  }
+  from { background-position: 0 0; }
+  to { background-position: 50px 50px; }
 }
 
 .animate-slide-slow {
   animation: slide-slow 20s linear infinite;
 }
 
-/* Grid Pattern Background */
 .bg-grid-pattern {
-  background-image: 
+  background-image:
     linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
   background-size: 20px 20px;
 }
 
-/* Custom Scrollbar */
+/* ============================================
+   SCROLLBAR — Minimal & Clean
+   ============================================ */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-dark-100 dark:bg-dark-800 rounded-full;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-dark-300 dark:bg-dark-600 rounded-full hover:bg-dark-400 dark:hover:bg-dark-500;
+  @apply bg-dark-300/50 dark:bg-dark-600/50 rounded-full;
 }
 
-/* Thin Scrollbar Variant */
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-dark-400 dark:bg-dark-500;
+}
+
 .scrollbar-thin::-webkit-scrollbar {
   width: 4px;
 }
@@ -251,7 +296,19 @@
   @apply bg-dark-200 dark:bg-dark-700 rounded-full;
 }
 
-/* Glassmorphism Utilities */
+/* ============================================
+   GLASSMORPHISM
+   ============================================ */
+.glass {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.dark .glass {
+  background: rgba(15, 23, 42, 0.8);
+}
+
 .glass-effect {
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(12px);
@@ -262,67 +319,41 @@
   background: rgba(30, 30, 30, 0.7);
 }
 
-/* Print Styles */
+/* ============================================
+   PRINT
+   ============================================ */
 @media print {
-  body {
-    @apply bg-white;
-  }
-
-  .no-print {
-    display: none !important;
-  }
-
-  .print-break {
-    page-break-before: always;
-  }
+  body { @apply bg-white; }
+  .no-print { display: none !important; }
+  .print-break { page-break-before: always; }
 }
 
-/* PWA / Mobile Optimizations */
+/* ============================================
+   MOBILE / PWA
+   ============================================ */
 @media (max-width: 1023px) {
-  /* Ensure proper touch targets */
-  button,
-  a,
-  [role="button"] {
+  button, a, [role="button"] {
     min-height: 44px;
   }
-
-  /* Prevent text selection issues on mobile */
   .no-select {
     -webkit-user-select: none;
     user-select: none;
   }
-
-  /* Improve touch scrolling */
   .scroll-touch {
     -webkit-overflow-scrolling: touch;
   }
 }
 
-/* Safe area insets for notched devices */
 @supports (padding-top: env(safe-area-inset-top)) {
-  .safe-top {
-    padding-top: env(safe-area-inset-top);
-  }
-
-  .safe-bottom {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
+  .safe-top { padding-top: env(safe-area-inset-top); }
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
 }
 
-/* Standalone PWA mode specific styles */
 @media all and (display-mode: standalone) {
-  /* Adjust for PWA standalone mode */
-  body {
-    overscroll-behavior-y: contain;
-  }
-
-  /* Prevent pull-to-refresh in PWA */
-  html {
-    overscroll-behavior: none;
-  }
+  body { overscroll-behavior-y: contain; }
+  html { overscroll-behavior: none; }
 }
 
-/* Fix iOS input zoom */
 @media screen and (max-width: 767px) {
   input[type="text"],
   input[type="number"],
@@ -335,14 +366,11 @@
   }
 }
 
-/* Force Desktop View Mode */
 .force-desktop-view {
-  /* Scale the viewport to show desktop view on mobile */
   min-width: 1024px;
   overflow-x: auto;
 }
 
-/* Ensure force-desktop class enables scrolling */
 html.force-desktop {
   overflow-x: auto;
 }

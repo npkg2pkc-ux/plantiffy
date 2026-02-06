@@ -1,4 +1,4 @@
-const CACHE_NAME = "plantiq-v1";
+const CACHE_NAME = "plantiffy-v1";
 const urlsToCache = ["/", "/index.html", "/manifest.json", "/favicon.png"];
 
 // Install event - cache essential files

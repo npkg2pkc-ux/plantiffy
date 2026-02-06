@@ -1,4 +1,4 @@
-export { Button } from "./Button";
+export { Button, buttonVariants } from "./Button";
 export type { ButtonProps } from "./Button";
 
 export { Input } from "./Input";
@@ -21,8 +21,10 @@ export type { ModalProps, ConfirmDialogProps } from "./Modal";
 
 export { ApprovalDialog } from "./ApprovalDialog";
 
-export { Badge } from "./Badge";
+export { Badge, badgeVariants } from "./Badge";
 export type { BadgeProps } from "./Badge";
+
+export { KPICard, KPIMini } from "./KPICard";
 
 export {
   Table,

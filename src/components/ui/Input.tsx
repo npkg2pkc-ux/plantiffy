@@ -8,7 +8,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, error, helperText, id, ...props }, ref) => {
+  ({ className, label, error, helperText, id, type, ...props }, ref) => {
     const inputId = id || props.name;
 
     return (
@@ -16,33 +16,34 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1.5"
+            className="block text-sm font-medium text-foreground mb-1.5"
           >
             {label}
           </label>
         )}
         <input
           id={inputId}
+          type={type}
           ref={ref}
           className={cn(
-            "w-full px-4 py-3 text-sm bg-white dark:bg-dark-800 border border-dark-200 dark:border-dark-600 rounded-xl",
-            "text-dark-900 dark:text-white",
-            "placeholder:text-dark-400 dark:placeholder:text-dark-500",
-            "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent",
-            "transition-all duration-200",
-            "disabled:bg-dark-100 dark:disabled:bg-dark-700 disabled:cursor-not-allowed",
-            error && "border-red-500 focus:ring-red-500",
+            "flex h-9 w-full rounded-lg border border-input bg-background px-3.5 py-2 text-sm",
+            "text-foreground placeholder:text-muted-foreground",
+            "focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary-500",
+            "transition-colors duration-150",
+            "disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground",
+            "file:border-0 file:bg-transparent file:text-sm file:font-medium",
+            error && "border-red-500 focus:ring-red-500/20 focus:border-red-500",
             className
           )}
           {...props}
         />
         {error && (
-          <p className="mt-1.5 text-sm text-red-600 dark:text-red-400">
+          <p className="mt-1.5 text-xs text-red-600 dark:text-red-400">
             {error}
           </p>
         )}
         {helperText && !error && (
-          <p className="mt-1.5 text-sm text-dark-500 dark:text-dark-400">
+          <p className="mt-1.5 text-xs text-muted-foreground">
             {helperText}
           </p>
         )}

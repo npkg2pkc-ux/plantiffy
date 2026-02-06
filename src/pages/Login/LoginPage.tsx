@@ -77,11 +77,11 @@ const LoginPage = () => {
   }, [username, password, login, navigate]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-dark-900 flex items-center justify-center p-4">
-      {/* Background decoration */}
+    <div className="min-h-screen bg-dark-900 flex items-center justify-center p-4">
+      {/* Subtle background */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/20 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/20 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-primary-500/5 rounded-full blur-3xl" />
       </div>
 
       <motion.div
@@ -96,14 +96,14 @@ const LoginPage = () => {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg shadow-primary-500/50 mb-4"
+            className="inline-flex items-center justify-center h-14 w-14 rounded-xl bg-primary-500 mb-4"
           >
             <Factory className="h-8 w-8 text-white" />
           </motion.div>
-          <h1 className="text-2xl font-display font-bold text-white">
+          <h1 className="text-xl font-display font-semibold text-white">
             NPK Production
           </h1>
-          <p className="text-primary-200 mt-1">Management System</p>
+          <p className="text-dark-400 text-sm mt-1">Management System</p>
         </div>
 
         {/* Login Form */}
@@ -111,24 +111,24 @@ const LoginPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/20"
+          className="bg-dark-800 rounded-xl p-8 border border-dark-700"
         >
-          <h2 className="text-xl font-semibold text-white mb-6 text-center">
+          <h2 className="text-lg font-semibold text-white mb-6 text-center">
             Selamat Datang
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-primary-100">
+              <label className="block text-sm font-medium text-dark-300">
                 Username
               </label>
               <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-dark-400" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-500" />
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 bg-dark-900 border border-dark-600 rounded-lg text-white placeholder:text-dark-500 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 transition-all text-sm"
                   placeholder="Masukkan username"
                   required
                 />
@@ -136,23 +136,23 @@ const LoginPage = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-primary-100">
+              <label className="block text-sm font-medium text-dark-300">
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-dark-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-500" />
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-12 pr-12 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-10 py-2.5 bg-dark-900 border border-dark-600 rounded-lg text-white placeholder:text-dark-500 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 transition-all text-sm"
                   placeholder="Masukkan password"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-dark-400 hover:text-white transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-500 hover:text-white transition-colors"
                 >
                   {showPassword ? (
                     <EyeOff className="h-5 w-5" />
@@ -167,7 +167,7 @@ const LoginPage = () => {
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-3 bg-red-500/20 border border-red-500/50 rounded-xl text-red-200 text-sm text-center"
+                className="p-3 bg-red-500/15 border border-red-500/30 rounded-lg text-red-300 text-sm text-center"
               >
                 {error}
               </motion.div>
@@ -180,7 +180,7 @@ const LoginPage = () => {
         </motion.div>
 
         {/* Footer */}
-        <p className="text-center text-primary-300 text-sm mt-6">
+        <p className="text-center text-dark-500 text-xs mt-6">
           © 2025 NPK Production Management System
         </p>
       </motion.div>

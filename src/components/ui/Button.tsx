@@ -1,15 +1,48 @@
 import * as React from "react";
+import { Slot } from "@radix-ui/react-slot";
+import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?:
-    | "primary"
-    | "secondary"
-    | "danger"
-    | "success"
-    | "ghost"
-    | "outline";
-  size?: "sm" | "md" | "lg" | "icon";
+const buttonVariants = cva(
+  "inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  {
+    variants: {
+      variant: {
+        primary:
+          "bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800",
+        secondary:
+          "bg-secondary text-secondary-foreground border border-border hover:bg-muted active:bg-muted/80",
+        destructive:
+          "bg-red-600 text-white hover:bg-red-700 active:bg-red-800",
+        success:
+          "bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800",
+        outline:
+          "border border-border bg-transparent text-foreground hover:bg-accent hover:text-accent-foreground",
+        ghost:
+          "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary-600 underline-offset-4 hover:underline p-0 h-auto",
+        // Legacy compat — "danger" alias
+        danger:
+          "bg-red-600 text-white hover:bg-red-700 active:bg-red-800",
+      },
+      size: {
+        sm: "h-8 rounded-md px-3 text-xs gap-1.5",
+        md: "h-9 rounded-lg px-4 gap-2",
+        lg: "h-11 rounded-lg px-6 text-base gap-2",
+        icon: "h-9 w-9 rounded-lg",
+      },
+    },
+    defaultVariants: {
+      variant: "primary",
+      size: "md",
+    },
+  }
+);
+
+interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean;
   isLoading?: boolean;
 }
 
@@ -17,8 +50,9 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
       className,
-      variant = "primary",
-      size = "md",
+      variant,
+      size,
+      asChild = false,
       isLoading,
       children,
       disabled,
@@ -26,45 +60,18 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
-    const variants = {
-      primary:
-        "bg-gradient-to-r from-primary-600 to-primary-500 text-white hover:from-primary-700 hover:to-primary-600 shadow-lg shadow-primary-500/25",
-      secondary:
-        "bg-white dark:bg-dark-700 text-dark-700 dark:text-dark-200 border border-dark-200 dark:border-dark-600 hover:bg-dark-50 dark:hover:bg-dark-600 hover:border-dark-300 dark:hover:border-dark-500",
-      danger:
-        "bg-gradient-to-r from-red-600 to-red-500 text-white hover:from-red-700 hover:to-red-600 shadow-lg shadow-red-500/25",
-      success:
-        "bg-gradient-to-r from-secondary-600 to-secondary-500 text-white hover:from-secondary-700 hover:to-secondary-600 shadow-lg shadow-secondary-500/25",
-      ghost: "text-dark-600 dark:text-dark-300 hover:bg-dark-100 dark:hover:bg-dark-700 hover:text-dark-900 dark:hover:text-white",
-      outline:
-        "border-2 border-primary-500 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20",
-    };
-
-    const sizes = {
-      sm: "px-3 py-1.5 text-xs",
-      md: "px-4 py-2.5 text-sm",
-      lg: "px-6 py-3 text-base",
-      icon: "p-2",
-    };
+    const Comp = asChild ? Slot : "button";
 
     return (
-      <button
+      <Comp
         ref={ref}
-        className={cn(
-          "inline-flex items-center justify-center font-medium rounded-xl",
-          "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2",
-          "transition-all duration-200",
-          "disabled:opacity-50 disabled:cursor-not-allowed",
-          variants[variant],
-          sizes[size],
-          className
-        )}
+        className={cn(buttonVariants({ variant, size, className }))}
         disabled={disabled || isLoading}
         {...props}
       >
         {isLoading && (
           <svg
-            className="animate-spin -ml-1 mr-2 h-4 w-4"
+            className="animate-spin h-4 w-4 shrink-0"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -85,12 +92,12 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           </svg>
         )}
         {children}
-      </button>
+      </Comp>
     );
   }
 );
 
 Button.displayName = "Button";
 
-export { Button };
+export { Button, buttonVariants };
 export type { ButtonProps };

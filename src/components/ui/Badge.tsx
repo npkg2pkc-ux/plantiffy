@@ -1,45 +1,44 @@
+import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
-interface BadgeProps {
-  children: React.ReactNode;
-  variant?: "default" | "primary" | "success" | "warning" | "danger" | "info";
-  size?: "sm" | "md";
-  className?: string;
-}
+const badgeVariants = cva(
+  "inline-flex items-center font-medium transition-colors",
+  {
+    variants: {
+      variant: {
+        default: "bg-secondary text-secondary-foreground",
+        primary: "bg-primary-50 text-primary-700 dark:bg-primary-950/50 dark:text-primary-300",
+        success: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300",
+        warning: "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300",
+        danger: "bg-red-50 text-red-700 dark:bg-red-950/50 dark:text-red-300",
+        info: "bg-cyan-50 text-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-300",
+        outline: "border border-border text-foreground",
+      },
+      size: {
+        sm: "px-1.5 py-0.5 text-[10px] rounded",
+        md: "px-2 py-0.5 text-xs rounded-md",
+        lg: "px-2.5 py-1 text-xs rounded-md",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "md",
+    },
+  }
+);
 
-const Badge = ({
-  children,
-  variant = "default",
-  size = "md",
-  className,
-}: BadgeProps) => {
-  const variants = {
-    default: "bg-dark-100 text-dark-700",
-    primary: "bg-primary-100 text-primary-700",
-    success: "bg-secondary-100 text-secondary-700",
-    warning: "bg-amber-100 text-amber-700",
-    danger: "bg-red-100 text-red-700",
-    info: "bg-cyan-100 text-cyan-700",
-  };
+interface BadgeProps
+  extends React.HTMLAttributes<HTMLSpanElement>,
+    VariantProps<typeof badgeVariants> {}
 
-  const sizes = {
-    sm: "px-2 py-0.5 text-xs",
-    md: "px-2.5 py-1 text-xs",
-  };
-
+const Badge = ({ className, variant, size, ...props }: BadgeProps) => {
   return (
     <span
-      className={cn(
-        "inline-flex items-center font-medium rounded-full",
-        variants[variant],
-        sizes[size],
-        className
-      )}
-    >
-      {children}
-    </span>
+      className={cn(badgeVariants({ variant, size, className }))}
+      {...props}
+    />
   );
 };
 
-export { Badge };
+export { Badge, badgeVariants };
 export type { BadgeProps };

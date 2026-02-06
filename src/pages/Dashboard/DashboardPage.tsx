@@ -1704,8 +1704,8 @@ const DashboardPage = () => {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary-500 mx-auto" />
-          <p className="mt-4 text-dark-500 dark:text-dark-400">
+          <Loader2 className="h-10 w-10 animate-spin text-primary-500 mx-auto" />
+          <p className="mt-4 text-muted-foreground">
             Memuat data dashboard...
           </p>
         </div>
@@ -1718,10 +1718,10 @@ const DashboardPage = () => {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-dark-900 dark:text-white">
+          <h1 className="text-xl font-display font-semibold text-foreground">
             Dashboard - {plantLabel}
           </h1>
-          <p className="text-dark-500 dark:text-dark-400 mt-1">
+          <p className="text-muted-foreground text-sm mt-1">
             Selamat datang, {user?.namaLengkap || user?.nama}! Berikut ringkasan
             data {plantLabel.toLowerCase()} tahun {dashboardYear}.
           </p>
@@ -1763,7 +1763,7 @@ const DashboardPage = () => {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl p-6 text-white shadow-lg"
+        className="bg-primary-500 rounded-xl p-5 text-white"
       >
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div
@@ -1814,8 +1814,8 @@ const DashboardPage = () => {
           className="cursor-pointer hover:opacity-90 transition-opacity"
         >
           <div className="flex flex-wrap gap-4 lg:gap-8 mt-4">
-            <div className="bg-white/20 rounded-xl px-6 py-4 backdrop-blur-sm min-w-[140px]">
-              <p className="text-primary-100 text-xs uppercase tracking-wider mb-1">
+            <div className="bg-white/15 rounded-lg px-5 py-3 min-w-[140px]">
+              <p className="text-primary-100 text-[10px] uppercase tracking-wider mb-1">
                 NPK Produksi
               </p>
               <p className="text-2xl lg:text-3xl font-bold">
@@ -1824,8 +1824,8 @@ const DashboardPage = () => {
               <p className="text-primary-100 text-xs">Ton</p>
             </div>
 
-            <div className="bg-white/20 rounded-xl px-6 py-4 backdrop-blur-sm min-w-[140px]">
-              <p className="text-primary-100 text-xs uppercase tracking-wider mb-1">
+            <div className="bg-white/15 rounded-lg px-5 py-3 min-w-[140px]">
+              <p className="text-primary-100 text-[10px] uppercase tracking-wider mb-1">
                 Target RKAP
               </p>
               <p className="text-2xl lg:text-3xl font-bold">
@@ -1834,7 +1834,7 @@ const DashboardPage = () => {
               <p className="text-primary-100 text-xs">Ton</p>
             </div>
 
-            <div className="bg-white/20 rounded-xl px-6 py-4 backdrop-blur-sm min-w-[140px]">
+            <div className="bg-white/15 rounded-lg px-5 py-3 min-w-[140px]">
               <p className="text-primary-100 text-xs uppercase tracking-wider mb-1">
                 Pencapaian
               </p>
@@ -1890,7 +1890,7 @@ const DashboardPage = () => {
               `/produksi/${effectivePlantFilter === "NPK1" ? "npk1" : "npk2"}`
             )
           }
-          className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-5 text-white shadow-lg cursor-pointer hover:shadow-xl hover:scale-[1.01] transition-all duration-300"
+          className="bg-blue-500 rounded-xl p-5 text-white cursor-pointer hover:bg-blue-600 transition-colors"
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">

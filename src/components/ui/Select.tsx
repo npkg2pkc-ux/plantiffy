@@ -1,4 +1,4 @@
-import { forwardRef, SelectHTMLAttributes, ReactNode } from "react";
+import { forwardRef, type SelectHTMLAttributes, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { ChevronDown } from "lucide-react";
 
@@ -18,7 +18,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
         {label && (
           <label
             htmlFor={selectId}
-            className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1.5"
+            className="block text-sm font-medium text-foreground mb-1.5"
           >
             {label}
           </label>
@@ -28,14 +28,13 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
             id={selectId}
             ref={ref}
             className={cn(
-              "w-full px-4 py-3 text-sm bg-white dark:bg-dark-800 border border-dark-200 dark:border-dark-600 rounded-xl",
-              "text-dark-900 dark:text-white",
-              "appearance-none cursor-pointer",
-              "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent",
-              "transition-all duration-200",
-              "disabled:bg-dark-100 dark:disabled:bg-dark-700 disabled:cursor-not-allowed",
-              "[&>option]:bg-white [&>option]:dark:bg-dark-800 [&>option]:text-dark-900 [&>option]:dark:text-white",
-              error && "border-red-500 focus:ring-red-500",
+              "flex h-9 w-full rounded-lg border border-input bg-background px-3.5 py-2 text-sm",
+              "text-foreground appearance-none cursor-pointer",
+              "focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary-500",
+              "transition-colors duration-150",
+              "disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground",
+              "[&>option]:bg-background [&>option]:text-foreground",
+              error && "border-red-500 focus:ring-red-500/20 focus:border-red-500",
               className
             )}
             {...props}
@@ -51,10 +50,10 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
               </option>
             ))}
           </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-dark-400 pointer-events-none" />
+          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
         </div>
         {error && (
-          <p className="mt-1.5 text-sm text-red-600 dark:text-red-400">
+          <p className="mt-1.5 text-xs text-red-600 dark:text-red-400">
             {error}
           </p>
         )}
@@ -65,7 +64,6 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
 
 Select.displayName = "Select";
 
-// SelectGroup for complex select with children
 interface SelectGroupProps {
   children: ReactNode;
   label?: string;
@@ -76,13 +74,13 @@ const SelectGroup = ({ children, label, error }: SelectGroupProps) => {
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1.5">
+        <label className="block text-sm font-medium text-foreground mb-1.5">
           {label}
         </label>
       )}
       {children}
       {error && (
-        <p className="mt-1.5 text-sm text-red-600 dark:text-red-400">{error}</p>
+        <p className="mt-1.5 text-xs text-red-600 dark:text-red-400">{error}</p>
       )}
     </div>
   );
