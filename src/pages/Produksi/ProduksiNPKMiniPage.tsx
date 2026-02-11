@@ -274,40 +274,32 @@ const ProduksiNPKMiniPage = () => {
 
     setLoading(true);
     try {
-      const API_URL =
-        "https://script.google.com/macros/s/AKfycbwhf1qqyKphj6flFppZSczHJDqERKyfn6qoh-LVhfS8thGvZw085lqDGMKKHyt_uYcwEw/exec";
+      const { createData, SHEETS } = await import("@/services/api");
 
       const approvalData = {
-        action: "create",
-        sheet: "APPROVAL_REQUESTS",
-        data: {
-          requestedBy: user.nama,
-          requestedByRole: user.role,
-          requestedByPlant: user.plant,
-          actionType: approvalAction,
-          targetSheet: "PRODUKSI_NPK_MINI",
-          targetId: pendingEditItem.id,
-          targetData: JSON.stringify(pendingEditItem),
-          reason: reason,
-          status: "pending",
-          requestedAt: new Date().toISOString(),
-        },
+        type: "produksi_npk_mini" as const,
+        action: approvalAction,
+        itemId: pendingEditItem.id,
+        itemData: pendingEditItem,
+        targetSheet: "produksi_npk_mini",
+        reason,
+        submittedBy: user?.nama || user?.email || "Unknown",
+        submittedAt: new Date().toISOString(),
+        status: "pending" as const,
       };
 
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(approvalData),
-        mode: "no-cors",
-      });
-      console.log("Approval response:", response.status);
+      const result = await createData(SHEETS.APPROVAL_REQUESTS, approvalData);
 
-      alert("Permintaan approval telah dikirim ke AVP/Supervisor/Admin");
-      setShowApprovalDialog(false);
-      setPendingEditItem(null);
+      if (result.success) {
+        setShowApprovalDialog(false);
+        setPendingEditItem(null);
+        alert("Permintaan telah dikirim dan menunggu persetujuan");
+      } else {
+        throw new Error(result.error || "Gagal mengirim permintaan");
+      }
     } catch (error) {
       console.error("Error submitting approval:", error);
-      alert("Gagal mengirim permintaan approval");
+      alert(error instanceof Error ? error.message : "Gagal mengirim permintaan approval");
     } finally {
       setLoading(false);
     }

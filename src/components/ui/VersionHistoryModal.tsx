@@ -40,6 +40,21 @@ interface VersionEntry {
 
 const versionHistory: VersionEntry[] = [
   {
+    version: "2.5.1",
+    date: "11 Februari 2026",
+    title: "Work Request & Data Integrity Fix",
+    type: "patch",
+    icon: <Bug className="h-5 w-5" />,
+    highlights: [
+      "Fix Work Request NPK1 - eksekutor, include, keterangan sekarang tersimpan dengan benar",
+      "Perbaikan header validation di backend (Code.gs) untuk konsistensi kolom",
+      "Fix Activity Log di halaman Produksi NPK (sheet name mismatch)",
+      "Perbaikan approval handler di 5 halaman - gunakan API helper yang benar",
+      "Approval request sekarang plant-aware (NPK1/NPK2)",
+      "Tambah fungsi Fix All Sheet Headers di menu Google Sheets",
+    ],
+  },
+  {
     version: "2.5.0",
     date: "6 Februari 2026",
     title: "Notification Sound & Activity Enhancement",

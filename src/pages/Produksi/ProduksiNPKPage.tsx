@@ -327,39 +327,32 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
 
     setLoading(true);
     try {
-      const API_URL =
-        "https://script.google.com/macros/s/AKfycbwhf1qqyKphj6flFppZSczHJDqERKyfn6qoh-LVhfS8thGvZw085lqDGMKKHyt_uYcwEw/exec";
+      const { createData, SHEETS } = await import("@/services/api");
 
       const approvalData = {
-        action: "create",
-        sheet: "APPROVAL_REQUESTS",
-        data: {
-          requestedBy: user.nama,
-          requestedByRole: user.role,
-          requestedByPlant: user.plant,
-          actionType: approvalAction,
-          targetSheet: `PRODUKSI_NPK_${plant}`,
-          targetId: pendingEditItem.id,
-          targetData: JSON.stringify(pendingEditItem),
-          reason: reason,
-          status: "pending",
-          requestedAt: new Date().toISOString(),
-        },
+        type: "produksi_npk" as const,
+        action: approvalAction,
+        itemId: pendingEditItem.id,
+        itemData: pendingEditItem,
+        targetSheet: plant === "NPK1" ? "produksi_npk_NPK1" : "produksi_npk",
+        reason,
+        submittedBy: user?.nama || user?.email || "Unknown",
+        submittedAt: new Date().toISOString(),
+        status: "pending" as const,
       };
 
-      await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(approvalData),
-        mode: "no-cors",
-      });
+      const result = await createData(SHEETS.APPROVAL_REQUESTS, approvalData);
 
-      alert("Permintaan approval telah dikirim ke AVP/Supervisor/Admin");
-      setShowApprovalDialog(false);
-      setPendingEditItem(null);
+      if (result.success) {
+        setShowApprovalDialog(false);
+        setPendingEditItem(null);
+        alert("Permintaan telah dikirim dan menunggu persetujuan");
+      } else {
+        throw new Error(result.error || "Gagal mengirim permintaan");
+      }
     } catch (error) {
       console.error("Error submitting approval:", error);
-      alert("Gagal mengirim permintaan approval");
+      alert(error instanceof Error ? error.message : "Gagal mengirim permintaan approval");
     } finally {
       setLoading(false);
     }
@@ -1006,7 +999,7 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
           setShowLogModal(false);
           setLogRecordId("");
         }}
-        sheetName={plant === "NPK1" ? "ProduksiNPK_NPK1" : "ProduksiNPK"}
+        sheetName={plant === "NPK1" ? "produksi_npk_NPK1" : "produksi_npk"}
         recordId={logRecordId}
         title="Log Aktivitas Produksi NPK"
       />
