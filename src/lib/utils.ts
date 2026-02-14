@@ -340,9 +340,9 @@ export function canEditAkunRKAP(userRole: string, userPlant?: string): boolean {
   return false;
 }
 
-// Can manage users - Only Admin with ALL plant
+// Can manage users - All Admins can manage users
 export function canManageUsers(userRole: string, userPlant?: string): boolean {
-  return userRole === "admin" && userPlant === "ALL";
+  return userRole === "admin";
 }
 
 // Can view settings menu (Users, RKAP, etc) - based on role and plant
@@ -357,12 +357,12 @@ export function canViewSettings(userRole: string, userPlant?: string): boolean {
   return false;
 }
 
-// Can view users page
+// Can view users page - All Admins can view
 export function canViewUsersPage(
   userRole: string,
   userPlant?: string
 ): boolean {
-  return userRole === "admin" && userPlant === "ALL";
+  return userRole === "admin";
 }
 
 // Can view RKAP page

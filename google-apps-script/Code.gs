@@ -745,33 +745,43 @@ function createRecord(sheetName, data) {
 
     let headers;
     if (configHeaders && configHeaders.length > 0) {
-      headers = configHeaders;
-
-      // Validate headers in sheet match config (getOrCreateSheet should have fixed this,
-      // but double-check for safety)
       const lastCol = sheet.getLastColumn();
+      const lastRow = sheet.getLastRow();
+
       if (lastCol === 0) {
-        // Sheet has no columns - add headers
+        // Sheet has no columns - add headers from config
+        headers = configHeaders;
         sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
         sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold");
         sheet.setFrozenRows(1);
         SpreadsheetApp.flush();
         Logger.log("createRecord: Added headers to empty sheet " + sheetName);
       } else {
-        // Check current headers thoroughly
+        // Sheet has columns - read actual headers
         const currentHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
 
-        // Fix headers if column count or any header name doesn't match
-        if (
-          currentHeaders.length < headers.length ||
-          !headers.every(function (h, i) { return currentHeaders[i] === h; })
-        ) {
-          sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-          sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold");
-          SpreadsheetApp.flush();
-          Logger.log("createRecord: Fixed headers in " + sheetName + 
-            " - was: " + JSON.stringify(currentHeaders.slice(0, headers.length)) + 
-            " - now: " + JSON.stringify(headers));
+        // Only fix headers if there are NO data rows (lastRow <= 1)
+        // Avoid rewriting headers when data exists to prevent column misalignment
+        if (lastRow <= 1) {
+          if (
+            currentHeaders.length < configHeaders.length ||
+            !configHeaders.every(function (h, i) { return currentHeaders[i] === h; })
+          ) {
+            headers = configHeaders;
+            sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+            sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold");
+            SpreadsheetApp.flush();
+            Logger.log("createRecord: Fixed headers in empty sheet " + sheetName + 
+              " - was: " + JSON.stringify(currentHeaders.slice(0, configHeaders.length)) + 
+              " - now: " + JSON.stringify(headers));
+          } else {
+            headers = configHeaders;
+          }
+        } else {
+          // Sheet has data rows - use ACTUAL sheet headers to append in correct column order
+          headers = currentHeaders;
+          Logger.log("createRecord: Using actual sheet headers for " + sheetName + 
+            " (has " + (lastRow - 1) + " data rows): " + JSON.stringify(headers));
         }
       }
     } else {
@@ -832,16 +842,11 @@ function updateRecord(sheetName, data) {
 
     const sheet = getOrCreateSheet(sheetName);
     
-    // Get config headers for consistent column mapping
-    const baseSheetName = sheetName.replace("_NPK1", "");
-    const configHeaders = SHEET_HEADERS[baseSheetName];
-    
     const allData = sheet.getDataRange().getValues();
     const sheetHeaders = allData[0];
     
-    // Use config headers if available, fallback to sheet headers
-    const headers = (configHeaders && configHeaders.length > 0) ? configHeaders : sheetHeaders;
-    const idIndex = headers.indexOf("id");
+    // ALWAYS use actual sheet headers for column mapping to prevent data misalignment
+    const idIndex = sheetHeaders.indexOf("id");
 
     if (idIndex === -1) {
       return { success: false, error: "ID column not found in sheet: " + sheetName };
@@ -863,22 +868,22 @@ function updateRecord(sheetName, data) {
       return { success: false, error: "Record not found (ID: " + searchId + " in " + sheetName + ")" };
     }
 
-    // Map data using headers - use config headers for proper column alignment
-    const rowData = headers.map((header, colIdx) => {
+    // Get existing row data for preserving values
+    const existingRow = allData[rowIndex - 1];
+
+    // Map data using ACTUAL SHEET headers to ensure correct column placement
+    // This prevents data corruption when config headers differ from sheet column order
+    const rowData = sheetHeaders.map((header, colIdx) => {
       if (data.hasOwnProperty(header)) {
         return data[header] === undefined || data[header] === null
           ? ""
           : data[header];
       }
-      // Preserve existing value from the correct column position
-      const sheetColIdx = sheetHeaders.indexOf(header);
-      if (sheetColIdx !== -1 && allData[rowIndex - 1]) {
-        return allData[rowIndex - 1][sheetColIdx];
-      }
-      return "";
+      // Preserve existing value at the same column position
+      return existingRow[colIdx] !== undefined ? existingRow[colIdx] : "";
     });
 
-    Logger.log("updateRecord: Updating row " + rowIndex + " in " + sheetName + " with " + headers.length + " columns");
+    Logger.log("updateRecord: Updating row " + rowIndex + " in " + sheetName + " with " + sheetHeaders.length + " columns");
     sheet.getRange(rowIndex, 1, 1, rowData.length).setValues([rowData]);
     SpreadsheetApp.flush();
 
@@ -1431,6 +1436,7 @@ function getOrCreateSheet(sheetName) {
   } else if (expectedHeaders && expectedHeaders.length > 0) {
     // Sheet exists - validate and fix headers if needed
     const lastCol = sheet.getLastColumn();
+    const lastRow = sheet.getLastRow();
 
     if (lastCol === 0) {
       // Sheet exists but has no columns - add headers
@@ -1445,23 +1451,37 @@ function getOrCreateSheet(sheetName) {
       // Check if current headers match expected
       const currentHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
 
-      // If headers don't match or are incomplete, fix them
-      if (
-        currentHeaders.length < expectedHeaders.length ||
-        !expectedHeaders.every((h, i) => currentHeaders[i] === h)
-      ) {
-        Logger.log("getOrCreateSheet: Fixing headers in " + sheetName + 
-          " - current: " + JSON.stringify(currentHeaders) + 
-          " - expected: " + JSON.stringify(expectedHeaders));
-        
-        // Update header row to match expected
-        sheet
-          .getRange(1, 1, 1, expectedHeaders.length)
-          .setValues([expectedHeaders]);
-        sheet.getRange(1, 1, 1, expectedHeaders.length).setFontWeight("bold");
-        
-        // Flush to ensure header changes are persisted before subsequent reads
-        SpreadsheetApp.flush();
+      // Only fix headers if there are NO data rows (lastRow <= 1)
+      // Rewriting headers when data rows exist causes data corruption
+      // because column values would no longer align with their headers
+      if (lastRow <= 1) {
+        if (
+          currentHeaders.length < expectedHeaders.length ||
+          !expectedHeaders.every((h, i) => currentHeaders[i] === h)
+        ) {
+          Logger.log("getOrCreateSheet: Fixing headers in empty sheet " + sheetName + 
+            " - current: " + JSON.stringify(currentHeaders) + 
+            " - expected: " + JSON.stringify(expectedHeaders));
+          
+          sheet
+            .getRange(1, 1, 1, expectedHeaders.length)
+            .setValues([expectedHeaders]);
+          sheet.getRange(1, 1, 1, expectedHeaders.length).setFontWeight("bold");
+          
+          SpreadsheetApp.flush();
+        }
+      } else {
+        // Sheet has data rows - do NOT rewrite headers to prevent data corruption
+        // Just log the mismatch for debugging
+        if (
+          currentHeaders.length < expectedHeaders.length ||
+          !expectedHeaders.every((h, i) => currentHeaders[i] === h)
+        ) {
+          Logger.log("getOrCreateSheet: WARNING - Header mismatch in " + sheetName + 
+            " with " + (lastRow - 1) + " data rows. Skipping header fix to prevent data corruption." +
+            " Current: " + JSON.stringify(currentHeaders) + 
+            " Expected: " + JSON.stringify(expectedHeaders));
+        }
       }
     }
   }
