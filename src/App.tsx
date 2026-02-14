@@ -5,6 +5,7 @@ import {
   canViewRKAPPage,
   canViewSettings,
 } from "@/lib/utils";
+import { Analytics } from "@vercel/analytics/react";
 import type { ReactNode } from "react";
 
 // Layout
@@ -295,6 +296,9 @@ function App() {
 
       {/* PWA Install Prompt */}
       <InstallPrompt />
+
+      {/* Vercel Web Analytics */}
+      <Analytics />
     </>
   );
 }
