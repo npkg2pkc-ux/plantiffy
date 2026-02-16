@@ -40,6 +40,18 @@ interface VersionEntry {
 
 const versionHistory: VersionEntry[] = [
   {
+    version: "2.5.3",
+    date: "15 Februari 2026",
+    title: "Work Request & Data Integrity Fix",
+    type: "patch",
+    icon: <Bug className="h-5 w-5" />,
+    highlights: [
+      "Fix Work Request NPK1 - eksekutor, include, keterangan sekarang tersimpan dengan benar",
+      "Perbaikan header validation di backend (Code.gs) untuk konsistensi kolom",
+      "Tambah fungsi Fix All Sheet Headers di menu Google Sheets",
+    ],
+  },
+  {
     version: "2.5.1",
     date: "11 Februari 2026",
     title: "Work Request & Data Integrity Fix",
