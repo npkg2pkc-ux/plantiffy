@@ -40,6 +40,22 @@ interface VersionEntry {
 
 const versionHistory: VersionEntry[] = [
   {
+    version: "2.6.0",
+    date: "16 Februari 2026",
+    title: "Summary Cards & Mobile Responsive All Pages",
+    type: "minor",
+    icon: <Smartphone className="h-5 w-5" />,
+    highlights: [
+      "Summary cards informatif di SEMUA halaman data (Work Request, Inventaris, Riksa Timbangan, dll)",
+      "Grid 2 kolom di mobile untuk semua summary cards - tidak terpotong di iPhone & Android",
+      "Font & padding responsif (text-lg sm:text-2xl, p-3 sm:p-4) di 15+ halaman",
+      "Fix pencarian Inventaris Material - sekarang mencari di seluruh database, bukan hanya halaman aktif",
+      "Work Request: tambah card Bulan Ini, Area Terlibat, Top Eksekutor",
+      "Riksa Timbangan: tambah card Total Pemeriksaan, Lolos, Perhatian, Rata-rata Selisih",
+      "Inventaris: tambah card Total Material, Total Stok, Stok Aman, Stok Menipis",
+    ],
+  },
+  {
     version: "2.5.4",
     date: "16 Februari 2026",
     title: "Mobile Responsive Produksi",

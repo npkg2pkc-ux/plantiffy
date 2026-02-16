@@ -416,20 +416,27 @@ const GatePassPage = ({ plant }: GatePassPageProps) => {
         </div>
       </div>
 
-      {/* Summary Card */}
-      <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary-100 rounded-lg">
-              <Truck className="h-5 w-5 text-primary-600" />
-            </div>
-            <div>
-              <p className="text-sm text-dark-500 dark:text-dark-400">
-                Total Gate Pass
-              </p>
-              <p className="text-2xl font-bold text-primary-600">{totalData}</p>
-            </div>
-          </div>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">Total Gate Pass</p>
+          <p className="text-lg sm:text-2xl font-bold text-primary-600">{totalData}</p>
+        </Card>
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">Bulan Ini</p>
+          <p className="text-lg sm:text-2xl font-bold text-green-600">
+            {filteredData.filter((item) => { const d = new Date(item.tanggal); const now = new Date(); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); }).length}
+          </p>
+        </Card>
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">Jenis Barang</p>
+          <p className="text-lg sm:text-2xl font-bold text-dark-900 dark:text-white">
+            {new Set(filteredData.map((item) => item.namaBarang).filter(Boolean)).size}
+          </p>
+        </Card>
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">Tahun {selectedYear}</p>
+          <p className="text-lg sm:text-2xl font-bold text-dark-900 dark:text-white">{totalData}</p>
         </Card>
       </div>
 

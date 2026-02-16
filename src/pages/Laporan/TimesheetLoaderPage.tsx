@@ -488,12 +488,12 @@ const TimesheetLoaderPage = ({ plant }: TimesheetLoaderPageProps) => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">
             Total Jam Grounded
           </p>
-          <p className="text-2xl font-bold text-amber-600">
+          <p className="text-lg sm:text-2xl font-bold text-amber-600">
             {formatNumber(
               filteredData.reduce(
                 (sum, item) => sum + parseNumber(item.jamGrounded),
@@ -503,11 +503,11 @@ const TimesheetLoaderPage = ({ plant }: TimesheetLoaderPageProps) => {
             Jam
           </p>
         </Card>
-        <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">
             Total Jam Operasi
           </p>
-          <p className="text-2xl font-bold text-secondary-600">
+          <p className="text-lg sm:text-2xl font-bold text-secondary-600">
             {formatNumber(
               filteredData.reduce(
                 (sum, item) => sum + parseNumber(item.jamOperasi),
@@ -517,19 +517,19 @@ const TimesheetLoaderPage = ({ plant }: TimesheetLoaderPageProps) => {
             Jam
           </p>
         </Card>
-        <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">
             Total Shift
           </p>
-          <p className="text-2xl font-bold text-dark-900 dark:text-white">
+          <p className="text-lg sm:text-2xl font-bold text-dark-900 dark:text-white">
             {filteredData.length}
           </p>
         </Card>
-        <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">
             Jumlah Entry
           </p>
-          <p className="text-2xl font-bold text-dark-900 dark:text-white">
+          <p className="text-lg sm:text-2xl font-bold text-dark-900 dark:text-white">
             {filteredData.length}
           </p>
         </Card>

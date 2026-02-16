@@ -932,8 +932,12 @@ const InventarisPage = () => {
     (m) => m.stok <= m.stok_minimum
   ).length;
 
+  // Summary stats
+  const totalMaterial = materials.length;
+  const totalStok = materials.reduce((sum, m) => sum + (m.stok || 0), 0);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Success Overlay */}
       <SuccessOverlay isVisible={showSuccess} message="Berhasil!" />
 
@@ -964,6 +968,34 @@ const InventarisPage = () => {
           {error}
         </div>
       )}
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">
+            Total Material
+          </p>
+          <p className="text-lg sm:text-2xl font-bold text-primary-600">{totalMaterial}</p>
+        </Card>
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">
+            Total Stok
+          </p>
+          <p className="text-lg sm:text-2xl font-bold text-dark-900 dark:text-white">{formatNumber(totalStok)}</p>
+        </Card>
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">
+            Stok Aman
+          </p>
+          <p className="text-lg sm:text-2xl font-bold text-green-600">{totalMaterial - lowStockCount}</p>
+        </Card>
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">
+            Stok Menipis
+          </p>
+          <p className="text-lg sm:text-2xl font-bold text-red-600">{lowStockCount}</p>
+        </Card>
+      </div>
 
       {/* Action Buttons */}
       <Card>
@@ -1010,52 +1042,21 @@ const InventarisPage = () => {
             <span>Daftar Material ({filteredMaterials.length})</span>
           </CardTitle>
         </CardHeader>
-        <div className="p-4">
-          <DataTable
-            data={paginatedMaterials}
-            columns={columns}
-            loading={loading}
-            emptyMessage="Belum ada data material"
-            searchable={true}
-            searchPlaceholder="Cari kode, nama material, satuan..."
-            searchKeys={[
-              "kode_material",
-              "nama_material",
-              "satuan",
-              "stok_awal",
-              "stok_akhir",
-            ]}
-          />
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4 pt-4 border-t border-dark-200 dark:border-dark-700">
-              <span className="text-sm text-dark-500 dark:text-dark-400">
-                Halaman {currentPage} dari {totalPages}
-              </span>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                >
-                  Sebelumnya
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    setCurrentPage((p) => Math.min(totalPages, p + 1))
-                  }
-                  disabled={currentPage === totalPages}
-                >
-                  Selanjutnya
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
+        <DataTable
+          data={filteredMaterials}
+          columns={columns}
+          loading={loading}
+          emptyMessage="Belum ada data material"
+          searchable={true}
+          searchPlaceholder="Cari kode, nama material, satuan..."
+          searchKeys={[
+            "kode_material",
+            "nama_material",
+            "satuan",
+            "stok",
+            "stok_minimum",
+          ]}
+        />
       </Card>
 
       {/* Modals */}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Plus,
   Edit2,
@@ -865,39 +865,84 @@ const RiksaTimbPortabelPage = () => {
     );
   };
 
-  return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-xl shadow-lg">
-              <Scale className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <CardTitle>
-                Riksa Timbangan Portabel - Tahun {selectedYear}
-              </CardTitle>
-              <p className="text-sm text-gray-500 mt-1">
-                Data pengujian kalibrasi timbangan portabel
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <Select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value)}
-              options={YEAR_OPTIONS}
-              className="w-32"
-            />
-            {userCanAdd && (
-              <Button onClick={() => setShowForm(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Tambah Data
-              </Button>
-            )}
-          </div>
-        </CardHeader>
+  // Summary stats
+  const summaryStats = useMemo(() => {
+    const total = filteredData.length;
+    const withCalc = filteredData.map((item) => calculateSelisih(item));
+    const goodCount = withCalc.filter((c) => c.rataRataSelisih <= 0.5).length;
+    const warningCount = withCalc.filter((c) => c.rataRataSelisih > 0.5 && c.rataRataSelisih <= 1).length;
+    const badCount = withCalc.filter((c) => c.rataRataSelisih > 1).length;
+    const avgSelisih = total > 0 ? withCalc.reduce((sum, c) => sum + c.rataRataSelisih, 0) / total : 0;
+    const uniqueAreas = new Set(filteredData.map((item) => item.area).filter(Boolean)).size;
+    return { total, goodCount, warningCount, badCount, avgSelisih, uniqueAreas };
+  }, [filteredData]);
 
+  return (
+    <div className="space-y-4 sm:space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-xl shadow-lg">
+            <Scale className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-dark-900 dark:text-white">
+              Riksa Timbangan Portabel
+            </h1>
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+              Data pengujian kalibrasi timbangan portabel
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <Select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(e.target.value)}
+            options={YEAR_OPTIONS}
+            className="w-32"
+          />
+          {userCanAdd && (
+            <Button onClick={() => setShowForm(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Tambah Data
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">
+            Total Pemeriksaan
+          </p>
+          <p className="text-lg sm:text-2xl font-bold text-primary-600">{summaryStats.total}</p>
+        </Card>
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">
+            Lolos (≤0.5kg)
+          </p>
+          <p className="text-lg sm:text-2xl font-bold text-green-600">{summaryStats.goodCount}</p>
+        </Card>
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">
+            Perhatian (&gt;0.5kg)
+          </p>
+          <p className="text-lg sm:text-2xl font-bold text-yellow-600">{summaryStats.warningCount + summaryStats.badCount}</p>
+        </Card>
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">
+            Rata-rata Selisih
+          </p>
+          <p className="text-lg sm:text-2xl font-bold text-dark-900 dark:text-white">{formatWeight(summaryStats.avgSelisih)} kg</p>
+        </Card>
+      </div>
+
+      {/* Data Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Data Riksa Timbangan - Tahun {selectedYear}</CardTitle>
+        </CardHeader>
         <DataTable
           columns={columns}
           data={filteredData}

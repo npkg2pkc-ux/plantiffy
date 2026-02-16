@@ -455,62 +455,22 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4 border-l-4 border-l-red-500">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-red-100 rounded-lg">
-              <AlertCircle className="h-5 w-5 text-red-600" />
-            </div>
-            <div>
-              <p className="text-sm text-dark-500 dark:text-dark-400">Open</p>
-              <p className="text-2xl font-bold text-red-600">
-                {statusCounts.open}
-              </p>
-            </div>
-          </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <Card className="p-3 sm:p-4 border-l-4 border-l-red-500">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400">Open</p>
+          <p className="text-lg sm:text-2xl font-bold text-red-600">{statusCounts.open}</p>
         </Card>
-        <Card className="p-4 border-l-4 border-l-amber-500">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-amber-100 rounded-lg">
-              <Clock className="h-5 w-5 text-amber-600" />
-            </div>
-            <div>
-              <p className="text-sm text-dark-500 dark:text-dark-400">
-                In Progress
-              </p>
-              <p className="text-2xl font-bold text-amber-600">
-                {statusCounts.progress}
-              </p>
-            </div>
-          </div>
+        <Card className="p-3 sm:p-4 border-l-4 border-l-amber-500">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400">In Progress</p>
+          <p className="text-lg sm:text-2xl font-bold text-amber-600">{statusCounts.progress}</p>
         </Card>
-        <Card className="p-4 border-l-4 border-l-green-500">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <AlertCircle className="h-5 w-5 text-green-600" />
-            </div>
-            <div>
-              <p className="text-sm text-dark-500 dark:text-dark-400">Closed</p>
-              <p className="text-2xl font-bold text-green-600">
-                {statusCounts.closed}
-              </p>
-            </div>
-          </div>
+        <Card className="p-3 sm:p-4 border-l-4 border-l-green-500">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400">Closed</p>
+          <p className="text-lg sm:text-2xl font-bold text-green-600">{statusCounts.closed}</p>
         </Card>
-        <Card className="p-4 border-l-4 border-l-gray-500">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
-              <AlertCircle className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-            </div>
-            <div>
-              <p className="text-sm text-dark-500 dark:text-dark-400">
-                Pending
-              </p>
-              <p className="text-2xl font-bold text-gray-600 dark:text-gray-400">
-                {statusCounts.pending}
-              </p>
-            </div>
-          </div>
+        <Card className="p-3 sm:p-4 border-l-4 border-l-gray-500">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400">Pending</p>
+          <p className="text-lg sm:text-2xl font-bold text-gray-600 dark:text-gray-400">{statusCounts.pending}</p>
         </Card>
       </div>
 

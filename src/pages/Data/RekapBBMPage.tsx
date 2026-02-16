@@ -416,111 +416,79 @@ const RekapBBMPage = ({ plant }: RekapBBMPageProps) => {
   return (
     <div className="space-y-6">
       {/* Summary Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-900/20 rounded-xl p-5 border border-amber-200 dark:border-amber-800">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-amber-500 rounded-lg">
-              <Fuel className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <p className="text-xs font-medium text-amber-700 dark:text-amber-300 uppercase tracking-wider">
-                Total Pengajuan
-              </p>
-              <p className="text-2xl font-bold text-amber-900 dark:text-amber-100">
-                {formatNumber(summaryStats.totalPengajuan)}
-              </p>
-              <p className="text-xs text-amber-600 dark:text-amber-400">Liter</p>
-            </div>
-          </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-900/20 rounded-xl p-3 sm:p-4 border border-amber-200 dark:border-amber-800">
+          <p className="text-[10px] sm:text-xs font-medium text-amber-700 dark:text-amber-300 uppercase tracking-wider">
+            Total Pengajuan
+          </p>
+          <p className="text-lg sm:text-2xl font-bold text-amber-900 dark:text-amber-100">
+            {formatNumber(summaryStats.totalPengajuan)}
+          </p>
+          <p className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-400">Liter</p>
         </div>
 
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-900/20 rounded-xl p-5 border border-blue-200 dark:border-blue-800">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-blue-500 rounded-lg">
-              <TrendingUp className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <p className="text-xs font-medium text-blue-700 dark:text-blue-300 uppercase tracking-wider">
-                Total Realisasi
-              </p>
-              <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                {formatNumber(summaryStats.totalRealisasi)}
-              </p>
-              <p className="text-xs text-blue-600 dark:text-blue-400">Liter</p>
-            </div>
-          </div>
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-900/20 rounded-xl p-3 sm:p-4 border border-blue-200 dark:border-blue-800">
+          <p className="text-[10px] sm:text-xs font-medium text-blue-700 dark:text-blue-300 uppercase tracking-wider">
+            Total Realisasi
+          </p>
+          <p className="text-lg sm:text-2xl font-bold text-blue-900 dark:text-blue-100">
+            {formatNumber(summaryStats.totalRealisasi)}
+          </p>
+          <p className="text-[10px] sm:text-xs text-blue-600 dark:text-blue-400">Liter</p>
         </div>
 
         <div
-          className={`bg-gradient-to-br rounded-xl p-5 border ${
+          className={`bg-gradient-to-br rounded-xl p-3 sm:p-4 border ${
             summaryStats.totalSelisih >= 0
               ? "from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-900/20 border-green-200 dark:border-green-800"
               : "from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-900/20 border-red-200 dark:border-red-800"
           }`}
         >
-          <div className="flex items-center gap-3">
-            <div
-              className={`p-2.5 rounded-lg ${
-                summaryStats.totalSelisih >= 0 ? "bg-green-500" : "bg-red-500"
-              }`}
-            >
-              <TrendingDown className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <p
-                className={`text-xs font-medium uppercase tracking-wider ${
-                  summaryStats.totalSelisih >= 0
-                    ? "text-green-700 dark:text-green-300"
-                    : "text-red-700 dark:text-red-300"
-                }`}
-              >
-                Total Selisih
-              </p>
-              <p
-                className={`text-2xl font-bold ${
-                  summaryStats.totalSelisih >= 0
-                    ? "text-green-900 dark:text-green-100"
-                    : "text-red-900 dark:text-red-100"
-                }`}
-              >
-                {summaryStats.totalSelisih >= 0 ? "+" : ""}
-                {formatNumber(summaryStats.totalSelisih)}
-              </p>
-              <p
-                className={`text-xs ${
-                  summaryStats.totalSelisih >= 0
-                    ? "text-green-600 dark:text-green-400"
-                    : "text-red-600 dark:text-red-400"
-                }`}
-              >
-                Liter{" "}
-                {summaryStats.totalSelisih >= 0 ? "(Surplus)" : "(Defisit)"}
-              </p>
-            </div>
-          </div>
+          <p
+            className={`text-[10px] sm:text-xs font-medium uppercase tracking-wider ${
+              summaryStats.totalSelisih >= 0
+                ? "text-green-700 dark:text-green-300"
+                : "text-red-700 dark:text-red-300"
+            }`}
+          >
+            Total Selisih
+          </p>
+          <p
+            className={`text-lg sm:text-2xl font-bold ${
+              summaryStats.totalSelisih >= 0
+                ? "text-green-900 dark:text-green-100"
+                : "text-red-900 dark:text-red-100"
+            }`}
+          >
+            {summaryStats.totalSelisih >= 0 ? "+" : ""}
+            {formatNumber(summaryStats.totalSelisih)}
+          </p>
+          <p
+            className={`text-[10px] sm:text-xs ${
+              summaryStats.totalSelisih >= 0
+                ? "text-green-600 dark:text-green-400"
+                : "text-red-600 dark:text-red-400"
+            }`}
+          >
+            Liter{" "}
+            {summaryStats.totalSelisih >= 0 ? "(Surplus)" : "(Defisit)"}
+          </p>
         </div>
 
-        <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/30 dark:to-slate-900/20 rounded-xl p-5 border border-slate-200 dark:border-slate-700">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-slate-500 rounded-lg">
-              <BarChart3 className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <p className="text-xs font-medium text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                Total Record
-              </p>
-              <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                {summaryStats.totalRecord}
-              </p>
-              <p className="text-xs text-slate-600 dark:text-slate-400">
-                {selectedYear === "all"
-                  ? "Semua tahun"
-                  : `Tahun ${selectedYear}`}
-                {selectedMonth !== "all" &&
-                  `, ${MONTH_NAMES[parseInt(selectedMonth)]}`}
-              </p>
-            </div>
-          </div>
+        <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/30 dark:to-slate-900/20 rounded-xl p-3 sm:p-4 border border-slate-200 dark:border-slate-700">
+          <p className="text-[10px] sm:text-xs font-medium text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+            Total Record
+          </p>
+          <p className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
+            {summaryStats.totalRecord}
+          </p>
+          <p className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-400">
+            {selectedYear === "all"
+              ? "Semua tahun"
+              : `Tahun ${selectedYear}`}
+            {selectedMonth !== "all" &&
+              `, ${MONTH_NAMES[parseInt(selectedMonth)]}`}
+          </p>
         </div>
       </div>
 

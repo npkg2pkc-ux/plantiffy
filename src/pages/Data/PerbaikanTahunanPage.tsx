@@ -470,36 +470,14 @@ const PerbaikanTahunanPage = ({ plant }: PerbaikanTahunanPageProps) => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary-100 rounded-lg">
-              <Wrench className="h-5 w-5 text-primary-600" />
-            </div>
-            <div>
-              <p className="text-sm text-dark-500 dark:text-dark-400">
-                Total Perbaikan
-              </p>
-              <p className="text-2xl font-bold text-primary-600">
-                {filteredData.length}
-              </p>
-            </div>
-          </div>
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">Total Perbaikan</p>
+          <p className="text-lg sm:text-2xl font-bold text-primary-600">{filteredData.length}</p>
         </Card>
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-amber-100 rounded-lg">
-              <Calendar className="h-5 w-5 text-amber-600" />
-            </div>
-            <div>
-              <p className="text-sm text-dark-500 dark:text-dark-400">
-                Total Hari Perta
-              </p>
-              <p className="text-2xl font-bold text-amber-600">
-                {totalHariPerta} Hari
-              </p>
-            </div>
-          </div>
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">Total Hari Perta</p>
+          <p className="text-lg sm:text-2xl font-bold text-amber-600">{totalHariPerta} Hari</p>
         </Card>
       </div>
 

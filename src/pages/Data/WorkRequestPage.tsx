@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Plus,
   Edit2,
@@ -351,15 +351,42 @@ const WorkRequestPage = ({ plant }: WorkRequestPageProps) => {
 
   const totalData = filteredData.length;
 
+  // Summary calculations
+  const eksekutorCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    filteredData.forEach((item) => {
+      const eks = item.eksekutor || "Lainnya";
+      counts[eks] = (counts[eks] || 0) + 1;
+    });
+    return counts;
+  }, [filteredData]);
+
+  const topEksekutor = useMemo(() => {
+    const entries = Object.entries(eksekutorCounts).sort(([, a], [, b]) => b - a);
+    return entries[0] || ["—", 0];
+  }, [eksekutorCounts]);
+
+  const uniqueAreas = useMemo(() => {
+    return new Set(filteredData.map((item) => item.area).filter(Boolean)).size;
+  }, [filteredData]);
+
+  const thisMonthCount = useMemo(() => {
+    const now = new Date();
+    return filteredData.filter((item) => {
+      const d = new Date(item.tanggal);
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    }).length;
+  }, [filteredData]);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-dark-900 dark:text-white">
+          <h1 className="text-xl sm:text-2xl font-display font-bold text-dark-900 dark:text-white">
             Work Request {currentPlant === "NPK1" ? "NPK 1" : "NPK 2"}
           </h1>
-          <p className="text-dark-500 dark:text-dark-400 mt-1">
+          <p className="text-dark-500 dark:text-dark-400 mt-1 text-sm">
             Kelola permintaan perbaikan dan maintenance
           </p>
         </div>
@@ -374,20 +401,32 @@ const WorkRequestPage = ({ plant }: WorkRequestPageProps) => {
         </div>
       </div>
 
-      {/* Summary Card */}
-      <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary-100 rounded-lg">
-              <FileText className="h-5 w-5 text-primary-600" />
-            </div>
-            <div>
-              <p className="text-sm text-dark-500 dark:text-dark-400">
-                Total Work Request
-              </p>
-              <p className="text-2xl font-bold text-primary-600">{totalData}</p>
-            </div>
-          </div>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">
+            Total WR ({selectedYear})
+          </p>
+          <p className="text-lg sm:text-2xl font-bold text-primary-600">{totalData}</p>
+        </Card>
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">
+            Bulan Ini
+          </p>
+          <p className="text-lg sm:text-2xl font-bold text-green-600">{thisMonthCount}</p>
+        </Card>
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">
+            Area Terlibat
+          </p>
+          <p className="text-lg sm:text-2xl font-bold text-dark-900 dark:text-white">{uniqueAreas}</p>
+        </Card>
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">
+            Top Eksekutor
+          </p>
+          <p className="text-sm sm:text-lg font-bold text-dark-900 dark:text-white truncate">{topEksekutor[0]}</p>
+          <p className="text-xs text-dark-400">{topEksekutor[1]} WR</p>
         </Card>
       </div>
 

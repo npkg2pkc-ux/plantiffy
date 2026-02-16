@@ -555,24 +555,17 @@ const BahanBakuNPKPage = ({ plant }: BahanBakuNPKPageProps) => {
       </div>
 
       {/* Summary - Top Items */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
         {Object.entries(totalsByBahanBaku)
           .slice(0, 5)
           .map(([name, total]) => (
-            <Card key={name} className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary-100 rounded-lg">
-                  <Package className="h-5 w-5 text-primary-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-dark-500 dark:text-dark-400">
-                    {name}
-                  </p>
-                  <p className="text-lg font-bold text-dark-900 dark:text-white">
-                    {formatNumber(total)}
-                  </p>
-                </div>
-              </div>
+            <Card key={name} className="p-3 sm:p-4">
+              <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">
+                {name}
+              </p>
+              <p className="text-base sm:text-lg font-bold text-dark-900 dark:text-white">
+                {formatNumber(total)}
+              </p>
             </Card>
           ))}
       </div>

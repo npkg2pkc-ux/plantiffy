@@ -414,66 +414,22 @@ const PertaPage = () => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-amber-100 rounded-lg">
-              <Droplets className="h-5 w-5 text-amber-600" />
-            </div>
-            <div>
-              <p className="text-sm text-dark-500 dark:text-dark-400">
-                Stock Saat Ini
-              </p>
-              <p className="text-2xl font-bold text-amber-600">
-                {formatNumber(latestStock)} L
-              </p>
-            </div>
-          </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <Card className="p-3 sm:p-4 bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">Stock Saat Ini</p>
+          <p className="text-lg sm:text-2xl font-bold text-amber-600">{formatNumber(latestStock)} L</p>
         </Card>
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <Droplets className="h-5 w-5 text-green-600" />
-            </div>
-            <div>
-              <p className="text-sm text-dark-500 dark:text-dark-400">
-                Total Pengisian
-              </p>
-              <p className="text-2xl font-bold text-green-600">
-                +{formatNumber(totals.pengisian)} L
-              </p>
-            </div>
-          </div>
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">Total Pengisian</p>
+          <p className="text-lg sm:text-2xl font-bold text-green-600">+{formatNumber(totals.pengisian)} L</p>
         </Card>
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-red-100 rounded-lg">
-              <Droplets className="h-5 w-5 text-red-600" />
-            </div>
-            <div>
-              <p className="text-sm text-dark-500 dark:text-dark-400">
-                Total Pemakaian
-              </p>
-              <p className="text-2xl font-bold text-red-600">
-                -{formatNumber(totals.pemakaian)} L
-              </p>
-            </div>
-          </div>
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">Total Pemakaian</p>
+          <p className="text-lg sm:text-2xl font-bold text-red-600">-{formatNumber(totals.pemakaian)} L</p>
         </Card>
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-dark-100 rounded-lg">
-              <Droplets className="h-5 w-5 text-dark-600" />
-            </div>
-            <div>
-              <p className="text-sm text-dark-500 dark:text-dark-400">
-                Jumlah Entry
-              </p>
-              <p className="text-2xl font-bold text-dark-900 dark:text-white">
-                {filteredData.length}
-              </p>
-            </div>
-          </div>
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">Jumlah Entry</p>
+          <p className="text-lg sm:text-2xl font-bold text-dark-900 dark:text-white">{filteredData.length}</p>
         </Card>
       </div>
 

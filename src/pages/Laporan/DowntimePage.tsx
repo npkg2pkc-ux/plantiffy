@@ -390,39 +390,39 @@ const DowntimePage = ({ plant }: DowntimePageProps) => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">
             Total Downtime
           </p>
-          <p className="text-2xl font-bold text-amber-600">
+          <p className="text-lg sm:text-2xl font-bold text-amber-600">
             {formatNumber(totalDowntime)} Jam
           </p>
         </Card>
-        <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">
             Jumlah Kejadian
           </p>
-          <p className="text-2xl font-bold text-dark-900 dark:text-white">
+          <p className="text-lg sm:text-2xl font-bold text-dark-900 dark:text-white">
             {filteredData.length}
           </p>
         </Card>
-        <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">
             Rata-rata Downtime
           </p>
-          <p className="text-2xl font-bold text-dark-900 dark:text-white">
+          <p className="text-lg sm:text-2xl font-bold text-dark-900 dark:text-white">
             {formatNumber(
               filteredData.length > 0 ? totalDowntime / filteredData.length : 0
             )}{" "}
             Jam
           </p>
         </Card>
-        <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">
             Equipment Terdampak
           </p>
-          <p className="text-2xl font-bold text-dark-900 dark:text-white">
+          <p className="text-lg sm:text-2xl font-bold text-dark-900 dark:text-white">
             {new Set(filteredData.map((item) => item.item)).size}
           </p>
         </Card>
