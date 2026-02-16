@@ -479,81 +479,82 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
 
       {/* Produksi Bulan Ini */}
       <div
-        className={`rounded-xl p-5 text-white shadow-md ${
+        className={`rounded-xl p-4 sm:p-5 text-white shadow-md ${
           plant === "NPK1"
             ? "bg-gradient-to-r from-primary-500 to-primary-600"
             : "bg-gradient-to-r from-green-500 to-green-600"
         }`}
       >
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <CalendarDays className="h-8 w-8" />
-            <div>
-              <h3 className="text-lg font-bold">
-                Produksi Bulan {currentMonthProduksi.monthName}{" "}
-                {currentMonthProduksi.year}
-              </h3>
-              <p className="text-white/80 text-sm">
-                {currentMonthProduksi.entryCount} entry data
-              </p>
-            </div>
+        <div className="flex items-center gap-3 mb-3">
+          <CalendarDays className="h-6 w-6 sm:h-7 sm:w-7 flex-shrink-0" />
+          <div className="min-w-0">
+            <h3 className="text-base sm:text-lg font-bold leading-tight">
+              Produksi Bulan {currentMonthProduksi.monthName}{" "}
+              {currentMonthProduksi.year}
+            </h3>
+            <p className="text-white/80 text-xs sm:text-sm">
+              {currentMonthProduksi.entryCount} entry data
+            </p>
           </div>
+        </div>
 
-          <div className="flex items-center gap-4 md:gap-6">
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(Number(e.target.value))}
-              className="bg-white/20 border-white/30 text-white rounded-lg px-3 py-2 text-sm backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white/50"
-            >
-              {MONTH_NAMES.map((name, index) => (
-                <option key={index} value={index} className="text-dark-900">
-                  {name}
-                </option>
-              ))}
-            </select>
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="bg-white/20 border-white/30 text-white rounded-lg px-3 py-2 text-sm backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white/50"
-            >
-              {availableYears.map((y) => (
-                <option key={y} value={y} className="text-dark-900">
-                  {y}
-                </option>
-              ))}
-            </select>
-            <div className="bg-white/20 rounded-lg px-4 py-2 backdrop-blur-sm">
-              <p className="text-white/80 text-xs uppercase">Onspek</p>
-              <p className="text-xl font-bold">
-                {formatNumber(currentMonthProduksi.totalOnspek)}{" "}
-                <span className="text-sm font-normal">Ton</span>
-              </p>
-            </div>
-            <div className="bg-white/20 rounded-lg px-4 py-2 backdrop-blur-sm">
-              <p className="text-white/80 text-xs uppercase">Offspek</p>
-              <p className="text-xl font-bold">
-                {formatNumber(currentMonthProduksi.totalOffspek)}{" "}
-                <span className="text-sm font-normal">Ton</span>
-              </p>
-            </div>
-            <div className="bg-white/20 rounded-lg px-4 py-2 backdrop-blur-sm">
-              <p className="text-white/80 text-xs uppercase">Total</p>
-              <p className="text-xl font-bold">
-                {formatNumber(currentMonthProduksi.total)}{" "}
-                <span className="text-sm font-normal">Ton</span>
-              </p>
-            </div>
+        <div className="flex items-center gap-2 mb-3">
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(Number(e.target.value))}
+            className="bg-white/20 border border-white/30 text-white rounded-lg px-2.5 py-1.5 text-xs sm:text-sm backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white/50 flex-1 min-w-0"
+          >
+            {MONTH_NAMES.map((name, index) => (
+              <option key={index} value={index} className="text-dark-900">
+                {name}
+              </option>
+            ))}
+          </select>
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(Number(e.target.value))}
+            className="bg-white/20 border border-white/30 text-white rounded-lg px-2.5 py-1.5 text-xs sm:text-sm backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white/50 w-20 sm:w-24"
+          >
+            {availableYears.map((y) => (
+              <option key={y} value={y} className="text-dark-900">
+                {y}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          <div className="bg-white/20 rounded-lg px-3 py-2 backdrop-blur-sm text-center">
+            <p className="text-white/80 text-[10px] sm:text-xs uppercase tracking-wide">Onspek</p>
+            <p className="text-base sm:text-lg font-bold leading-tight">
+              {formatNumber(currentMonthProduksi.totalOnspek)}
+            </p>
+            <p className="text-white/70 text-[10px] sm:text-xs">Ton</p>
+          </div>
+          <div className="bg-white/20 rounded-lg px-3 py-2 backdrop-blur-sm text-center">
+            <p className="text-white/80 text-[10px] sm:text-xs uppercase tracking-wide">Offspek</p>
+            <p className="text-base sm:text-lg font-bold leading-tight">
+              {formatNumber(currentMonthProduksi.totalOffspek)}
+            </p>
+            <p className="text-white/70 text-[10px] sm:text-xs">Ton</p>
+          </div>
+          <div className="bg-white/20 rounded-lg px-3 py-2 backdrop-blur-sm text-center">
+            <p className="text-white/80 text-[10px] sm:text-xs uppercase tracking-wide">Total</p>
+            <p className="text-base sm:text-lg font-bold leading-tight">
+              {formatNumber(currentMonthProduksi.total)}
+            </p>
+            <p className="text-white/70 text-[10px] sm:text-xs">Ton</p>
           </div>
         </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">
             Total Onspek ({selectedYear})
           </p>
-          <p className="text-2xl font-bold text-primary-600">
+          <p className="text-lg sm:text-2xl font-bold text-primary-600">
             {formatNumber(
               filteredByYear.reduce(
                 (sum, item) => sum + parseNumber(item.totalOnspek),
@@ -562,11 +563,11 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
             )}
           </p>
         </Card>
-        <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">
             Total Offspek ({selectedYear})
           </p>
-          <p className="text-2xl font-bold text-red-600">
+          <p className="text-lg sm:text-2xl font-bold text-red-600">
             {formatNumber(
               filteredByYear.reduce(
                 (sum, item) => sum + parseNumber(item.totalOffspek),
@@ -575,11 +576,11 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
             )}
           </p>
         </Card>
-        <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">
             Total Produksi ({selectedYear})
           </p>
-          <p className="text-2xl font-bold text-dark-900 dark:text-white">
+          <p className="text-lg sm:text-2xl font-bold text-dark-900 dark:text-white">
             {formatNumber(
               filteredByYear.reduce(
                 (sum, item) => sum + parseNumber(item.total),
@@ -588,11 +589,11 @@ const ProduksiNPKPage = ({ plant }: ProduksiNPKPageProps) => {
             )}
           </p>
         </Card>
-        <Card className="p-4">
-          <p className="text-sm text-dark-500 dark:text-dark-400">
+        <Card className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">
             Jumlah Entry ({selectedYear})
           </p>
-          <p className="text-2xl font-bold text-dark-900 dark:text-white">
+          <p className="text-lg sm:text-2xl font-bold text-dark-900 dark:text-white">
             {filteredByYear.length}
           </p>
         </Card>

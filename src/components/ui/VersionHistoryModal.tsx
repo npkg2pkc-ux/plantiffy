@@ -40,6 +40,20 @@ interface VersionEntry {
 
 const versionHistory: VersionEntry[] = [
   {
+    version: "2.5.4",
+    date: "16 Februari 2026",
+    title: "Mobile Responsive Produksi",
+    type: "patch",
+    icon: <Smartphone className="h-5 w-5" />,
+    highlights: [
+      "Perbaikan layout halaman Produksi NPK Granul agar tidak terpotong di HP",
+      "Redesain banner produksi bulanan - compact & proporsional di iPhone & Android",
+      "Summary cards 2 kolom di mobile (sebelumnya 1 kolom penuh, terlalu besar)",
+      "Ukuran font & padding responsif (sm/xs) untuk tampilan lebih profesional",
+      "Fix halaman Produksi NPK Mini dengan layout mobile yang sama",
+    ],
+  },
+  {
     version: "2.5.3",
     date: "15 Februari 2026",
     title: "Work Request & Data Integrity Fix",
