@@ -54,6 +54,7 @@ const ProduksiNPKMiniPage = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState<ProduksiNPKMini>(initialFormState);
+  const [tonaseInput, setTonaseInput] = useState<string>("");
   const [selectedYear, setSelectedYear] = useState<number>(
     new Date().getFullYear()
   );
@@ -188,12 +189,15 @@ const ProduksiNPKMiniPage = () => {
     e.preventDefault();
     setLoading(true);
 
+    const tonaseNumber = parseFloat(tonaseInput.replace(",", ".")) || 0;
+    const submitForm = { ...form, tonase: tonaseNumber };
+
     try {
       if (editingId) {
         const updateResult = await updateWithLog<ProduksiNPKMini>(
           "produksi_npk_mini",
           {
-            ...form,
+            ...submitForm,
             id: editingId,
             _plant: "NPK2",
           }
@@ -202,7 +206,7 @@ const ProduksiNPKMiniPage = () => {
           setData((prev) =>
             prev.map((item) =>
               item.id === editingId
-                ? { ...form, id: editingId, _plant: "NPK2" }
+                ? { ...submitForm, id: editingId, _plant: "NPK2" }
                 : item
             )
           );
@@ -210,7 +214,7 @@ const ProduksiNPKMiniPage = () => {
           throw new Error(updateResult.error || "Gagal mengupdate data");
         }
       } else {
-        const newData = { ...form, _plant: "NPK2" as const };
+        const newData = { ...submitForm, _plant: "NPK2" as const };
         const createResult = await createWithLog<ProduksiNPKMini>(
           "produksi_npk_mini",
           newData
@@ -228,6 +232,7 @@ const ProduksiNPKMiniPage = () => {
 
       setShowForm(false);
       setForm(initialFormState);
+      setTonaseInput("");
       setEditingId(null);
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 2000);
@@ -251,6 +256,7 @@ const ProduksiNPKMiniPage = () => {
       return;
     }
     setForm(item);
+    setTonaseInput(item.tonase ? String(item.tonase) : "");
     setEditingId(item.id || null);
     setShowForm(true);
   };
@@ -337,6 +343,7 @@ const ProduksiNPKMiniPage = () => {
 
   const openAddForm = () => {
     setForm(initialFormState);
+    setTonaseInput("");
     setEditingId(null);
     setShowForm(true);
   };
@@ -564,6 +571,7 @@ const ProduksiNPKMiniPage = () => {
         onClose={() => {
           setShowForm(false);
           setForm(initialFormState);
+          setTonaseInput("");
           setEditingId(null);
         }}
         title={editingId ? "Edit Data NPK Mini" : "Tambah Data NPK Mini"}
@@ -593,13 +601,21 @@ const ProduksiNPKMiniPage = () => {
 
           <Input
             label="Tonase (Ton)"
-            type="number"
-            value={form.tonase}
-            onChange={(e) =>
-              setForm((prev) => ({ ...prev, tonase: Number(e.target.value) }))
-            }
-            min="0"
-            step="0.01"
+            type="text"
+            inputMode="decimal"
+            value={tonaseInput}
+            onChange={(e) => {
+              let val = e.target.value;
+              // Allow digits, one decimal separator (period or comma), max 2 decimal places
+              val = val.replace(/[^0-9.,]/g, "");
+              // Replace comma with period for consistency in validation
+              const normalized = val.replace(",", ".");
+              // Validate format: optional digits, optional one decimal point with up to 2 digits
+              if (normalized === "" || /^\d*\.?\d{0,2}$/.test(normalized)) {
+                setTonaseInput(val);
+              }
+            }}
+            placeholder="0"
             required
           />
 
@@ -610,6 +626,7 @@ const ProduksiNPKMiniPage = () => {
               onClick={() => {
                 setShowForm(false);
                 setForm(initialFormState);
+                setTonaseInput("");
                 setEditingId(null);
               }}
             >

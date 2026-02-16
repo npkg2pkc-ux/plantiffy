@@ -40,6 +40,19 @@ interface VersionEntry {
 
 const versionHistory: VersionEntry[] = [
   {
+    version: "2.6.1",
+    date: "16 Februari 2026",
+    title: "Fix Input Tonase NPK Mini",
+    type: "patch",
+    icon: <Smartphone className="h-5 w-5" />,
+    highlights: [
+      "Input tonase NPK Mini menggunakan placeholder '0' - tidak lagi pre-fill nilai lama",
+      "Support input desimal dengan koma (,) dan titik (.) sebagai pemisah",
+      "Maksimal 2 angka di belakang koma (contoh: 12,50 atau 12.50)",
+      "Fix keyboard mobile - sekarang bisa ketik koma & titik di iPhone dan Android",
+    ],
+  },
+  {
     version: "2.6.0",
     date: "16 Februari 2026",
     title: "Summary Cards & Mobile Responsive All Pages",
