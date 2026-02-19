@@ -24,7 +24,7 @@ const Modal = ({
   children,
   size = "md",
   showCloseButton = true,
-  closeOnOverlayClick = true,
+  closeOnOverlayClick = false,
   className,
 }: ModalProps) => {
   const modalRef = useRef<HTMLDivElement>(null);

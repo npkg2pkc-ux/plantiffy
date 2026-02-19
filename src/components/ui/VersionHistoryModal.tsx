@@ -40,6 +40,19 @@ interface VersionEntry {
 
 const versionHistory: VersionEntry[] = [
   {
+    version: "2.6.2",
+    date: "19 Februari 2026",
+    title: "Modal Tidak Tertutup Saat Klik di Luar",
+    type: "patch",
+    icon: <Shield className="h-5 w-5" />,
+    highlights: [
+      "Modal form tidak lagi tertutup saat klik di luar area modal",
+      "Data input yang sedang diisi tidak akan hilang karena klik tidak sengaja",
+      "Berlaku untuk semua modal di seluruh halaman aplikasi",
+      "User tetap bisa menutup modal via tombol X atau tombol Batal",
+    ],
+  },
+  {
     version: "2.6.1",
     date: "16 Februari 2026",
     title: "Fix Input Tonase NPK Mini",
