@@ -20,6 +20,7 @@ import {
   Eye,
   FileText,
   ClipboardList,
+  FileSpreadsheet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -39,6 +40,22 @@ interface VersionEntry {
 }
 
 const versionHistory: VersionEntry[] = [
+  {
+    version: "2.7.0",
+    date: "20 Februari 2026",
+    title: "Export Excel Bahan Baku NPK",
+    type: "minor",
+    icon: <FileSpreadsheet className="h-5 w-5" />,
+    highlights: [
+      "Export data penerimaan bahan baku ke file Excel (.xlsx)",
+      "Filter berdasarkan rentang tanggal (dari - sampai)",
+      "Pilih per bahan baku atau semua bahan baku sekaligus",
+      "Sheet 1: Data detail lengkap dengan semua kolom",
+      "Sheet 2: Rekap total per bahan baku",
+      "Tersedia di halaman Bahan Baku NPK 1 dan NPK 2",
+      "Preview jumlah data sebelum export",
+    ],
+  },
   {
     version: "2.6.2",
     date: "19 Februari 2026",

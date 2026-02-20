@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Edit2, Trash2, Search, Package, History, X } from "lucide-react";
+import { Plus, Edit2, Trash2, Search, Package, History, X, Download } from "lucide-react";
 import { useSaveShortcut, useDataWithLogging, useOptimisticList, generateTempId } from "@/hooks";
 import {
   Button,
@@ -14,6 +14,7 @@ import {
   SuccessOverlay,
   ApprovalDialog,
   ActivityLogModal,
+  ExportExcelModal,
 } from "@/components/ui";
 import { useAuthStore } from "@/stores";
 import {
@@ -134,6 +135,9 @@ const BahanBakuNPKPage = ({ plant }: BahanBakuNPKPageProps) => {
   // Log modal state
   const [showLogModal, setShowLogModal] = useState(false);
   const [logRecordId, setLogRecordId] = useState<string>("");
+
+  // Export modal state
+  const [showExportModal, setShowExportModal] = useState(false);
 
   // Handle view log
   const handleViewLog = (id: string) => {
@@ -545,6 +549,14 @@ const BahanBakuNPKPage = ({ plant }: BahanBakuNPKPageProps) => {
         </div>
 
         <div className="flex items-center gap-3">
+          <Button
+            variant="secondary"
+            onClick={() => setShowExportModal(true)}
+            className="border-green-300 text-green-700 hover:bg-green-50 dark:border-green-700 dark:text-green-400 dark:hover:bg-green-900/20"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export Excel
+          </Button>
           {userCanAdd && (
             <Button onClick={openAddForm}>
               <Plus className="h-4 w-4 mr-2" />
@@ -817,6 +829,15 @@ const BahanBakuNPKPage = ({ plant }: BahanBakuNPKPageProps) => {
         isVisible={showSuccess}
         message="Data berhasil disimpan!"
         onClose={() => setShowSuccess(false)}
+      />
+
+      {/* Export Excel Modal */}
+      <ExportExcelModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        data={data}
+        plantName={currentPlant === "NPK1" ? "NPK 1" : "NPK 2"}
+        bahanBakuOptions={BAHAN_BAKU_OPTIONS}
       />
 
       {/* Activity Log Modal */}

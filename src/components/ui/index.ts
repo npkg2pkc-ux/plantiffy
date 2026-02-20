@@ -60,3 +60,5 @@ export { NotificationLogModal } from "./NotificationLogModal";
 export { ActivityLogModal } from "./ActivityLogModal";
 
 export { VersionHistoryModal } from "./VersionHistoryModal";
+
+export { ExportExcelModal } from "./ExportExcelModal";
