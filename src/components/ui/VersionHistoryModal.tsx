@@ -41,6 +41,18 @@ interface VersionEntry {
 
 const versionHistory: VersionEntry[] = [
   {
+    version: "2.7.1",
+    date: "20 Februari 2026",
+    title: "Export Excel - Grup per Bahan Baku",
+    type: "patch",
+    icon: <FileSpreadsheet className="h-5 w-5" />,
+    highlights: [
+      "Data di Excel dikelompokkan per bahan baku (Urea, DAP, KCL, dll)",
+      "Setiap kelompok memiliki header dan subtotal masing-masing",
+      "Grand total di akhir sheet",
+    ],
+  },
+  {
     version: "2.7.0",
     date: "20 Februari 2026",
     title: "Export Excel Bahan Baku NPK",

@@ -119,29 +119,21 @@ export function ExportExcelModal({
         (a, b) => new Date(a.tanggal).getTime() - new Date(b.tanggal).getTime()
       );
 
-      // Prepare rows for Excel
-      const rows = sorted.map((item, index) => {
-        const entries = parseEntries(item.entries);
-        return {
-          No: index + 1,
-          Tanggal: formatDateForExcel(item.tanggal),
-          "Bahan Baku": item.bahanBaku,
-          "Detail Berat & Unit": formatEntries(entries),
-          "Total Berat": item.totalBerat || 0,
-        };
-      });
-
-      // Calculate summary per bahan baku
-      const summary: Record<string, number> = {};
+      // Group data by bahan baku
+      const grouped: Record<string, BahanBakuNPKData[]> = {};
       sorted.forEach((item) => {
         const key = item.bahanBaku || "Unknown";
-        summary[key] = (summary[key] || 0) + (item.totalBerat || 0);
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(item);
       });
+
+      // Sort group keys alphabetically
+      const sortedKeys = Object.keys(grouped).sort((a, b) => a.localeCompare(b));
 
       // Create workbook
       const wb = XLSX.utils.book_new();
 
-      // --- Sheet 1: Data detail ---
+      // --- Sheet 1: Data detail dikelompokkan per bahan baku ---
       const wsData: (string | number)[][] = [];
 
       // Title rows
@@ -154,23 +146,37 @@ export function ExportExcelModal({
       ]);
       wsData.push([]); // Empty row
 
-      // Header
-      wsData.push(["No", "Tanggal", "Bahan Baku", "Detail Berat & Unit", "Total Berat"]);
+      let grandTotal = 0;
 
-      // Data rows
-      rows.forEach((row) => {
-        wsData.push([
-          row.No,
-          row.Tanggal,
-          row["Bahan Baku"],
-          row["Detail Berat & Unit"],
-          row["Total Berat"],
-        ]);
+      sortedKeys.forEach((bahanBaku) => {
+        const items = grouped[bahanBaku];
+        const subtotal = items.reduce((sum, item) => sum + (item.totalBerat || 0), 0);
+        grandTotal += subtotal;
+
+        // Group header
+        wsData.push([`Bahan Baku: ${bahanBaku}`]);
+
+        // Column header
+        wsData.push(["No", "Tanggal", "Detail Berat & Unit", "Total Berat"]);
+
+        // Data rows
+        items.forEach((item, idx) => {
+          const entries = parseEntries(item.entries);
+          wsData.push([
+            idx + 1,
+            formatDateForExcel(item.tanggal),
+            formatEntries(entries),
+            item.totalBerat || 0,
+          ]);
+        });
+
+        // Subtotal row
+        wsData.push(["", "", `Subtotal ${bahanBaku} (${items.length} data)`, subtotal]);
+        wsData.push([]); // Empty row separator
       });
 
-      // Empty row before summary
-      wsData.push([]);
-      wsData.push(["", "", "", "Grand Total", sorted.reduce((sum, item) => sum + (item.totalBerat || 0), 0)]);
+      // Grand total
+      wsData.push(["", "", `Grand Total (${sorted.length} data)`, grandTotal]);
 
       const ws = XLSX.utils.aoa_to_sheet(wsData);
 
@@ -178,17 +184,25 @@ export function ExportExcelModal({
       ws["!cols"] = [
         { wch: 5 },   // No
         { wch: 15 },  // Tanggal
-        { wch: 18 },  // Bahan Baku
         { wch: 35 },  // Detail Berat & Unit
         { wch: 15 },  // Total Berat
       ];
 
-      // Merge title cells
-      ws["!merges"] = [
-        { s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }, // Title
-        { s: { r: 1, c: 0 }, e: { r: 1, c: 4 } }, // Period
-        { s: { r: 2, c: 0 }, e: { r: 2, c: 4 } }, // Filter
+      // Merge title cells & group headers
+      const merges = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }, // Title
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } }, // Period
+        { s: { r: 2, c: 0 }, e: { r: 2, c: 3 } }, // Filter
       ];
+
+      // Find group header rows and merge them
+      wsData.forEach((row, idx) => {
+        if (typeof row[0] === "string" && row[0].startsWith("Bahan Baku: ")) {
+          merges.push({ s: { r: idx, c: 0 }, e: { r: idx, c: 3 } });
+        }
+      });
+
+      ws["!merges"] = merges;
 
       XLSX.utils.book_append_sheet(wb, ws, "Data Bahan Baku");
 
@@ -202,17 +216,16 @@ export function ExportExcelModal({
       wsRekap.push(["No", "Bahan Baku", "Jumlah Penerimaan", "Total Berat"]);
 
       let rekapNo = 1;
-      let grandTotal = 0;
-      Object.entries(summary)
-        .sort(([a], [b]) => a.localeCompare(b))
-        .forEach(([bahan, total]) => {
-          const count = sorted.filter((item) => item.bahanBaku === bahan).length;
-          wsRekap.push([rekapNo++, bahan, count, total]);
-          grandTotal += total;
-        });
+      let rekapGrandTotal = 0;
+      sortedKeys.forEach((bahan) => {
+        const items = grouped[bahan];
+        const total = items.reduce((sum, item) => sum + (item.totalBerat || 0), 0);
+        wsRekap.push([rekapNo++, bahan, items.length, total]);
+        rekapGrandTotal += total;
+      });
 
       wsRekap.push([]);
-      wsRekap.push(["", "Total", sorted.length, grandTotal]);
+      wsRekap.push(["", "Total", sorted.length, rekapGrandTotal]);
 
       const wsRekapSheet = XLSX.utils.aoa_to_sheet(wsRekap);
       wsRekapSheet["!cols"] = [
