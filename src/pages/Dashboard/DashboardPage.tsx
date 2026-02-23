@@ -9,14 +9,14 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  LineChart,
-  Line,
   Legend,
   PieChart,
   Pie,
   Cell,
   ReferenceLine,
   LabelList,
+  AreaChart,
+  Area,
 } from "recharts";
 import {
   Factory,
@@ -37,6 +37,7 @@ import {
   Award,
   Target,
   BarChart3,
+  LayoutDashboard,
 } from "lucide-react";
 import {
   Card,
@@ -78,13 +79,42 @@ const BAHAN_BAKU_OPTIONS = [
 ] as const;
 
 const COLORS = [
-  "#3b82f6",
-  "#22c55e",
+  "#6366f1",
+  "#06b6d4",
   "#f59e0b",
   "#ef4444",
   "#8b5cf6",
-  "#06b6d4",
+  "#ec4899",
+  "#10b981",
+  "#f97316",
 ];
+
+// Modern glassmorphism tooltip style
+const modernTooltipStyle = {
+  backgroundColor: "rgba(255, 255, 255, 0.95)",
+  border: "1px solid rgba(148, 163, 184, 0.2)",
+  borderRadius: "16px",
+  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06)",
+  padding: "14px 18px",
+  backdropFilter: "blur(20px)",
+  WebkitBackdropFilter: "blur(20px)",
+};
+
+// Modern chart grid style
+const modernGridStyle = {
+  strokeDasharray: "3 3",
+  stroke: "rgba(148, 163, 184, 0.15)",
+  vertical: false as const,
+};
+
+// Modern axis style
+const modernAxisStyle = {
+  stroke: "#94a3b8",
+  fontSize: 11,
+  fontWeight: 500,
+  tickLine: false,
+  axisLine: false,
+};
 
 const MONTH_SHORT = [
   "Jan",
@@ -650,12 +680,14 @@ const MonthlyDowntimeChart = ({
 
   return (
     <>
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden border-0 shadow-soft-lg">
         <CardHeader className="bg-gradient-to-r from-red-500 to-rose-500 text-white py-5">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <AlertTriangle className="h-5 w-5" />
+                <div className="p-2 rounded-xl bg-white/20 backdrop-blur-sm">
+                  <AlertTriangle className="h-5 w-5" />
+                </div>
                 <CardTitle className="text-white text-lg">
                   Analisis Downtime Bulanan {year}
                 </CardTitle>
@@ -734,7 +766,13 @@ const MonthlyDowntimeChart = ({
                 data={monthlyData}
                 margin={{ top: 40, right: 30, left: 20, bottom: 20 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <defs>
+                  <linearGradient id="gradDowntimeMonth" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.9} />
+                    <stop offset="100%" stopColor="#60a5fa" stopOpacity={0.7} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid {...modernGridStyle} />
                 <XAxis
                   dataKey="month"
                   stroke="#64748b"
@@ -1718,13 +1756,20 @@ const DashboardPage = () => {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-xl font-display font-semibold text-foreground">
-            Dashboard - {plantLabel}
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Selamat datang, {user?.namaLengkap || user?.nama}! Berikut ringkasan
-            data {plantLabel.toLowerCase()} tahun {dashboardYear}.
-          </p>
+          <div className="flex items-center gap-3 mb-1">
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 text-white shadow-lg shadow-indigo-500/20">
+              <LayoutDashboard className="h-5 w-5" />
+            </div>
+            <div>
+              <h1 className="text-xl font-display font-bold text-foreground tracking-tight">
+                Dashboard - {plantLabel}
+              </h1>
+              <p className="text-muted-foreground text-sm">
+                Selamat datang, {user?.namaLengkap || user?.nama}! Ringkasan
+                data {plantLabel.toLowerCase()} tahun {dashboardYear}.
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
@@ -1759,129 +1804,140 @@ const DashboardPage = () => {
         </div>
       </div>
 
-      {/* Produksi Bulan Ini - Highlighted Section */}
+      {/* Produksi Bulan Ini — Modern Hero Card */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-primary-500 rounded-xl p-5 text-white"
+        className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-600 rounded-2xl p-6 text-white shadow-xl shadow-indigo-500/15"
       >
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        {/* Background decoration */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-white/20 blur-3xl" />
+          <div className="absolute -left-8 -bottom-8 w-48 h-48 rounded-full bg-white/10 blur-2xl" />
+        </div>
+        <div className="relative z-10">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div
+              onClick={() =>
+                navigate(
+                  `/produksi/${effectivePlantFilter === "NPK1" ? "npk1" : "npk2"}`
+                )
+              }
+              className="cursor-pointer hover:opacity-90 transition-opacity"
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2.5 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20">
+                  <CalendarDays className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold">
+                    Produksi Bulan {currentMonthData.monthName} {dashboardYear}
+                  </h2>
+                  <p className="text-blue-100 text-sm">
+                    Ringkasan produksi {plantLabel.toLowerCase()} bulan ini
+                  </p>
+                </div>
+                <ArrowUpRight className="h-5 w-5 opacity-60 ml-1" />
+              </div>
+            </div>
+
+            {/* Month Filter */}
+            <div
+              className="flex items-center gap-2"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <select
+                value={produksiMonthFilter}
+                onChange={(e) => setProduksiMonthFilter(Number(e.target.value))}
+                className="bg-white/15 backdrop-blur-sm text-white border border-white/20 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-white/30 cursor-pointer hover:bg-white/20 transition-colors"
+              >
+                {MONTH_SHORT.map((month, index) => (
+                  <option key={index} value={index} className="text-dark-900">
+                    {month}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <div
             onClick={() =>
               navigate(
                 `/produksi/${effectivePlantFilter === "NPK1" ? "npk1" : "npk2"}`
               )
             }
-            className="cursor-pointer hover:opacity-80 transition-opacity"
+            className="cursor-pointer hover:opacity-95 transition-opacity"
           >
-            <div className="flex items-center gap-2 mb-2">
-              <CalendarDays className="h-6 w-6" />
-              <h2 className="text-xl font-bold">
-                Produksi Bulan {currentMonthData.monthName} {dashboardYear}
-              </h2>
-              <ArrowUpRight className="h-5 w-5 opacity-60 ml-2" />
-            </div>
-            <p className="text-primary-100 text-sm">
-              Ringkasan produksi {plantLabel.toLowerCase()} bulan ini
-            </p>
-          </div>
+            <div className="flex flex-wrap gap-4 lg:gap-6 mt-5">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl px-5 py-3.5 min-w-[140px] border border-white/10 hover:bg-white/15 transition-colors">
+                <p className="text-blue-100 text-[10px] uppercase tracking-wider font-semibold mb-1">
+                  NPK Produksi
+                </p>
+                <p className="text-2xl lg:text-3xl font-bold tabular-nums">
+                  {formatNumber(currentMonthData.npkProduksi)}
+                </p>
+                <p className="text-blue-200 text-xs">Ton</p>
+              </div>
 
-          {/* Month Filter */}
-          <div
-            className="flex items-center gap-2"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <select
-              value={produksiMonthFilter}
-              onChange={(e) => setProduksiMonthFilter(Number(e.target.value))}
-              className="bg-white/20 backdrop-blur-sm text-white border-0 rounded-lg px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-white/30 cursor-pointer"
-            >
-              {MONTH_SHORT.map((month, index) => (
-                <option key={index} value={index} className="text-dark-900">
-                  {month}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl px-5 py-3.5 min-w-[140px] border border-white/10 hover:bg-white/15 transition-colors">
+                <p className="text-blue-100 text-[10px] uppercase tracking-wider font-semibold mb-1">
+                  Target RKAP
+                </p>
+                <p className="text-2xl lg:text-3xl font-bold tabular-nums">
+                  {formatNumber(currentMonthData.rkapThisMonth)}
+                </p>
+                <p className="text-blue-200 text-xs">Ton</p>
+              </div>
 
-        <div
-          onClick={() =>
-            navigate(
-              `/produksi/${effectivePlantFilter === "NPK1" ? "npk1" : "npk2"}`
-            )
-          }
-          className="cursor-pointer hover:opacity-90 transition-opacity"
-        >
-          <div className="flex flex-wrap gap-4 lg:gap-8 mt-4">
-            <div className="bg-white/15 rounded-lg px-5 py-3 min-w-[140px]">
-              <p className="text-primary-100 text-[10px] uppercase tracking-wider mb-1">
-                NPK Produksi
-              </p>
-              <p className="text-2xl lg:text-3xl font-bold">
-                {formatNumber(currentMonthData.npkProduksi)}
-              </p>
-              <p className="text-primary-100 text-xs">Ton</p>
-            </div>
-
-            <div className="bg-white/15 rounded-lg px-5 py-3 min-w-[140px]">
-              <p className="text-primary-100 text-[10px] uppercase tracking-wider mb-1">
-                Target RKAP
-              </p>
-              <p className="text-2xl lg:text-3xl font-bold">
-                {formatNumber(currentMonthData.rkapThisMonth)}
-              </p>
-              <p className="text-primary-100 text-xs">Ton</p>
-            </div>
-
-            <div className="bg-white/15 rounded-lg px-5 py-3 min-w-[140px]">
-              <p className="text-primary-100 text-xs uppercase tracking-wider mb-1">
-                Pencapaian
-              </p>
-              <p className="text-2xl lg:text-3xl font-bold">
-                {currentMonthData.percentageRkap}%
-              </p>
-              <p className="text-primary-100 text-xs">
-                {Number(currentMonthData.percentageRkap) >= 100
-                  ? "✓ Target Tercapai"
-                  : "dari target"}
-              </p>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl px-5 py-3.5 min-w-[140px] border border-white/10 hover:bg-white/15 transition-colors">
+                <p className="text-blue-100 text-xs uppercase tracking-wider font-semibold mb-1">
+                  Pencapaian
+                </p>
+                <p className="text-2xl lg:text-3xl font-bold tabular-nums">
+                  {currentMonthData.percentageRkap}%
+                </p>
+                <p className="text-blue-200 text-xs">
+                  {Number(currentMonthData.percentageRkap) >= 100
+                    ? "✓ Target Tercapai"
+                    : "dari target"}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Sub-detail row */}
-        <div className="mt-4 pt-4 border-t border-white/20 grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div>
-            <p className="text-primary-100 text-xs">Onspek</p>
-            <p className="font-semibold">
-              {formatNumber(currentMonthData.npkOnspek)} Ton
-            </p>
-          </div>
-          <div>
-            <p className="text-primary-100 text-xs">Offspek</p>
-            <p className="font-semibold">
-              {formatNumber(currentMonthData.npkOffspek)} Ton
-            </p>
-          </div>
-          <div>
-            <p className="text-primary-100 text-xs">Blending</p>
-            <p className="font-semibold">
-              {formatNumber(currentMonthData.blendingProduksi)} Ton
-            </p>
-          </div>
-          <div>
-            <p className="text-primary-100 text-xs">NPK Mini</p>
-            <p className="font-semibold">
-              {formatNumber(currentMonthData.npkMiniProduksi)} Ton
-            </p>
+          {/* Sub-detail row */}
+          <div className="mt-5 pt-4 border-t border-white/15 grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-white/5 rounded-lg px-3 py-2">
+              <p className="text-blue-200 text-xs font-medium">Onspek</p>
+              <p className="font-semibold tabular-nums">
+                {formatNumber(currentMonthData.npkOnspek)} Ton
+              </p>
+            </div>
+            <div className="bg-white/5 rounded-lg px-3 py-2">
+              <p className="text-blue-200 text-xs font-medium">Offspek</p>
+              <p className="font-semibold tabular-nums">
+                {formatNumber(currentMonthData.npkOffspek)} Ton
+              </p>
+            </div>
+            <div className="bg-white/5 rounded-lg px-3 py-2">
+              <p className="text-blue-200 text-xs font-medium">Blending</p>
+              <p className="font-semibold tabular-nums">
+                {formatNumber(currentMonthData.blendingProduksi)} Ton
+              </p>
+            </div>
+            <div className="bg-white/5 rounded-lg px-3 py-2">
+              <p className="text-blue-200 text-xs font-medium">NPK Mini</p>
+              <p className="font-semibold tabular-nums">
+                {formatNumber(currentMonthData.npkMiniProduksi)} Ton
+              </p>
+            </div>
           </div>
         </div>
       </motion.div>
 
       {/* Main Metrics Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Produksi Section */}
+        {/* Produksi Section — Modern */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1890,15 +1946,21 @@ const DashboardPage = () => {
               `/produksi/${effectivePlantFilter === "NPK1" ? "npk1" : "npk2"}`
             )
           }
-          className="bg-blue-500 rounded-xl p-5 text-white cursor-pointer hover:bg-blue-600 transition-colors"
+          className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-600 to-indigo-700 rounded-2xl p-5 text-white cursor-pointer hover:shadow-xl hover:shadow-blue-500/15 transition-all duration-300 group"
         >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Factory className="h-5 w-5" />
-              <h3 className="font-bold">Produksi Tahunan {dashboardYear}</h3>
-            </div>
-            <ArrowUpRight className="h-4 w-4 opacity-60" />
+          <div className="absolute inset-0 opacity-5">
+            <div className="absolute -right-12 -top-12 w-48 h-48 rounded-full bg-white/30 blur-2xl" />
           </div>
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-white/15 backdrop-blur-sm border border-white/10">
+                  <Factory className="h-4 w-4" />
+                </div>
+                <h3 className="font-bold text-base">Produksi Tahunan {dashboardYear}</h3>
+              </div>
+              <ArrowUpRight className="h-4 w-4 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+            </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="bg-white/20 rounded-xl px-4 py-3 backdrop-blur-sm">
               <p className="text-blue-100 text-[10px] uppercase tracking-wider">
@@ -2002,19 +2064,26 @@ const DashboardPage = () => {
               </p>
             </div>
           </div>
+          </div>
         </motion.div>
 
-        {/* Operasional Section */}
+        {/* Operasional Section — Modern */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-gradient-to-r from-slate-600 to-slate-700 rounded-2xl p-5 text-white shadow-lg"
+          className="relative overflow-hidden bg-gradient-to-br from-slate-700 via-slate-700 to-gray-800 rounded-2xl p-5 text-white shadow-xl shadow-slate-800/15"
         >
+          <div className="absolute inset-0 opacity-5">
+            <div className="absolute -right-12 -bottom-12 w-48 h-48 rounded-full bg-white/30 blur-2xl" />
+          </div>
+          <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Truck className="h-5 w-5" />
-              <h3 className="font-bold">Operasional & Logistik</h3>
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-white/15 backdrop-blur-sm border border-white/10">
+                <Truck className="h-4 w-4" />
+              </div>
+              <h3 className="font-bold text-base">Operasional & Logistik</h3>
             </div>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -2095,22 +2164,29 @@ const DashboardPage = () => {
               </p>
             </div>
           </div>
+          </div>
         </motion.div>
       </div>
 
       {/* Maintenance & Issues Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Downtime & Issues */}
+        {/* Downtime & Issues — Modern */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-gradient-to-r from-red-500 to-rose-500 rounded-2xl p-5 text-white shadow-lg"
+          className="relative overflow-hidden bg-gradient-to-br from-rose-600 via-red-600 to-pink-700 rounded-2xl p-5 text-white shadow-xl shadow-red-500/15"
         >
+          <div className="absolute inset-0 opacity-5">
+            <div className="absolute -left-12 -top-12 w-48 h-48 rounded-full bg-white/30 blur-2xl" />
+          </div>
+          <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              <h3 className="font-bold">Downtime & Issues</h3>
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-white/15 backdrop-blur-sm border border-white/10">
+                <Clock className="h-4 w-4" />
+              </div>
+              <h3 className="font-bold text-base">Downtime & Issues</h3>
             </div>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -2189,9 +2265,10 @@ const DashboardPage = () => {
               </p>
             </div>
           </div>
+          </div>
         </motion.div>
 
-        {/* BBM Summary Section */}
+        {/* BBM Summary Section — Modern */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -2203,16 +2280,22 @@ const DashboardPage = () => {
               }`
             )
           }
-          className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl p-5 text-white shadow-lg cursor-pointer hover:shadow-xl hover:scale-[1.01] transition-all duration-300"
+          className="relative overflow-hidden bg-gradient-to-br from-amber-500 via-amber-500 to-orange-600 rounded-2xl p-5 text-white shadow-xl shadow-amber-500/15 cursor-pointer hover:shadow-2xl hover:scale-[1.01] transition-all duration-300 group"
         >
+          <div className="absolute inset-0 opacity-5">
+            <div className="absolute -right-12 -top-12 w-48 h-48 rounded-full bg-white/30 blur-2xl" />
+          </div>
+          <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Fuel className="h-5 w-5" />
-              <h3 className="font-bold">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-white/15 backdrop-blur-sm border border-white/10">
+                <Fuel className="h-4 w-4" />
+              </div>
+              <h3 className="font-bold text-base">
                 Rekap BBM Alat Berat {dashboardYear}
               </h3>
             </div>
-            <ArrowUpRight className="h-4 w-4 opacity-60" />
+            <ArrowUpRight className="h-4 w-4 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="bg-white/20 rounded-xl px-4 py-3 backdrop-blur-sm">
@@ -2253,10 +2336,11 @@ const DashboardPage = () => {
               <p className="text-amber-100 text-[10px]">Pengajuan</p>
             </div>
           </div>
+          </div>
         </motion.div>
       </div>
 
-      {/* Pemantauan Bahan Baku Section */}
+      {/* Pemantauan Bahan Baku Section — Modern */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -2268,12 +2352,18 @@ const DashboardPage = () => {
             }`
           )
         }
-        className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl p-5 text-white shadow-lg cursor-pointer hover:shadow-xl hover:scale-[1.01] transition-all duration-300"
+        className="relative overflow-hidden bg-gradient-to-br from-emerald-600 via-emerald-600 to-teal-700 rounded-2xl p-5 text-white shadow-xl shadow-emerald-500/15 cursor-pointer hover:shadow-2xl hover:scale-[1.01] transition-all duration-300 group"
       >
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute -left-12 -bottom-12 w-48 h-48 rounded-full bg-white/30 blur-2xl" />
+        </div>
+        <div className="relative z-10">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-          <div className="flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            <h3 className="font-bold">Pemantauan Stok Bahan Baku</h3>
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-white/15 backdrop-blur-sm border border-white/10">
+              <Package className="h-4 w-4" />
+            </div>
+            <h3 className="font-bold text-base">Pemantauan Stok Bahan Baku</h3>
           </div>
           <div className="flex items-center gap-2">
             <Select
@@ -2356,120 +2446,182 @@ const DashboardPage = () => {
             </div>
           );
         })()}
+        </div>
       </motion.div>
 
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Production vs RKAP Chart */}
-        <Card>
-          <CardHeader>
+        {/* Production vs RKAP Chart — Modern Area + Gradient */}
+        <Card className="overflow-hidden border-0 shadow-soft-lg">
+          <CardHeader className="bg-gradient-to-r from-indigo-500/5 via-blue-500/5 to-cyan-500/5 dark:from-indigo-500/10 dark:via-blue-500/10 dark:to-cyan-500/10">
             <div className="flex items-center justify-between">
-              <CardTitle>Produksi vs RKAP</CardTitle>
-              <Badge variant="primary">{dashboardYear}</Badge>
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 text-white shadow-lg shadow-indigo-500/25">
+                  <TrendingUp className="h-4 w-4" />
+                </div>
+                <div>
+                  <CardTitle className="text-base">Produksi vs RKAP</CardTitle>
+                  <p className="text-xs text-muted-foreground mt-0.5">Perbandingan realisasi produksi terhadap target</p>
+                </div>
+              </div>
+              <Badge variant="primary" className="shadow-sm">{dashboardYear}</Badge>
             </div>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={monthlyChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="bulan" stroke="#64748b" fontSize={12} />
-                <YAxis stroke="#64748b" fontSize={12} />
+          <CardContent className="pt-2">
+            <ResponsiveContainer width="100%" height={320}>
+              <AreaChart data={monthlyChartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="gradProduksi" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#6366f1" stopOpacity={0.3} />
+                    <stop offset="50%" stopColor="#6366f1" stopOpacity={0.1} />
+                    <stop offset="100%" stopColor="#6366f1" stopOpacity={0.02} />
+                  </linearGradient>
+                  <linearGradient id="gradRkap" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.15} />
+                    <stop offset="100%" stopColor="#10b981" stopOpacity={0.02} />
+                  </linearGradient>
+                  <linearGradient id="gradRkapNPK1" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.15} />
+                    <stop offset="100%" stopColor="#10b981" stopOpacity={0.02} />
+                  </linearGradient>
+                  <linearGradient id="gradRkapNPK2" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.15} />
+                    <stop offset="100%" stopColor="#f59e0b" stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid {...modernGridStyle} />
+                <XAxis dataKey="bulan" {...modernAxisStyle} dy={8} />
+                <YAxis {...modernAxisStyle} dx={-4} tickFormatter={(v: number) => v >= 1000 ? `${(v/1000).toFixed(0)}k` : `${v}`} />
                 <Tooltip
-                  contentStyle={{
-                    backgroundColor: "white",
-                    border: "none",
-                    borderRadius: "12px",
-                    boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-                  }}
-                  formatter={(value: number) => [
+                  contentStyle={modernTooltipStyle}
+                  formatter={(value: number, name: string) => [
                     formatNumber(value) + " Ton",
-                    "",
+                    name,
                   ]}
+                  labelStyle={{ fontWeight: 600, marginBottom: 4 }}
+                  cursor={{ stroke: '#6366f1', strokeWidth: 1, strokeDasharray: '4 4' }}
                 />
-                <Legend />
-                <Line
+                <Legend
+                  iconType="circle"
+                  iconSize={8}
+                  wrapperStyle={{ fontSize: '11px', paddingTop: '12px' }}
+                />
+                <Area
                   type="monotone"
                   dataKey="produksi"
-                  stroke="#3b82f6"
-                  strokeWidth={3}
-                  dot={{ fill: "#3b82f6", r: 4 }}
+                  stroke="#6366f1"
+                  strokeWidth={2.5}
+                  fill="url(#gradProduksi)"
+                  dot={{ fill: "#6366f1", stroke: "#fff", strokeWidth: 2, r: 4 }}
+                  activeDot={{ fill: "#6366f1", stroke: "#fff", strokeWidth: 2, r: 6 }}
                   name="Produksi"
+                  animationDuration={1200}
+                  animationEasing="ease-out"
                 />
                 {effectivePlantFilter === "ALL" ? (
                   <>
-                    <Line
+                    <Area
                       type="monotone"
                       dataKey="rkapNPK1"
-                      stroke="#22c55e"
+                      stroke="#10b981"
                       strokeWidth={2}
-                      strokeDasharray="5 5"
+                      strokeDasharray="6 4"
+                      fill="url(#gradRkapNPK1)"
                       dot={false}
                       name="RKAP NPK 1"
+                      animationDuration={1400}
                     />
-                    <Line
+                    <Area
                       type="monotone"
                       dataKey="rkapNPK2"
                       stroke="#f59e0b"
                       strokeWidth={2}
-                      strokeDasharray="5 5"
+                      strokeDasharray="6 4"
+                      fill="url(#gradRkapNPK2)"
                       dot={false}
                       name="RKAP NPK 2"
+                      animationDuration={1600}
                     />
                   </>
                 ) : (
-                  <Line
+                  <Area
                     type="monotone"
                     dataKey="rkap"
-                    stroke="#22c55e"
+                    stroke="#10b981"
                     strokeWidth={2}
-                    strokeDasharray="5 5"
+                    strokeDasharray="6 4"
+                    fill="url(#gradRkap)"
                     dot={false}
                     name="RKAP"
+                    animationDuration={1400}
                   />
                 )}
-              </LineChart>
+              </AreaChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        {/* Onspek vs Offspek */}
-        <Card>
-          <CardHeader>
+        {/* Onspek vs Offspek — Modern Stacked Bar with Gradients */}
+        <Card className="overflow-hidden border-0 shadow-soft-lg">
+          <CardHeader className="bg-gradient-to-r from-emerald-500/5 via-teal-500/5 to-cyan-500/5 dark:from-emerald-500/10 dark:via-teal-500/10 dark:to-cyan-500/10">
             <div className="flex items-center justify-between">
-              <CardTitle>Produksi Onspek vs Offspek</CardTitle>
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25">
+                  <BarChart3 className="h-4 w-4" />
+                </div>
+                <div>
+                  <CardTitle className="text-base">Produksi Onspek vs Offspek</CardTitle>
+                  <p className="text-xs text-muted-foreground mt-0.5">Distribusi kualitas produksi bulanan</p>
+                </div>
+              </div>
               <Badge variant="success">Monthly</Badge>
             </div>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={monthlyChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="bulan" stroke="#64748b" fontSize={12} />
-                <YAxis stroke="#64748b" fontSize={12} />
+          <CardContent className="pt-2">
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart data={monthlyChartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="gradOnspek" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#6366f1" stopOpacity={0.9} />
+                    <stop offset="100%" stopColor="#818cf8" stopOpacity={0.7} />
+                  </linearGradient>
+                  <linearGradient id="gradOffspek" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#f43f5e" stopOpacity={0.9} />
+                    <stop offset="100%" stopColor="#fb7185" stopOpacity={0.7} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid {...modernGridStyle} />
+                <XAxis dataKey="bulan" {...modernAxisStyle} dy={8} />
+                <YAxis {...modernAxisStyle} dx={-4} tickFormatter={(v: number) => v >= 1000 ? `${(v/1000).toFixed(0)}k` : `${v}`} />
                 <Tooltip
-                  contentStyle={{
-                    backgroundColor: "white",
-                    border: "none",
-                    borderRadius: "12px",
-                    boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-                  }}
+                  contentStyle={modernTooltipStyle}
                   formatter={(value: number) => [
                     formatNumber(value) + " Ton",
                     "",
                   ]}
+                  labelStyle={{ fontWeight: 600, marginBottom: 4 }}
+                  cursor={{ fill: 'rgba(99, 102, 241, 0.04)' }}
                 />
-                <Legend />
+                <Legend
+                  iconType="circle"
+                  iconSize={8}
+                  wrapperStyle={{ fontSize: '11px', paddingTop: '12px' }}
+                />
                 <Bar
                   dataKey="onspek"
-                  fill="#3b82f6"
-                  radius={[4, 4, 0, 0]}
+                  fill="url(#gradOnspek)"
+                  radius={[6, 6, 0, 0]}
                   name="Onspek"
+                  animationDuration={800}
+                  animationEasing="ease-out"
                 />
                 <Bar
                   dataKey="offspek"
-                  fill="#ef4444"
-                  radius={[4, 4, 0, 0]}
+                  fill="url(#gradOffspek)"
+                  radius={[6, 6, 0, 0]}
                   name="Offspek"
+                  animationDuration={1000}
+                  animationEasing="ease-out"
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -2486,16 +2638,21 @@ const DashboardPage = () => {
 
       {/* Charts Row 2 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Downtime Chart */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
+        {/* Downtime Chart — Enhanced */}
+        <Card className="lg:col-span-2 overflow-hidden border-0 shadow-soft-lg">
+          <CardHeader className="bg-gradient-to-r from-amber-500/5 via-orange-500/5 to-red-500/5 dark:from-amber-500/10 dark:via-orange-500/10 dark:to-red-500/10">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <CardTitle>Downtime per Equipment</CardTitle>
-                <Badge variant="warning">
-                  {formatNumber(filteredTotalDowntime)}{" "}
-                  {downtimeValueFilter === "jam" ? "Jam" : "Kejadian"} Total
-                </Badge>
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/25">
+                  <Clock className="h-4 w-4" />
+                </div>
+                <div>
+                  <CardTitle className="text-base">Downtime per Equipment</CardTitle>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    <span className="font-semibold text-amber-600 dark:text-amber-400">{formatNumber(filteredTotalDowntime)}</span>
+                    {' '}{downtimeValueFilter === "jam" ? "Jam" : "Kejadian"} Total
+                  </p>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <Select
@@ -2540,26 +2697,27 @@ const DashboardPage = () => {
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-2">
             {downtimeChartData.length > 0 ? (
               <ResponsiveContainer width="100%" height={350}>
-                <BarChart data={downtimeChartData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis type="number" stroke="#64748b" fontSize={12} />
+                <BarChart data={downtimeChartData} layout="vertical" margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+                  <defs>
+                    <linearGradient id="gradDowntime" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.8} />
+                      <stop offset="100%" stopColor="#f97316" stopOpacity={0.95} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid {...modernGridStyle} horizontal={false} vertical={true} />
+                  <XAxis type="number" {...modernAxisStyle} />
                   <YAxis
                     type="category"
                     dataKey="item"
-                    stroke="#64748b"
-                    fontSize={12}
-                    width={120}
+                    {...modernAxisStyle}
+                    width={130}
+                    tick={{ fontSize: 11, fontWeight: 500 }}
                   />
                   <Tooltip
-                    contentStyle={{
-                      backgroundColor: "white",
-                      border: "none",
-                      borderRadius: "12px",
-                      boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-                    }}
+                    contentStyle={modernTooltipStyle}
                     formatter={(
                       value: number,
                       _name: string,
@@ -2576,63 +2734,88 @@ const DashboardPage = () => {
                         "Downtime",
                       ];
                     }}
+                    cursor={{ fill: 'rgba(245, 158, 11, 0.06)' }}
                   />
                   <Bar
                     dataKey="downtime"
-                    fill="#f59e0b"
+                    fill="url(#gradDowntime)"
                     radius={[0, 8, 8, 0]}
                     name={
                       downtimeValueFilter === "jam"
                         ? "Downtime (Jam)"
                         : "Downtime (Frekuensi)"
                     }
+                    animationDuration={1000}
+                    animationEasing="ease-out"
                   />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-[350px] text-dark-400">
-                Tidak ada data downtime
+              <div className="flex flex-col items-center justify-center h-[350px] text-muted-foreground">
+                <Clock className="h-10 w-10 mb-3 opacity-30" />
+                <p>Tidak ada data downtime</p>
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Produksi Breakdown Pie Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Breakdown Produksi</CardTitle>
+        {/* Produksi Breakdown — Modern Donut Chart */}
+        <Card className="overflow-hidden border-0 shadow-soft-lg">
+          <CardHeader className="bg-gradient-to-r from-violet-500/5 via-purple-500/5 to-fuchsia-500/5 dark:from-violet-500/10 dark:via-purple-500/10 dark:to-fuchsia-500/10">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/25">
+                <Target className="h-4 w-4" />
+              </div>
+              <div>
+                <CardTitle className="text-base">Breakdown Produksi</CardTitle>
+                <p className="text-xs text-muted-foreground mt-0.5">Komposisi produksi {dashboardYear}</p>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-2">
             {produksiBreakdownData.length > 0 ? (
               <ResponsiveContainer width="100%" height={350}>
                 <PieChart>
+                  <defs>
+                    <linearGradient id="gradPie0" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="#6366f1" />
+                      <stop offset="100%" stopColor="#818cf8" />
+                    </linearGradient>
+                    <linearGradient id="gradPie1" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="#06b6d4" />
+                      <stop offset="100%" stopColor="#22d3ee" />
+                    </linearGradient>
+                    <linearGradient id="gradPie2" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="#f59e0b" />
+                      <stop offset="100%" stopColor="#fbbf24" />
+                    </linearGradient>
+                  </defs>
                   <Pie
                     data={produksiBreakdownData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    fill="#8884d8"
-                    paddingAngle={5}
+                    innerRadius={70}
+                    outerRadius={110}
+                    paddingAngle={4}
                     dataKey="value"
+                    cornerRadius={6}
                     label={({ name, percent }) =>
                       `${name} ${(percent * 100).toFixed(0)}%`
                     }
+                    animationDuration={1200}
+                    animationEasing="ease-out"
                   >
                     {produksiBreakdownData.map((_, index) => (
                       <Cell
                         key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
+                        fill={`url(#gradPie${index % 3})`}
+                        stroke="rgba(255,255,255,0.6)"
+                        strokeWidth={2}
                       />
                     ))}
                   </Pie>
                   <Tooltip
-                    contentStyle={{
-                      backgroundColor: "white",
-                      border: "none",
-                      borderRadius: "12px",
-                      boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-                    }}
+                    contentStyle={modernTooltipStyle}
                     formatter={(value: number) => [
                       formatNumber(value) + " Ton",
                       "",
@@ -2641,8 +2824,9 @@ const DashboardPage = () => {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-[350px] text-dark-400">
-                Tidak ada data produksi
+              <div className="flex flex-col items-center justify-center h-[350px] text-muted-foreground">
+                <Target className="h-10 w-10 mb-3 opacity-30" />
+                <p>Tidak ada data produksi</p>
               </div>
             )}
           </CardContent>
@@ -2651,15 +2835,24 @@ const DashboardPage = () => {
 
       {/* Charts Row 3 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Work Request by Eksekutor */}
-        <Card>
-          <CardHeader>
+        {/* Work Request by Eksekutor — Modern */}
+        <Card className="overflow-hidden border-0 shadow-soft-lg">
+          <CardHeader className="bg-gradient-to-r from-rose-500/5 via-pink-500/5 to-fuchsia-500/5 dark:from-rose-500/10 dark:via-pink-500/10 dark:to-fuchsia-500/10">
             <div className="flex items-center justify-between">
-              <CardTitle>Work Request by Eksekutor</CardTitle>
-              <Badge variant="danger">{metrics.workRequestTotal} Total</Badge>
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 text-white shadow-lg shadow-rose-500/25">
+                  <FileText className="h-4 w-4" />
+                </div>
+                <div>
+                  <CardTitle className="text-base">Work Request by Eksekutor</CardTitle>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    <span className="font-semibold text-rose-600 dark:text-rose-400">{metrics.workRequestTotal}</span> total request
+                  </p>
+                </div>
+              </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-2">
             {workRequestChartData.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
@@ -2667,53 +2860,60 @@ const DashboardPage = () => {
                     data={workRequestChartData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={50}
-                    outerRadius={90}
-                    fill="#8884d8"
-                    paddingAngle={5}
+                    innerRadius={55}
+                    outerRadius={95}
+                    paddingAngle={4}
                     dataKey="count"
                     nameKey="eksekutor"
+                    cornerRadius={5}
                     label={({ eksekutor, count }) => `${eksekutor}: ${count}`}
+                    animationDuration={1200}
+                    animationEasing="ease-out"
                   >
                     {workRequestChartData.map((_, index) => (
                       <Cell
                         key={`cell-${index}`}
                         fill={COLORS[index % COLORS.length]}
+                        stroke="rgba(255,255,255,0.6)"
+                        strokeWidth={2}
                       />
                     ))}
                   </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "white",
-                      border: "none",
-                      borderRadius: "12px",
-                      boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-                    }}
+                  <Tooltip contentStyle={modernTooltipStyle} />
+                  <Legend
+                    iconType="circle"
+                    iconSize={8}
+                    wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }}
                   />
-                  <Legend />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-[300px] text-dark-400">
-                Tidak ada data work request
+              <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
+                <FileText className="h-10 w-10 mb-3 opacity-30" />
+                <p>Tidak ada data work request</p>
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Vibrasi Status */}
-        <Card>
-          <CardHeader>
+        {/* Vibrasi Status — Modern */}
+        <Card className="overflow-hidden border-0 shadow-soft-lg">
+          <CardHeader className="bg-gradient-to-r from-cyan-500/5 via-sky-500/5 to-blue-500/5 dark:from-cyan-500/10 dark:via-sky-500/10 dark:to-blue-500/10">
             <div className="flex items-center justify-between">
-              <CardTitle>Status Vibrasi Equipment</CardTitle>
-              <Badge
-                variant={metrics.vibrasiWarnings > 0 ? "danger" : "success"}
-              >
-                {metrics.vibrasiWarnings} Alert
-              </Badge>
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-500 to-sky-600 text-white shadow-lg shadow-cyan-500/25">
+                  <Gauge className="h-4 w-4" />
+                </div>
+                <div>
+                  <CardTitle className="text-base">Status Vibrasi Equipment</CardTitle>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    <span className={cn("font-semibold", metrics.vibrasiWarnings > 0 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400")}>{metrics.vibrasiWarnings}</span> alert aktif
+                  </p>
+                </div>
+              </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-2">
             {vibrasiChartData.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
@@ -2721,19 +2921,21 @@ const DashboardPage = () => {
                     data={vibrasiChartData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={50}
-                    outerRadius={90}
-                    fill="#8884d8"
-                    paddingAngle={5}
+                    innerRadius={55}
+                    outerRadius={95}
+                    paddingAngle={4}
                     dataKey="count"
                     nameKey="status"
+                    cornerRadius={5}
+                    animationDuration={1200}
+                    animationEasing="ease-out"
                   >
                     {vibrasiChartData.map((entry, index) => {
                       const statusColors: { [key: string]: string } = {
-                        Normal: "#22c55e",
+                        Normal: "#10b981",
                         Warning: "#f59e0b",
                         Critical: "#ef4444",
-                        Alert: "#ef4444",
+                        Alert: "#f43f5e",
                       };
                       return (
                         <Cell
@@ -2742,24 +2944,24 @@ const DashboardPage = () => {
                             statusColors[entry.status] ||
                             COLORS[index % COLORS.length]
                           }
+                          stroke="rgba(255,255,255,0.6)"
+                          strokeWidth={2}
                         />
                       );
                     })}
                   </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "white",
-                      border: "none",
-                      borderRadius: "12px",
-                      boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-                    }}
+                  <Tooltip contentStyle={modernTooltipStyle} />
+                  <Legend
+                    iconType="circle"
+                    iconSize={8}
+                    wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }}
                   />
-                  <Legend />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-[300px] text-dark-400">
-                Tidak ada data vibrasi
+              <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
+                <Gauge className="h-10 w-10 mb-3 opacity-30" />
+                <p>Tidak ada data vibrasi</p>
               </div>
             )}
           </CardContent>
@@ -2768,137 +2970,119 @@ const DashboardPage = () => {
 
       {/* Quick Actions & Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Aksi Cepat</CardTitle>
+        {/* Quick Actions — Modern */}
+        <Card className="overflow-hidden border-0 shadow-soft-lg">
+          <CardHeader className="bg-gradient-to-r from-slate-500/5 via-gray-500/5 to-zinc-500/5 dark:from-slate-500/10 dark:via-gray-500/10 dark:to-zinc-500/10">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-slate-600 to-gray-700 text-white shadow-lg shadow-slate-600/25">
+                <ArrowUpRight className="h-4 w-4" />
+              </div>
+              <CardTitle className="text-base">Aksi Cepat</CardTitle>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-2.5">
             <a
               href="/produksi/npk2"
-              className="flex items-center justify-between p-3 bg-primary-50 hover:bg-primary-100 rounded-xl transition-colors group"
+              className="flex items-center justify-between p-3.5 bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-950/30 dark:to-blue-950/30 hover:from-indigo-100 hover:to-blue-100 dark:hover:from-indigo-950/50 dark:hover:to-blue-950/50 rounded-xl transition-all duration-200 group border border-indigo-100/50 dark:border-indigo-800/30"
             >
               <div className="flex items-center gap-3">
-                <Factory className="h-5 w-5 text-primary-600" />
-                <span className="text-sm font-medium text-primary-900">
+                <div className="p-2 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/20">
+                  <Factory className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                </div>
+                <span className="text-sm font-medium text-indigo-900 dark:text-indigo-200">
                   Input Produksi
                 </span>
               </div>
-              <ArrowUpRight className="h-4 w-4 text-primary-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+              <ArrowUpRight className="h-4 w-4 text-indigo-600 dark:text-indigo-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </a>
             <a
               href="/laporan/downtime-npk2"
-              className="flex items-center justify-between p-3 bg-amber-50 hover:bg-amber-100 rounded-xl transition-colors group"
+              className="flex items-center justify-between p-3.5 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 hover:from-amber-100 hover:to-orange-100 dark:hover:from-amber-950/50 dark:hover:to-orange-950/50 rounded-xl transition-all duration-200 group border border-amber-100/50 dark:border-amber-800/30"
             >
               <div className="flex items-center gap-3">
-                <Clock className="h-5 w-5 text-amber-600" />
-                <span className="text-sm font-medium text-amber-900">
+                <div className="p-2 rounded-lg bg-amber-500/10 dark:bg-amber-500/20">
+                  <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                </div>
+                <span className="text-sm font-medium text-amber-900 dark:text-amber-200">
                   Input Downtime
                 </span>
               </div>
-              <ArrowUpRight className="h-4 w-4 text-amber-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+              <ArrowUpRight className="h-4 w-4 text-amber-600 dark:text-amber-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </a>
             <a
               href="/data/work-request-npk2"
-              className="flex items-center justify-between p-3 bg-secondary-50 hover:bg-secondary-100 rounded-xl transition-colors group"
+              className="flex items-center justify-between p-3.5 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 hover:from-emerald-100 hover:to-teal-100 dark:hover:from-emerald-950/50 dark:hover:to-teal-950/50 rounded-xl transition-all duration-200 group border border-emerald-100/50 dark:border-emerald-800/30"
             >
               <div className="flex items-center gap-3">
-                <FileText className="h-5 w-5 text-secondary-600" />
-                <span className="text-sm font-medium text-secondary-900">
+                <div className="p-2 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/20">
+                  <FileText className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <span className="text-sm font-medium text-emerald-900 dark:text-emerald-200">
                   Work Request
                 </span>
               </div>
-              <ArrowUpRight className="h-4 w-4 text-secondary-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+              <ArrowUpRight className="h-4 w-4 text-emerald-600 dark:text-emerald-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </a>
             <a
               href="/data/vibrasi-npk2"
-              className="flex items-center justify-between p-3 bg-red-50 hover:bg-red-100 rounded-xl transition-colors group"
+              className="flex items-center justify-between p-3.5 bg-gradient-to-r from-rose-50 to-pink-50 dark:from-rose-950/30 dark:to-pink-950/30 hover:from-rose-100 hover:to-pink-100 dark:hover:from-rose-950/50 dark:hover:to-pink-950/50 rounded-xl transition-all duration-200 group border border-rose-100/50 dark:border-rose-800/30"
             >
               <div className="flex items-center gap-3">
-                <Gauge className="h-5 w-5 text-red-600" />
-                <span className="text-sm font-medium text-red-900">
+                <div className="p-2 rounded-lg bg-rose-500/10 dark:bg-rose-500/20">
+                  <Gauge className="h-4 w-4 text-rose-600 dark:text-rose-400" />
+                </div>
+                <span className="text-sm font-medium text-rose-900 dark:text-rose-200">
                   Data Vibrasi
                 </span>
               </div>
-              <ArrowUpRight className="h-4 w-4 text-red-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+              <ArrowUpRight className="h-4 w-4 text-rose-600 dark:text-rose-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </a>
           </CardContent>
         </Card>
 
-        {/* Data Summary */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
+        {/* Data Summary — Modern Grid */}
+        <Card className="lg:col-span-2 overflow-hidden border-0 shadow-soft-lg">
+          <CardHeader className="bg-gradient-to-r from-sky-500/5 via-blue-500/5 to-indigo-500/5 dark:from-sky-500/10 dark:via-blue-500/10 dark:to-indigo-500/10">
             <div className="flex items-center justify-between">
-              <CardTitle>Ringkasan Data {plantLabel}</CardTitle>
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/25">
+                  <BarChart3 className="h-4 w-4" />
+                </div>
+                <div>
+                  <CardTitle className="text-base">Ringkasan Data {plantLabel}</CardTitle>
+                  <p className="text-xs text-muted-foreground mt-0.5">Overview seluruh data tahun {dashboardYear}</p>
+                </div>
+              </div>
               <Badge variant="info">{dashboardYear}</Badge>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="p-4 bg-dark-50 rounded-xl text-center">
-                <p className="text-2xl font-bold text-primary-600">
-                  {filteredData.produksiNPK.length}
-                </p>
-                <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">
-                  Record Produksi NPK
-                </p>
-              </div>
-              <div className="p-4 bg-dark-50 rounded-xl text-center">
-                <p className="text-2xl font-bold text-secondary-600">
-                  {filteredData.produksiBlending.length}
-                </p>
-                <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">
-                  Record Blending
-                </p>
-              </div>
-              <div className="p-4 bg-dark-50 rounded-xl text-center">
-                <p className="text-2xl font-bold text-amber-600">
-                  {filteredData.downtime.length}
-                </p>
-                <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">
-                  Record Downtime
-                </p>
-              </div>
-              <div className="p-4 bg-dark-50 rounded-xl text-center">
-                <p className="text-2xl font-bold text-red-600">
-                  {filteredData.workRequest.length}
-                </p>
-                <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">
-                  Work Request
-                </p>
-              </div>
-              <div className="p-4 bg-dark-50 rounded-xl text-center">
-                <p className="text-2xl font-bold text-cyan-600">
-                  {filteredData.bahanBaku.length}
-                </p>
-                <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">
-                  Bahan Baku
-                </p>
-              </div>
-              <div className="p-4 bg-dark-50 rounded-xl text-center">
-                <p className="text-2xl font-bold text-purple-600">
-                  {filteredData.vibrasi.length}
-                </p>
-                <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">
-                  Data Vibrasi
-                </p>
-              </div>
-              <div className="p-4 bg-dark-50 rounded-xl text-center">
-                <p className="text-2xl font-bold text-indigo-600">
-                  {filteredData.gatePass.length}
-                </p>
-                <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">
-                  Gate Pass
-                </p>
-              </div>
-              <div className="p-4 bg-dark-50 rounded-xl text-center">
-                <p className="text-2xl font-bold text-pink-600">
-                  {filteredData.troubleRecord.length}
-                </p>
-                <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">
-                  Trouble Record
-                </p>
-              </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {[
+                { label: "Record Produksi NPK", value: filteredData.produksiNPK.length, color: "indigo" },
+                { label: "Record Blending", value: filteredData.produksiBlending.length, color: "cyan" },
+                { label: "Record Downtime", value: filteredData.downtime.length, color: "amber" },
+                { label: "Work Request", value: filteredData.workRequest.length, color: "rose" },
+                { label: "Bahan Baku", value: filteredData.bahanBaku.length, color: "sky" },
+                { label: "Data Vibrasi", value: filteredData.vibrasi.length, color: "violet" },
+                { label: "Gate Pass", value: filteredData.gatePass.length, color: "emerald" },
+                { label: "Trouble Record", value: filteredData.troubleRecord.length, color: "pink" },
+              ].map((item, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: idx * 0.05 }}
+                  className={`p-4 rounded-xl text-center border border-${item.color}-100 dark:border-${item.color}-900/30 bg-gradient-to-br from-${item.color}-50/80 to-${item.color}-50/30 dark:from-${item.color}-950/30 dark:to-${item.color}-950/10 hover:shadow-soft transition-shadow duration-200`}
+                >
+                  <p className={`text-2xl font-bold tabular-nums text-${item.color}-600 dark:text-${item.color}-400`}>
+                    {item.value}
+                  </p>
+                  <p className="text-[11px] font-medium text-muted-foreground mt-1">
+                    {item.label}
+                  </p>
+                </motion.div>
+              ))}
             </div>
           </CardContent>
         </Card>

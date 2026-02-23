@@ -21,6 +21,7 @@ import {
   FileText,
   ClipboardList,
   FileSpreadsheet,
+  Palette,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -40,6 +41,29 @@ interface VersionEntry {
 }
 
 const versionHistory: VersionEntry[] = [
+  {
+    version: "3.0.0",
+    date: "23 Februari 2026",
+    title: "Major UI Overhaul — Modern Dashboard & Charts",
+    type: "major",
+    icon: <Palette className="h-5 w-5" />,
+    highlights: [
+      "Semua chart di-upgrade ke desain modern: gradient fills, glassmorphism tooltips, animated legends",
+      "Produksi vs RKAP: diubah dari LineChart ke AreaChart dengan gradient fill area transparan yang cantik",
+      "Onspek vs Offspek: bar chart dengan gradient warna indigo & rose, rounded corners lebih halus",
+      "Pie charts (Breakdown Produksi, Work Request, Vibrasi): donut chart modern dengan gradient fills, corner radius, dan white stroke separator",
+      "Downtime per Equipment: horizontal bar chart dengan gradient fills amber-orange + enhanced empty state",
+      "Semua chart: axis tanpa garis border (cleaner), grid transparan halus, tooltip glassmorphism blur",
+      "Dashboard hero cards: redesign total — gradient backgrounds jadi lebih deep & vibrant, decorative blur orbs, backdrop glass borders",
+      "Setiap card section punya icon header dengan gradient background dan shadow warna",
+      "KPI Card: upgrade ke v3.0 — accent line atas, rounded-xl, hover lift effect, gradient variant baru",
+      "Card component: modern rounded-xl, subtle border, dark mode backdrop-blur",
+      "Quick Actions: redesign dengan gradient background per-item, bordered icon containers",
+      "Data Summary: animated grid cards dengan gradient backgrounds per-warna",
+      "CSS: glassmorphism v3.0, chart-specific dark mode support, hover-lift utility, gradient-border effect, text-gradient-vibrant",
+      "Overall: tampilan enterprise premium — visual hierarchy lebih jelas, spacing lebih lapang, warna lebih vibrant",
+    ],
+  },
   {
     version: "2.7.1",
     date: "20 Februari 2026",

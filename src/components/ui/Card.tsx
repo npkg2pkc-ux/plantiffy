@@ -2,8 +2,8 @@ import { type ReactNode, forwardRef, type HTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
 /* ============================================
-   Card — Flat modern, subtle border, minimal shadow
-   Enterprise-grade data card
+   Card — Modern Enterprise Design (v3.0)
+   Glassmorphism + subtle borders + hover lift
    ============================================ */
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
@@ -17,7 +17,10 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
       <div
         ref={ref}
         className={cn(
-          "bg-card text-card-foreground rounded-lg border border-border shadow-soft",
+          "bg-card text-card-foreground rounded-xl border border-border/60 shadow-soft",
+          "transition-all duration-300 ease-out",
+          "hover:shadow-soft-md",
+          "dark:bg-card/90 dark:backdrop-blur-sm dark:border-border/40",
           className
         )}
         {...props}
