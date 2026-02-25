@@ -42,6 +42,19 @@ interface VersionEntry {
 
 const versionHistory: VersionEntry[] = [
   {
+    version: "3.0.1",
+    date: "25 Februari 2026",
+    title: "Sidebar Accordion — Satu Menu Terbuka",
+    type: "patch",
+    icon: <Zap className="h-5 w-5" />,
+    highlights: [
+      "Sidebar menu parent kini berperilaku seperti accordion",
+      "Hanya satu menu parent yang bisa terbuka dalam satu waktu",
+      "Membuka menu baru otomatis menutup menu yang sebelumnya terbuka",
+      "Navigasi lebih rapi dan fokus",
+    ],
+  },
+  {
     version: "3.0.0",
     date: "23 Februari 2026",
     title: "Major UI Overhaul — Modern Dashboard & Charts",

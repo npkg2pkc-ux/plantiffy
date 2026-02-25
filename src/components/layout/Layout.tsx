@@ -788,7 +788,7 @@ const VersionBadge = () => {
         title="Klik untuk melihat perjalanan versi"
       >
         <History className="h-3 w-3" />
-        v3.0.0
+        v3.0.1
       </button>
       <VersionHistoryModal
         isOpen={showVersionHistory}
@@ -937,8 +937,8 @@ const Sidebar = () => {
   const toggleExpand = (name: string) => {
     setExpandedItems((prev) =>
       prev.includes(name)
-        ? prev.filter((item) => item !== name)
-        : [...prev, name]
+        ? [] // Tutup menu yang sedang terbuka
+        : [name] // Buka hanya menu ini, tutup yang lain (accordion)
     );
   };
 
