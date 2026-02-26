@@ -13,7 +13,10 @@ import {
   FileText,
   CheckCircle,
   History,
+  Download,
+  FileSpreadsheet,
 } from "lucide-react";
+import * as XLSX from "xlsx";
 import { useSaveShortcut, useDataWithLogging } from "@/hooks";
 import {
   Button,
@@ -60,7 +63,7 @@ const initialFormState: TroubleRecord = {
   shift: "1",
   waktuKejadian: "",
   kodePeralatan: "",
-  area: "",
+  area: "",  // UI label: "Item yang Terdampak"
   deskripsiMasalah: "",
   penyebab: "",
   tindakan: "",
@@ -131,21 +134,16 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
   const userNeedsApprovalDelete = needsApprovalForDelete(userRole);
   const userIsViewOnly = isViewOnly(userRole);
 
-  const areaOptions = [
-    { value: "Granulator", label: "Granulator" },
-    { value: "Dryer", label: "Dryer" },
-    { value: "Cooler", label: "Cooler" },
-    { value: "Screening", label: "Screening" },
-    { value: "Coater", label: "Coater" },
-    { value: "Bagging", label: "Bagging" },
-    { value: "Utility", label: "Utility" },
-    { value: "Conveyor", label: "Conveyor" },
-    { value: "Bucket Elevator", label: "Bucket Elevator" },
-    { value: "Control Room", label: "Control Room" },
-    { value: "Furnace", label: "Furnace" },
-    { value: "Scrubbing System", label: "Scrubbing System" },
-    { value: "Lainnya", label: "Lainnya" },
-  ];
+  // Export states
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportStartDate, setExportStartDate] = useState(
+    new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split("T")[0]
+  );
+  const [exportEndDate, setExportEndDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+  const [exportStatus, setExportStatus] = useState<string>("all");
+  const [exporting, setExporting] = useState(false);
 
   const statusOptions = [
     { value: "Open", label: "Open" },
@@ -399,7 +397,7 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
     },
     {
       key: "area",
-      header: "Area",
+      header: "Item Terdampak",
       render: (value: unknown) => (
         <div className="flex items-center gap-2">
           <AlertCircle className="h-4 w-4 text-dark-400" />
@@ -445,6 +443,14 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
         </div>
 
         <div className="flex items-center gap-3">
+          <Button
+            variant="secondary"
+            onClick={() => setShowExportModal(true)}
+            className="bg-green-600 hover:bg-green-700 text-white border-0"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
           {userCanAdd && (
             <Button onClick={openAddForm}>
               <Plus className="h-4 w-4 mr-2" />
@@ -492,7 +498,7 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
           columns={columns}
           loading={loading}
           searchable={true}
-          searchPlaceholder="Cari tanggal, nomor berkas, area, masalah, PIC..."
+          searchPlaceholder="Cari tanggal, nomor berkas, item terdampak, masalah, PIC..."
           searchKeys={[
             "tanggal",
             "nomorBerkas",
@@ -604,14 +610,14 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
             />
           </div>
 
-          <Select
-            label="Area"
+          <Input
+            label="Item yang Terdampak"
+            type="text"
             value={form.area}
             onChange={(e) =>
               setForm((prev) => ({ ...prev, area: e.target.value }))
             }
-            options={areaOptions}
-            placeholder="Pilih area"
+            placeholder="Masukkan item/peralatan yang terdampak"
             required
           />
 
@@ -752,7 +758,7 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
                   <p className="text-white/80 text-sm font-medium">
                     Trouble Record
                   </p>
-                  <h2 className="text-2xl font-bold mt-1">{viewItem.area}</h2>
+                  <h2 className="text-2xl font-bold mt-1">{viewItem.area || "Item Terdampak"}</h2>
                   <p className="text-white/80 text-sm mt-1">
                     {currentPlant === "NPK1" ? "NPK 1" : "NPK 2"}
                   </p>
@@ -933,6 +939,230 @@ const TroubleRecordPage = ({ plant }: TroubleRecordPageProps) => {
         recordId={logRecordId}
         title="Log Aktivitas Trouble Record"
       />
+
+      {/* Export Modal */}
+      <Modal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        title=""
+        size="md"
+      >
+        <div className="space-y-5">
+          {/* Header */}
+          <div className="text-center pb-4 border-b border-border">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-green-100 dark:bg-green-900/40 mb-3">
+              <FileSpreadsheet className="h-7 w-7 text-green-600 dark:text-green-400" />
+            </div>
+            <h2 className="text-xl font-bold text-foreground">Export Trouble Record</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              {currentPlant === "NPK1" ? "NPK 1" : "NPK 2"}
+            </p>
+          </div>
+
+          {/* Date Range */}
+          <div className="space-y-3">
+            <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <Calendar className="h-4 w-4 text-primary-500" />
+              Rentang Tanggal
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <Input
+                label="Dari Tanggal"
+                type="date"
+                value={exportStartDate}
+                onChange={(e) => setExportStartDate(e.target.value)}
+              />
+              <Input
+                label="Sampai Tanggal"
+                type="date"
+                value={exportEndDate}
+                onChange={(e) => setExportEndDate(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Status Filter */}
+          <div className="space-y-3">
+            <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <AlertCircle className="h-4 w-4 text-primary-500" />
+              Filter Status
+            </label>
+            <Select
+              value={exportStatus}
+              onChange={(e) => setExportStatus(e.target.value)}
+              options={[
+                { value: "all", label: "Semua Status" },
+                { value: "Open", label: "Open" },
+                { value: "In Progress", label: "In Progress" },
+                { value: "Closed", label: "Closed" },
+                { value: "Pending", label: "Pending" },
+              ]}
+            />
+          </div>
+
+          {/* Preview count */}
+          {(() => {
+            const exportFiltered = filteredData.filter((item) => {
+              const itemDate = new Date(item.tanggal || "");
+              const start = new Date(exportStartDate);
+              const end = new Date(exportEndDate);
+              itemDate.setHours(0, 0, 0, 0);
+              start.setHours(0, 0, 0, 0);
+              end.setHours(0, 0, 0, 0);
+              const matchesDate = itemDate >= start && itemDate <= end;
+              const matchesStatus = exportStatus === "all" || item.status === exportStatus;
+              return matchesDate && matchesStatus;
+            });
+            return (
+              <div className="flex items-center justify-between p-3 bg-dark-50 dark:bg-dark-800 rounded-lg border border-border">
+                <span className="text-sm text-muted-foreground">Data yang akan diekspor:</span>
+                <span className={`text-sm font-bold ${exportFiltered.length > 0 ? "text-green-600 dark:text-green-400" : "text-red-500"}`}>
+                  {exportFiltered.length} data
+                </span>
+              </div>
+            );
+          })()}
+
+          {/* Actions */}
+          <div className="flex justify-end gap-3 pt-3 border-t border-border">
+            <Button variant="secondary" onClick={() => setShowExportModal(false)}>
+              Batal
+            </Button>
+            <Button
+              onClick={() => {
+                setExporting(true);
+                try {
+                  const exportFiltered = filteredData.filter((item) => {
+                    const itemDate = new Date(item.tanggal || "");
+                    const start = new Date(exportStartDate);
+                    const end = new Date(exportEndDate);
+                    itemDate.setHours(0, 0, 0, 0);
+                    start.setHours(0, 0, 0, 0);
+                    end.setHours(0, 0, 0, 0);
+                    const matchesDate = itemDate >= start && itemDate <= end;
+                    const matchesStatus = exportStatus === "all" || item.status === exportStatus;
+                    return matchesDate && matchesStatus;
+                  });
+
+                  if (exportFiltered.length === 0) {
+                    alert("Tidak ada data untuk diekspor.");
+                    setExporting(false);
+                    return;
+                  }
+
+                  const sorted = [...exportFiltered].sort(
+                    (a, b) => new Date(a.tanggal || "").getTime() - new Date(b.tanggal || "").getTime()
+                  );
+
+                  const fmtDate = (d: string) => {
+                    if (!d) return "-";
+                    return new Date(d).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
+                  };
+
+                  const plantLabel = currentPlant === "NPK1" ? "NPK 1" : "NPK 2";
+                  const wb = XLSX.utils.book_new();
+
+                  // Sheet 1: Data detail
+                  const wsData: (string | number)[][] = [];
+                  wsData.push([`Trouble Record - ${plantLabel}`]);
+                  wsData.push([`Periode: ${fmtDate(exportStartDate)} s/d ${fmtDate(exportEndDate)}`]);
+                  wsData.push([`Status: ${exportStatus === "all" ? "Semua" : exportStatus}`]);
+                  wsData.push([]);
+                  wsData.push(["No", "Tanggal", "Shift", "Waktu", "Item Terdampak", "Deskripsi Masalah", "Penyebab", "Tindakan", "Status", "PIC", "Target Selesai", "Keterangan"]);
+
+                  sorted.forEach((item, idx) => {
+                    wsData.push([
+                      idx + 1,
+                      fmtDate(item.tanggal || ""),
+                      `Shift ${item.shift || "-"}`,
+                      item.waktuKejadian || "-",
+                      item.area || "-",
+                      item.deskripsiMasalah || "-",
+                      item.penyebab || "-",
+                      item.tindakan || "-",
+                      item.status || "-",
+                      item.pic || "-",
+                      item.targetSelesai ? fmtDate(item.targetSelesai) : "-",
+                      item.keterangan || "-",
+                    ]);
+                  });
+
+                  wsData.push([]);
+                  wsData.push(["", "", "", "", "", "", "", "", `Total: ${sorted.length} data`, "", "", ""]);
+
+                  const ws = XLSX.utils.aoa_to_sheet(wsData);
+                  ws["!cols"] = [
+                    { wch: 5 },   // No
+                    { wch: 14 },  // Tanggal
+                    { wch: 8 },   // Shift
+                    { wch: 8 },   // Waktu
+                    { wch: 20 },  // Item Terdampak
+                    { wch: 35 },  // Deskripsi
+                    { wch: 30 },  // Penyebab
+                    { wch: 30 },  // Tindakan
+                    { wch: 12 },  // Status
+                    { wch: 15 },  // PIC
+                    { wch: 14 },  // Target
+                    { wch: 20 },  // Keterangan
+                  ];
+                  ws["!merges"] = [
+                    { s: { r: 0, c: 0 }, e: { r: 0, c: 11 } },
+                    { s: { r: 1, c: 0 }, e: { r: 1, c: 11 } },
+                    { s: { r: 2, c: 0 }, e: { r: 2, c: 11 } },
+                  ];
+                  XLSX.utils.book_append_sheet(wb, ws, "Trouble Record");
+
+                  // Sheet 2: Rekap per Status
+                  const wsRekap: (string | number)[][] = [];
+                  wsRekap.push([`Rekap Trouble Record - ${plantLabel}`]);
+                  wsRekap.push([`Periode: ${fmtDate(exportStartDate)} s/d ${fmtDate(exportEndDate)}`]);
+                  wsRekap.push([]);
+                  wsRekap.push(["No", "Status", "Jumlah"]);
+                  const statuses = ["Open", "In Progress", "Closed", "Pending"];
+                  let rekapTotal = 0;
+                  statuses.forEach((s, idx) => {
+                    const count = sorted.filter((d) => d.status === s).length;
+                    if (count > 0) {
+                      wsRekap.push([idx + 1, s, count]);
+                      rekapTotal += count;
+                    }
+                  });
+                  wsRekap.push([]);
+                  wsRekap.push(["", "Total", rekapTotal]);
+
+                  const wsRekapSheet = XLSX.utils.aoa_to_sheet(wsRekap);
+                  wsRekapSheet["!cols"] = [
+                    { wch: 5 },
+                    { wch: 15 },
+                    { wch: 10 },
+                  ];
+                  wsRekapSheet["!merges"] = [
+                    { s: { r: 0, c: 0 }, e: { r: 0, c: 2 } },
+                    { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } },
+                  ];
+                  XLSX.utils.book_append_sheet(wb, wsRekapSheet, "Rekap Status");
+
+                  const dateStr = `${exportStartDate.replace(/-/g, "")}_${exportEndDate.replace(/-/g, "")}`;
+                  const filename = `TroubleRecord_${plantLabel.replace(" ", "")}_${dateStr}.xlsx`;
+                  XLSX.writeFile(wb, filename);
+
+                  setShowExportModal(false);
+                } catch (error) {
+                  console.error("Export error:", error);
+                  alert("Gagal mengekspor data. Silakan coba lagi.");
+                } finally {
+                  setExporting(false);
+                }
+              }}
+              isLoading={exporting}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export Excel
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

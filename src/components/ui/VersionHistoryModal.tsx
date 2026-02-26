@@ -42,6 +42,19 @@ interface VersionEntry {
 
 const versionHistory: VersionEntry[] = [
   {
+    version: "3.0.2",
+    date: "26 Februari 2026",
+    title: "Trouble Record — Item Terdampak & Export Excel",
+    type: "patch",
+    icon: <FileSpreadsheet className="h-5 w-5" />,
+    highlights: [
+      "Field 'Area' pada Trouble Record diganti menjadi 'Item yang Terdampak'",
+      "Input diubah dari dropdown (Select) menjadi text input manual (textbox)",
+      "Ditambahkan fitur Export ke Excel dengan filter tanggal dan status",
+      "File export mencakup 2 sheet: Data detail & Rekap per Status",
+    ],
+  },
+  {
     version: "3.0.1",
     date: "25 Februari 2026",
     title: "Sidebar Accordion — Satu Menu Terbuka",
