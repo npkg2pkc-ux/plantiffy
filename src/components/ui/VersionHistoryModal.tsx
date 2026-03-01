@@ -42,6 +42,22 @@ interface VersionEntry {
 
 const versionHistory: VersionEntry[] = [
   {
+    version: "3.2.0",
+    date: "1 Maret 2026",
+    title: "Dashboard — Visualisasi Pemakaian Bahan Baku",
+    type: "minor",
+    icon: <ClipboardList className="h-5 w-5" />,
+    highlights: [
+      "Ditambahkan section Pemakaian Bahan Baku di Dashboard",
+      "3 mode tampilan interaktif: Material Chart, Shift Breakdown, Monthly Trend",
+      "Gradient header card dengan quick stats 6 material utama (klik untuk select)",
+      "Bar chart total pemakaian per material dengan animasi gradient",
+      "Detail shift per material (Malam/Pagi/Sore) dengan bar chart terpisah",
+      "Area chart trend bulanan untuk top 4 material terbanyak",
+      "Panel detail material dengan animated progress bars & ranking",
+    ],
+  },
+  {
     version: "3.1.1",
     date: "1 Maret 2026",
     title: "Pemakaian BB — Summary Cards Semua Bahan Baku",
