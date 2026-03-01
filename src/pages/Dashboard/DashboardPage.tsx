@@ -26,7 +26,6 @@ import {
   AlertTriangle,
   FileText,
   ArrowUpRight,
-  Package,
   Truck,
   Gauge,
   Loader2,
@@ -65,18 +64,7 @@ import type {
   RKAP,
   PlantType,
   RekapBBM,
-  PemantauanBahanBaku,
 } from "@/types";
-
-// Bahan Baku options for filter
-const BAHAN_BAKU_OPTIONS = [
-  "Urea",
-  "DAP",
-  "KCL",
-  "ZA",
-  "Dolomite",
-  "Clay",
-] as const;
 
 const COLORS = [
   "#6366f1",
@@ -984,12 +972,6 @@ const DashboardPage = () => {
     new Date().getMonth()
   );
 
-  // Pemantauan Bahan Baku state
-  const [pemantauanBBFilter, setPemantauanBBFilter] = useState<string>("Urea");
-  const [pemantauanBBData, setPemantauanBBData] = useState<
-    PemantauanBahanBaku[]
-  >([]);
-
   const [dashboardData, setDashboardData] = useState<DashboardData>({
     produksiNPK: [],
     produksiBlending: [],
@@ -1125,25 +1107,7 @@ const DashboardPage = () => {
     fetchAllData();
   }, []);
 
-  // Fetch pemantauan bahan baku data terpisah
-  useEffect(() => {
-    const fetchPemantauanBB = async () => {
-      try {
-        const { fetchDataByPlant, SHEETS } = await import("@/services/api");
-        if (SHEETS.PEMANTAUAN_BAHAN_BAKU) {
-          const result = await fetchDataByPlant<PemantauanBahanBaku>(
-            SHEETS.PEMANTAUAN_BAHAN_BAKU
-          );
-          if (result.success && result.data) {
-            setPemantauanBBData(result.data);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching pemantauan bahan baku:", error);
-      }
-    };
-    fetchPemantauanBB();
-  }, []);
+
 
   // Filter data by plant - use effectivePlantFilter
   const filterByPlant = useCallback(
@@ -2339,115 +2303,6 @@ const DashboardPage = () => {
           </div>
         </motion.div>
       </div>
-
-      {/* Pemantauan Bahan Baku Section — Modern */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.35 }}
-        onClick={() =>
-          navigate(
-            `/laporan/pemantauan-bb-${
-              effectivePlantFilter === "NPK1" ? "npk1" : "npk2"
-            }`
-          )
-        }
-        className="relative overflow-hidden bg-gradient-to-br from-emerald-600 via-emerald-600 to-teal-700 rounded-2xl p-5 text-white shadow-xl shadow-emerald-500/15 cursor-pointer hover:shadow-2xl hover:scale-[1.01] transition-all duration-300 group"
-      >
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute -left-12 -bottom-12 w-48 h-48 rounded-full bg-white/30 blur-2xl" />
-        </div>
-        <div className="relative z-10">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-white/15 backdrop-blur-sm border border-white/10">
-              <Package className="h-4 w-4" />
-            </div>
-            <h3 className="font-bold text-base">Pemantauan Stok Bahan Baku</h3>
-          </div>
-          <div className="flex items-center gap-2">
-            <Select
-              value={pemantauanBBFilter}
-              onChange={(e) => {
-                e.stopPropagation();
-                setPemantauanBBFilter(e.target.value);
-              }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full sm:w-40 bg-white/20 border-white/30 text-white text-sm"
-              options={BAHAN_BAKU_OPTIONS.map((opt) => ({
-                value: opt,
-                label: opt,
-              }))}
-            />
-            <ArrowUpRight className="h-4 w-4 opacity-60" />
-          </div>
-        </div>
-        {(() => {
-          const filteredBBData = pemantauanBBData.filter(
-            (item) =>
-              item._plant === effectivePlantFilter ||
-              effectivePlantFilter === "ALL"
-          );
-          const selectedData = filteredBBData
-            .filter((item) => item.bahanBaku === pemantauanBBFilter)
-            .sort(
-              (a, b) =>
-                new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime()
-            );
-          const latestData = selectedData[0];
-          const totalRecords = selectedData.length;
-          const yearData = selectedData.filter((item) => {
-            const year = new Date(item.tanggal).getFullYear();
-            return year === dashboardYear;
-          });
-          const totalIn = yearData.reduce(
-            (sum, item) => sum + (item.bahanBakuIn || 0),
-            0
-          );
-          const totalOut = yearData.reduce(
-            (sum, item) => sum + (item.bahanBakuOut || 0),
-            0
-          );
-
-          return (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className="bg-white/20 rounded-xl px-4 py-3 backdrop-blur-sm">
-                <p className="text-emerald-100 text-[10px] uppercase tracking-wider">
-                  Stok Terakhir
-                </p>
-                <p className="text-xl font-bold">
-                  {formatNumber(latestData?.stockAkhir || 0)}
-                </p>
-                <p className="text-emerald-100 text-[10px]">
-                  Ton ({latestData?.tanggal || "-"})
-                </p>
-              </div>
-              <div className="bg-white/20 rounded-xl px-4 py-3 backdrop-blur-sm">
-                <p className="text-emerald-100 text-[10px] uppercase tracking-wider">
-                  Total Masuk {dashboardYear}
-                </p>
-                <p className="text-xl font-bold">{formatNumber(totalIn)}</p>
-                <p className="text-emerald-100 text-[10px]">Ton</p>
-              </div>
-              <div className="bg-white/20 rounded-xl px-4 py-3 backdrop-blur-sm">
-                <p className="text-emerald-100 text-[10px] uppercase tracking-wider">
-                  Total Keluar {dashboardYear}
-                </p>
-                <p className="text-xl font-bold">{formatNumber(totalOut)}</p>
-                <p className="text-emerald-100 text-[10px]">Ton</p>
-              </div>
-              <div className="bg-white/20 rounded-xl px-4 py-3 backdrop-blur-sm">
-                <p className="text-emerald-100 text-[10px] uppercase tracking-wider">
-                  Total Record
-                </p>
-                <p className="text-xl font-bold">{totalRecords}</p>
-                <p className="text-emerald-100 text-[10px]">Pencatatan</p>
-              </div>
-            </div>
-          );
-        })()}
-        </div>
-      </motion.div>
 
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

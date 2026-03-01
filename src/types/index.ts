@@ -200,15 +200,23 @@ export interface BahanBakuNPK {
   _plant?: PlantType;
 }
 
-// Pemantauan Bahan Baku
-export interface PemantauanBahanBaku {
+// Pemakaian Bahan Baku
+export interface PemakaianBahanBaku {
   id?: string;
   tanggal: string;
-  bahanBaku: string; // Urea, DAP, KCL, ZA, Dolomite, Clay
-  stockAwal: number;
-  bahanBakuIn: number;
-  bahanBakuOut: number;
-  stockAkhir: number;
+  shift: string; // Malam, Pagi, Sore
+  urea: number;
+  dap: number;
+  kcl: number;
+  za: number;
+  clayJumbo: number;
+  clayBucket: number;
+  pewarna: number;
+  coatingOilLigno: number;
+  riject: number;
+  tinta: number;
+  rekon: number;
+  makeupIjp: number;
   _plant?: PlantType;
 }
 

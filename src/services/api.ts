@@ -403,7 +403,7 @@ export const SHEETS = {
   TROUBLE_RECORD: "trouble_record",
   KOP: "kop",
   REKAP_BBM: "rekap_bbm",
-  PEMANTAUAN_BAHAN_BAKU: "pemantauan_bahan_baku",
+  PEMAKAIAN_BAHAN_BAKU: "pemakaian_bahan_baku",
 
   // NPK2 only features
   RIKSA_TIMB_PORTABEL: "riksa_timb_portabel",

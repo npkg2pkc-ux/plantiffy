@@ -727,8 +727,8 @@ const navItems: NavItemProps[] = [
       { name: "Timesheet Loader NPK2", path: "/laporan/timesheet-loader-npk2" },
       { name: "Downtime NPK1", path: "/laporan/downtime-npk1" },
       { name: "Downtime NPK2", path: "/laporan/downtime-npk2" },
-      { name: "Pemantauan BB NPK1", path: "/laporan/pemantauan-bb-npk1" },
-      { name: "Pemantauan BB NPK2", path: "/laporan/pemantauan-bb-npk2" },
+      { name: "Pemakaian BB NPK1", path: "/laporan/pemakaian-bb-npk1" },
+      { name: "Pemakaian BB NPK2", path: "/laporan/pemakaian-bb-npk2" },
     ],
   },
   {
@@ -788,7 +788,7 @@ const VersionBadge = () => {
         title="Klik untuk melihat perjalanan versi"
       >
         <History className="h-3 w-3" />
-        v3.0.2
+        v3.0.3
       </button>
       <VersionHistoryModal
         isOpen={showVersionHistory}

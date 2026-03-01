@@ -42,6 +42,21 @@ interface VersionEntry {
 
 const versionHistory: VersionEntry[] = [
   {
+    version: "3.1.0",
+    date: "1 Maret 2026",
+    title: "Pemakaian Bahan Baku — Ganti Pemantauan BB",
+    type: "minor",
+    icon: <ClipboardList className="h-5 w-5" />,
+    highlights: [
+      "Halaman 'Pemantauan Bahan Baku' dihapus dari menu Laporan",
+      "Ditambahkan halaman baru 'Pemakaian Bahan Baku' di menu Laporan",
+      "Data pemakaian per shift (Malam, Pagi, Sore) untuk 12 jenis bahan baku",
+      "Tampilan harian (grid per tanggal) dan mode tabel",
+      "Bahan baku: Urea, DAP, KCL, ZA, Clay Jumbo/Bucket, Pewarna, Coating Oil LIGNO, Riject, Tinta, Rekon, MAKEUP IJP",
+      "Sheet lama pemantauan_bahan_baku diganti dengan pemakaian_bahan_baku",
+    ],
+  },
+  {
     version: "3.0.2",
     date: "26 Februari 2026",
     title: "Trouble Record — Item Terdampak & Export Excel",

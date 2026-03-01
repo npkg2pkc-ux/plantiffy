@@ -44,7 +44,7 @@
  * - dokumentasi_foto, dokumentasi_foto_NPK1
  * - kop, kop_NPK1
  * - rekap_bbm, rekap_bbm_NPK1
- * - pemantauan_bahan_baku, pemantauan_bahan_baku_NPK1
+ * - pemakaian_bahan_baku, pemakaian_bahan_baku_NPK1
  * - riksa_timb_portabel (NPK2 only - NO NPK1 version)
  * - akun
  * - rkap
@@ -332,14 +332,22 @@ const SHEET_HEADERS = {
     "realisasiPengisian",
     "keterangan",
   ],
-  pemantauan_bahan_baku: [
+  pemakaian_bahan_baku: [
     "id",
     "tanggal",
-    "bahanBaku",
-    "stockAwal",
-    "bahanBakuIn",
-    "bahanBakuOut",
-    "stockAkhir",
+    "shift",
+    "urea",
+    "dap",
+    "kcl",
+    "za",
+    "clayJumbo",
+    "clayBucket",
+    "pewarna",
+    "coatingOilLigno",
+    "riject",
+    "tinta",
+    "rekon",
+    "makeupIjp",
   ],
   riksa_timb_portabel: [
     "id",
@@ -1552,8 +1560,8 @@ function initializeAllSheets() {
     "kop_NPK1",
     "rekap_bbm",
     "rekap_bbm_NPK1",
-    "pemantauan_bahan_baku",
-    "pemantauan_bahan_baku_NPK1",
+    "pemakaian_bahan_baku",
+    "pemakaian_bahan_baku_NPK1",
     "akun",
     "rkap",
     "approval_requests",
@@ -2018,8 +2026,8 @@ function fillEmptyIdsAllSheets() {
   const allDataSheets = [
     "rekap_bbm",
     "rekap_bbm_NPK1",
-    "pemantauan_bahan_baku",
-    "pemantauan_bahan_baku_NPK1",
+    "pemakaian_bahan_baku",
+    "pemakaian_bahan_baku_NPK1",
     "produksi_npk",
     "produksi_npk_NPK1",
     "produksi_blending",
@@ -2127,7 +2135,7 @@ function onOpen() {
     .addSeparator()
     .addItem("🔑 Fill Empty IDs - Rekap BBM", "fillEmptyIdsRekapBBM")
     .addItem("🔑 Fill Empty IDs - All Sheets", "fillEmptyIdsAllSheets")
-    .addItem("🔑 Fill Empty IDs - Pemantauan BB", "fillEmptyIdsPemantauanBB")
+    .addItem("🔑 Fill Empty IDs - Pemakaian BB", "fillEmptyIdsPemakaianBB")
     .addSeparator()
     .addItem("🩺 Diagnose Bahan Baku NPK", "diagnoseBahanBakuNPK")
     .addItem(
@@ -2144,11 +2152,11 @@ function onOpen() {
 }
 
 /**
- * Fill empty IDs in pemantauan_bahan_baku sheets
+ * Fill empty IDs in pemakaian_bahan_baku sheets
  */
-function fillEmptyIdsPemantauanBB() {
+function fillEmptyIdsPemakaianBB() {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  const sheetNames = ["pemantauan_bahan_baku", "pemantauan_bahan_baku_NPK1"];
+  const sheetNames = ["pemakaian_bahan_baku", "pemakaian_bahan_baku_NPK1"];
   let totalFilled = 0;
 
   sheetNames.forEach((sheetName) => {
@@ -2184,7 +2192,7 @@ function fillEmptyIdsPemantauanBB() {
 
   Logger.log("=== Total IDs filled: " + totalFilled + " ===");
   SpreadsheetApp.getActiveSpreadsheet().toast(
-    "Berhasil mengisi " + totalFilled + " ID kosong di pemantauan_bahan_baku!",
+    "Berhasil mengisi " + totalFilled + " ID kosong di pemakaian_bahan_baku!",
     "✅ Selesai",
     5
   );
@@ -2986,8 +2994,8 @@ function getSheetDisplayName(sheetName) {
     dokumentasi_foto_NPK1: "Dokumentasi Foto",
     rekap_bbm: "Rekap BBM",
     rekap_bbm_NPK1: "Rekap BBM",
-    pemantauan_bahan_baku: "Pemantauan Bahan Baku",
-    pemantauan_bahan_baku_NPK1: "Pemantauan Bahan Baku",
+    pemakaian_bahan_baku: "Pemakaian Bahan Baku",
+    pemakaian_bahan_baku_NPK1: "Pemakaian Bahan Baku",
     riksa_timb_portabel: "Riksa Timbangan Portabel",
     kop: "KOP",
     kop_NPK1: "KOP",
