@@ -3,7 +3,6 @@ import {
   Plus,
   Edit2,
   Trash2,
-  Package,
   Filter,
   History,
   Sun,
@@ -536,93 +535,37 @@ const PemakaianBahanBakuPage = ({ plant }: PemakaianBahanBakuPageProps) => {
         )}
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-800">
-          <div className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">
-                  Total Record
-                </p>
-                <p className="text-2xl font-bold text-blue-700 dark:text-blue-300 mt-1">
-                  {stats.totalRecords}
-                </p>
-              </div>
-              <div className="p-3 bg-blue-500 rounded-lg">
-                <Package className="h-6 w-6 text-white" />
-              </div>
+      {/* Summary Cards — compact grid showing all materials */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
+        {/* Total Record */}
+        <div className="rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border border-blue-200 dark:border-blue-800 p-3">
+          <p className="text-[11px] text-blue-600 dark:text-blue-400 font-medium truncate">Total Record</p>
+          <p className="text-lg font-bold text-blue-700 dark:text-blue-300 mt-0.5">{stats.totalRecords}</p>
+          <p className="text-[10px] text-blue-500 dark:text-blue-400 mt-1">Tahun {selectedYear}</p>
+        </div>
+        {/* Total Hari */}
+        <div className="rounded-xl bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border border-green-200 dark:border-green-800 p-3">
+          <p className="text-[11px] text-green-600 dark:text-green-400 font-medium truncate">Total Hari</p>
+          <p className="text-lg font-bold text-green-700 dark:text-green-300 mt-0.5">{stats.totalDays}</p>
+          <p className="text-[10px] text-green-500 dark:text-green-400 mt-1">Hari tercatat</p>
+        </div>
+        {/* All material cards */}
+        {MATERIAL_FIELDS.map((field) => {
+          const total = stats.totals[field.key] || 0;
+          return (
+            <div
+              key={field.key}
+              className="rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 dark:from-dark-700 dark:to-dark-800 border border-gray-200 dark:border-dark-600 p-3"
+            >
+              <p className="text-[11px] text-gray-600 dark:text-gray-400 font-medium truncate">{field.label}</p>
+              <p className="text-lg font-bold text-gray-900 dark:text-white mt-0.5">
+                {total}{" "}
+                <span className="text-[10px] font-normal text-gray-500 dark:text-gray-400">{field.unit}</span>
+              </p>
+              <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1">Tahun {selectedYear}</p>
             </div>
-            <p className="text-xs text-blue-500 dark:text-blue-400 mt-2">
-              Pencatatan tahun {selectedYear}
-            </p>
-          </div>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-800">
-          <div className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-green-600 dark:text-green-400 font-medium">
-                  Total Hari
-                </p>
-                <p className="text-2xl font-bold text-green-700 dark:text-green-300 mt-1">
-                  {stats.totalDays}
-                </p>
-              </div>
-              <div className="p-3 bg-green-500 rounded-lg">
-                <Sun className="h-6 w-6 text-white" />
-              </div>
-            </div>
-            <p className="text-xs text-green-500 dark:text-green-400 mt-2">
-              Hari kerja tercatat
-            </p>
-          </div>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 border-amber-200 dark:border-amber-800">
-          <div className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-amber-600 dark:text-amber-400 font-medium">
-                  Total Urea
-                </p>
-                <p className="text-2xl font-bold text-amber-700 dark:text-amber-300 mt-1">
-                  {stats.totals.urea || 0}{" "}
-                  <span className="text-sm font-normal">Bucket</span>
-                </p>
-              </div>
-              <div className="p-3 bg-amber-500 rounded-lg">
-                <Package className="h-6 w-6 text-white" />
-              </div>
-            </div>
-            <p className="text-xs text-amber-500 dark:text-amber-400 mt-2">
-              Pemakaian tahun {selectedYear}
-            </p>
-          </div>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200 dark:border-purple-800">
-          <div className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-purple-600 dark:text-purple-400 font-medium">
-                  Total DAP
-                </p>
-                <p className="text-2xl font-bold text-purple-700 dark:text-purple-300 mt-1">
-                  {stats.totals.dap || 0}{" "}
-                  <span className="text-sm font-normal">Bucket</span>
-                </p>
-              </div>
-              <div className="p-3 bg-purple-500 rounded-lg">
-                <Package className="h-6 w-6 text-white" />
-              </div>
-            </div>
-            <p className="text-xs text-purple-500 dark:text-purple-400 mt-2">
-              Pemakaian tahun {selectedYear}
-            </p>
-          </div>
-        </Card>
+          );
+        })}
       </div>
 
       {/* View Mode Toggle + Filters */}

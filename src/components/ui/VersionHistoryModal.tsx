@@ -42,6 +42,18 @@ interface VersionEntry {
 
 const versionHistory: VersionEntry[] = [
   {
+    version: "3.1.1",
+    date: "1 Maret 2026",
+    title: "Pemakaian BB — Summary Cards Semua Bahan Baku",
+    type: "patch",
+    icon: <ClipboardList className="h-5 w-5" />,
+    highlights: [
+      "Summary cards diperkecil menjadi grid compact (7 kolom)",
+      "Menampilkan total pemakaian seluruh 12 bahan baku sekaligus",
+      "Ditambah card Total Record dan Total Hari di awal",
+    ],
+  },
+  {
     version: "3.1.0",
     date: "1 Maret 2026",
     title: "Pemakaian Bahan Baku — Ganti Pemantauan BB",
