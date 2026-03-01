@@ -42,6 +42,18 @@ interface VersionEntry {
 
 const versionHistory: VersionEntry[] = [
   {
+    version: "3.2.2",
+    date: "1 Maret 2026",
+    title: "Pemakaian BB — Tabel Collapsible",
+    type: "patch",
+    icon: <ClipboardList className="h-5 w-5" />,
+    highlights: [
+      "Tabel harian Pemakaian Bahan Baku default tertutup (collapsed) agar lebih rapih",
+      "Klik header tanggal untuk expand/collapse tabel material & aksi",
+      "Chevron down icon sebagai indikator buka/tutup dengan animasi rotasi",
+    ],
+  },
+  {
     version: "3.2.1",
     date: "1 Maret 2026",
     title: "Dashboard BB — Perbaikan Satuan & Hapus Ranking",

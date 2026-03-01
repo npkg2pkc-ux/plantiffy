@@ -8,6 +8,7 @@ import {
   Sun,
   Moon,
   Sunset,
+  ChevronDown,
 } from "lucide-react";
 import { useSaveShortcut, useDataWithLogging } from "@/hooks";
 import {
@@ -126,6 +127,21 @@ const PemakaianBahanBakuPage = ({ plant }: PemakaianBahanBakuPageProps) => {
 
   // View mode: "table" or "daily"
   const [viewMode, setViewMode] = useState<"table" | "daily">("daily");
+
+  // Expanded dates for daily view (default all collapsed)
+  const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
+
+  const toggleDate = useCallback((date: string) => {
+    setExpandedDates((prev) => {
+      const next = new Set(prev);
+      if (next.has(date)) {
+        next.delete(date);
+      } else {
+        next.add(date);
+      }
+      return next;
+    });
+  }, []);
 
   const handleViewLog = (id: string) => {
     setLogRecordId(id);
@@ -648,11 +664,21 @@ const PemakaianBahanBakuPage = ({ plant }: PemakaianBahanBakuPageProps) => {
                     key={date}
                     className="border border-dark-200 dark:border-dark-600 rounded-xl overflow-hidden"
                   >
-                    {/* Date Header */}
-                    <div className="bg-gradient-to-r from-primary-600 to-primary-700 dark:from-primary-700 dark:to-primary-800 px-4 py-3 flex items-center justify-between">
-                      <h3 className="font-bold text-white text-sm">
-                        {formatDate(date)}
-                      </h3>
+                    {/* Date Header — Collapsible */}
+                    <div
+                      className="bg-gradient-to-r from-primary-600 to-primary-700 dark:from-primary-700 dark:to-primary-800 px-4 py-3 flex items-center justify-between cursor-pointer select-none hover:from-primary-700 hover:to-primary-800 transition-all"
+                      onClick={() => toggleDate(date)}
+                    >
+                      <div className="flex items-center gap-2">
+                        <ChevronDown
+                          className={`h-4 w-4 text-white transition-transform duration-200 ${
+                            expandedDates.has(date) ? "rotate-180" : "rotate-0"
+                          }`}
+                        />
+                        <h3 className="font-bold text-white text-sm">
+                          {formatDate(date)}
+                        </h3>
+                      </div>
                       <div className="flex items-center gap-2">
                         {shifts.map((shift) => (
                           <Badge
@@ -666,7 +692,9 @@ const PemakaianBahanBakuPage = ({ plant }: PemakaianBahanBakuPageProps) => {
                       </div>
                     </div>
 
-                    {/* Material Table */}
+                    {/* Material Table — Collapsible */}
+                    {expandedDates.has(date) && (
+                    <>
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
@@ -773,6 +801,8 @@ const PemakaianBahanBakuPage = ({ plant }: PemakaianBahanBakuPageProps) => {
                           </div>
                         ))}
                       </div>
+                    )}
+                    </>
                     )}
                   </div>
                 );
