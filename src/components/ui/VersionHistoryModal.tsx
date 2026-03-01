@@ -42,6 +42,21 @@ interface VersionEntry {
 
 const versionHistory: VersionEntry[] = [
   {
+    version: "3.2.1",
+    date: "1 Maret 2026",
+    title: "Dashboard BB — Perbaikan Satuan & Hapus Ranking",
+    type: "patch",
+    icon: <ClipboardList className="h-5 w-5" />,
+    highlights: [
+      "Perbaikan satuan material: Pewarna (Bag), Coating Oil (Dus), Tinta (pcs), Rekon (Ton), MAKEUP IJP (pcs), Clay Jumbo (Jumbo)",
+      "Hapus ranking/peringkat karena satuan berbeda tidak bisa dibandingkan (apple to apple)",
+      "Chart dikelompokkan per satuan (Bucket, Jumbo, Bag, Dus, pcs, Ton)",
+      "Trend bulanan hanya menampilkan material dengan satuan yang sama (Bucket)",
+      "Panel detail material dikelompokkan per satuan tanpa sorting",
+      "Progress bar hanya membandingkan sesama satuan yang sama",
+    ],
+  },
+  {
     version: "3.2.0",
     date: "1 Maret 2026",
     title: "Dashboard — Visualisasi Pemakaian Bahan Baku",
@@ -51,10 +66,10 @@ const versionHistory: VersionEntry[] = [
       "Ditambahkan section Pemakaian Bahan Baku di Dashboard",
       "3 mode tampilan interaktif: Material Chart, Shift Breakdown, Monthly Trend",
       "Gradient header card dengan quick stats 6 material utama (klik untuk select)",
-      "Bar chart total pemakaian per material dengan animasi gradient",
+      "Bar chart total pemakaian per material dikelompokkan per satuan",
       "Detail shift per material (Malam/Pagi/Sore) dengan bar chart terpisah",
-      "Area chart trend bulanan untuk top 4 material terbanyak",
-      "Panel detail material dengan animated progress bars & ranking",
+      "Area chart trend bulanan untuk material satuan Bucket",
+      "Panel detail material dikelompokkan per satuan",
     ],
   },
   {

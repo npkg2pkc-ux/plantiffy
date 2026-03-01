@@ -2330,14 +2330,14 @@ const DashboardPage = () => {
           { key: "dap", label: "DAP", unit: "Bucket", color: "#06b6d4" },
           { key: "kcl", label: "KCL", unit: "Bucket", color: "#10b981" },
           { key: "za", label: "ZA", unit: "Bucket", color: "#f59e0b" },
-          { key: "clayJumbo", label: "Clay Jumbo", unit: "Sak", color: "#ef4444" },
-          { key: "clayBucket", label: "Clay Bucket", unit: "Bucket", color: "#8b5cf6" },
-          { key: "pewarna", label: "Pewarna", unit: "Kg", color: "#ec4899" },
-          { key: "coatingOilLigno", label: "Coating Oil", unit: "Kg", color: "#14b8a6" },
+          { key: "clayJumbo", label: "Clay (Jumbo)", unit: "Jumbo", color: "#ef4444" },
+          { key: "clayBucket", label: "Clay (Bucket)", unit: "Bucket", color: "#8b5cf6" },
+          { key: "pewarna", label: "Pewarna", unit: "Bag", color: "#ec4899" },
+          { key: "coatingOilLigno", label: "Coating Oil LIGNO", unit: "Dus", color: "#14b8a6" },
           { key: "riject", label: "Riject", unit: "Bucket", color: "#f97316" },
-          { key: "tinta", label: "Tinta", unit: "Liter", color: "#a855f7" },
-          { key: "rekon", label: "Rekon", unit: "Bucket", color: "#0ea5e9" },
-          { key: "makeupIjp", label: "Makeup IJP", unit: "Liter", color: "#84cc16" },
+          { key: "tinta", label: "Tinta", unit: "pcs", color: "#a855f7" },
+          { key: "rekon", label: "Rekon", unit: "Ton", color: "#0ea5e9" },
+          { key: "makeupIjp", label: "MAKEUP IJP", unit: "pcs", color: "#84cc16" },
         ];
 
         const pemakaianData = filteredData.pemakaianBB;
@@ -2352,7 +2352,12 @@ const DashboardPage = () => {
           return { ...mat, total };
         });
 
-        const maxTotal = Math.max(...materialTotals.map((m) => m.total), 1);
+        // Group materials by unit for fair comparison
+        const unitGroups = materialTotals.reduce((acc, mat) => {
+          if (!acc[mat.unit]) acc[mat.unit] = [];
+          acc[mat.unit].push(mat);
+          return acc;
+        }, {} as Record<string, typeof materialTotals>);
 
         // Shift breakdown
         const shiftData = [
@@ -2378,17 +2383,16 @@ const DashboardPage = () => {
             })()
           : [];
 
-        // Monthly trend data
+        // Monthly trend data — only compare materials with same unit (Bucket group)
         const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+        const bucketMaterials = materialTotals.filter((m) => m.unit === "Bucket");
         const monthlyTrend = monthNames.map((month, idx) => {
           const monthData = pemakaianData.filter((d) => {
             if (!d.tanggal) return false;
             return new Date(d.tanggal).getMonth() === idx;
           });
           const entry: Record<string, unknown> = { bulan: month, records: monthData.length };
-          // Top 4 materials for trend
-          const top4 = [...materialTotals].sort((a, b) => b.total - a.total).slice(0, 4);
-          top4.forEach((mat) => {
+          bucketMaterials.forEach((mat) => {
             entry[mat.label] = monthData.reduce(
               (sum, item) => sum + (parseNumber((item as unknown as Record<string, number>)[mat.key as string]) || 0),
               0
@@ -2396,13 +2400,17 @@ const DashboardPage = () => {
           });
           return entry;
         });
-        const top4Materials = [...materialTotals].sort((a, b) => b.total - a.total).slice(0, 4);
+        const trendMaterials = bucketMaterials;
 
-        // Bar chart data for materials
-        const barChartData = materialTotals.map((m) => ({
-          name: m.label,
-          total: Math.round(m.total * 100) / 100,
-          fill: m.color,
+        // Bar chart data grouped by unit (only show same-unit comparisons)
+        const barChartDataByUnit = Object.entries(unitGroups).map(([unit, mats]) => ({
+          unit,
+          data: mats.map((m) => ({
+            name: m.label,
+            total: Math.round(m.total * 100) / 100,
+            fill: m.color,
+            color: m.color,
+          })),
         }));
 
         return (
@@ -2502,12 +2510,12 @@ const DashboardPage = () => {
                         </CardTitle>
                         <p className="text-xs text-muted-foreground mt-0.5">
                           {pemakaianViewMode === "chart"
-                            ? "Klik bar untuk detail shift"
+                            ? "Dikelompokkan per satuan · Klik bar untuk detail shift"
                             : pemakaianViewMode === "shift"
                             ? pemakaianSelectedMaterial
                               ? `Detail shift untuk ${MATERIAL_FIELDS.find((m) => m.key === pemakaianSelectedMaterial)?.label || ""}`
                               : "Pilih material di atas untuk detail"
-                            : "Top 4 material per bulan"}
+                            : "Trend bulanan per satuan Bucket"}
                         </p>
                       </div>
                     </div>
@@ -2516,86 +2524,74 @@ const DashboardPage = () => {
                 </CardHeader>
                 <CardContent className="pt-2">
                   {pemakaianViewMode === "chart" && (
-                    <ResponsiveContainer width="100%" height={320}>
-                      <BarChart
-                        data={barChartData}
-                        margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-                        onClick={(data) => {
-                          if (data?.activePayload?.[0]) {
-                            const clickedMat = MATERIAL_FIELDS.find(
-                              (m) => m.label === data.activePayload![0].payload.name
-                            );
-                            if (clickedMat) {
-                              setPemakaianSelectedMaterial(
-                                pemakaianSelectedMaterial === (clickedMat.key as string) ? null : (clickedMat.key as string)
-                              );
-                              setPemakaianViewMode("shift");
-                            }
-                          }
-                        }}
-                      >
-                        <defs>
-                          {MATERIAL_FIELDS.map((mat) => (
-                            <linearGradient key={mat.key as string} id={`gradMat_${mat.key as string}`} x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="0%" stopColor={mat.color} stopOpacity={0.9} />
-                              <stop offset="100%" stopColor={mat.color} stopOpacity={0.5} />
-                            </linearGradient>
-                          ))}
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.07} vertical={false} />
-                        <XAxis
-                          dataKey="name"
-                          tick={{ fontSize: 10 }}
-                          tickLine={false}
-                          axisLine={false}
-                          dy={8}
-                          angle={-35}
-                          textAnchor="end"
-                          height={60}
-                        />
-                        <YAxis
-                          tick={{ fontSize: 10 }}
-                          tickLine={false}
-                          axisLine={false}
-                          dx={-4}
-                          tickFormatter={(v: number) => (v >= 1000 ? `${(v / 1000).toFixed(0)}k` : `${v}`)}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "rgba(255,255,255,0.95)",
-                            border: "none",
-                            borderRadius: "12px",
-                            boxShadow: "0 10px 40px rgba(0,0,0,0.15)",
-                            padding: "12px 16px",
-                          }}
-                          formatter={(value: number) => [formatNumber(value), "Total"]}
-                          cursor={{ fill: "rgba(0,0,0,0.04)" }}
-                        />
-                        <Bar
-                          dataKey="total"
-                          radius={[6, 6, 0, 0]}
-                          cursor="pointer"
-                        >
-                          {barChartData.map((_entry, index) => {
-                            const mat = MATERIAL_FIELDS[index];
-                            return (
-                              <Cell
-                                key={`cell-${index}`}
-                                fill={`url(#gradMat_${mat.key as string})`}
-                                stroke={mat.color}
-                                strokeWidth={pemakaianSelectedMaterial === (mat.key as string) ? 2 : 0}
+                    <div className="space-y-6 max-h-[380px] overflow-y-auto pr-1 custom-scrollbar">
+                      {barChartDataByUnit.map((group) => (
+                        <div key={group.unit}>
+                          <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">
+                            Satuan: {group.unit}
+                          </p>
+                          <ResponsiveContainer width="100%" height={Math.max(group.data.length * 44, 80)}>
+                            <BarChart
+                              data={group.data}
+                              layout="vertical"
+                              margin={{ top: 0, right: 40, left: 0, bottom: 0 }}
+                              onClick={(data) => {
+                                if (data?.activePayload?.[0]) {
+                                  const clickedMat = MATERIAL_FIELDS.find(
+                                    (m) => m.label === data.activePayload![0].payload.name
+                                  );
+                                  if (clickedMat) {
+                                    setPemakaianSelectedMaterial(
+                                      pemakaianSelectedMaterial === (clickedMat.key as string) ? null : (clickedMat.key as string)
+                                    );
+                                    setPemakaianViewMode("shift");
+                                  }
+                                }
+                              }}
+                            >
+                              <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.07} horizontal={false} />
+                              <XAxis
+                                type="number"
+                                tick={{ fontSize: 10 }}
+                                tickLine={false}
+                                axisLine={false}
+                                tickFormatter={(v: number) => (v >= 1000 ? `${(v / 1000).toFixed(0)}k` : `${v}`)}
                               />
-                            );
-                          })}
-                          <LabelList
-                            dataKey="total"
-                            position="top"
-                            formatter={(v: number) => (v > 0 ? formatNumber(v) : "")}
-                            style={{ fontSize: "9px", fontWeight: "bold", fill: "#64748b" }}
-                          />
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
+                              <YAxis
+                                type="category"
+                                dataKey="name"
+                                tick={{ fontSize: 11 }}
+                                tickLine={false}
+                                axisLine={false}
+                                width={110}
+                              />
+                              <Tooltip
+                                contentStyle={{
+                                  backgroundColor: "rgba(255,255,255,0.95)",
+                                  border: "none",
+                                  borderRadius: "12px",
+                                  boxShadow: "0 10px 40px rgba(0,0,0,0.15)",
+                                  padding: "12px 16px",
+                                }}
+                                formatter={(value: number) => [formatNumber(value), group.unit]}
+                                cursor={{ fill: "rgba(0,0,0,0.04)" }}
+                              />
+                              <Bar dataKey="total" radius={[0, 6, 6, 0]} cursor="pointer">
+                                {group.data.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={entry.color} fillOpacity={0.8} />
+                                ))}
+                                <LabelList
+                                  dataKey="total"
+                                  position="right"
+                                  formatter={(v: number) => (v > 0 ? formatNumber(v) : "")}
+                                  style={{ fontSize: "10px", fontWeight: "bold", fill: "#64748b" }}
+                                />
+                              </Bar>
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      ))}
+                    </div>
                   )}
 
                   {pemakaianViewMode === "shift" && (
@@ -2658,7 +2654,7 @@ const DashboardPage = () => {
                     <ResponsiveContainer width="100%" height={320}>
                       <AreaChart data={monthlyTrend} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                         <defs>
-                          {top4Materials.map((mat) => (
+                          {trendMaterials.map((mat) => (
                             <linearGradient key={`trend_${mat.key as string}`} id={`gradTrend_${mat.key as string}`} x1="0" y1="0" x2="0" y2="1">
                               <stop offset="0%" stopColor={mat.color} stopOpacity={0.25} />
                               <stop offset="100%" stopColor={mat.color} stopOpacity={0.02} />
@@ -2679,7 +2675,7 @@ const DashboardPage = () => {
                           formatter={(value: number, name: string) => [formatNumber(value), name]}
                         />
                         <Legend verticalAlign="top" height={36} iconType="circle" iconSize={8} />
-                        {top4Materials.map((mat) => (
+                        {trendMaterials.map((mat) => (
                           <Area
                             key={mat.key as string}
                             type="monotone"
@@ -2697,7 +2693,7 @@ const DashboardPage = () => {
                 </CardContent>
               </Card>
 
-              {/* Right: Material Detail + Progress Bars */}
+              {/* Right: Material Detail — Grouped by Unit */}
               <Card className="overflow-hidden border-0 shadow-soft-lg">
                 <CardHeader className="bg-gradient-to-r from-emerald-500/5 via-teal-500/5 to-cyan-500/5 dark:from-emerald-500/10 dark:via-teal-500/10 dark:to-cyan-500/10 pb-2">
                   <div className="flex items-center justify-between">
@@ -2708,7 +2704,7 @@ const DashboardPage = () => {
                       <div>
                         <CardTitle className="text-base">Detail Material</CardTitle>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          Proporsi pemakaian tiap bahan baku
+                          Pemakaian per material (dikelompokkan per satuan)
                         </p>
                       </div>
                     </div>
@@ -2716,66 +2712,72 @@ const DashboardPage = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="pt-3">
-                  <div className="space-y-2.5 max-h-[360px] overflow-y-auto pr-1 custom-scrollbar">
-                    {[...materialTotals]
-                      .sort((a, b) => b.total - a.total)
-                      .map((mat, idx) => {
-                        const percentage = maxTotal > 0 ? (mat.total / maxTotal) * 100 : 0;
-                        const isSelected = pemakaianSelectedMaterial === (mat.key as string);
-                        return (
-                          <motion.div
-                            key={mat.key as string}
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.03 * idx }}
-                            onClick={() =>
-                              setPemakaianSelectedMaterial(
-                                isSelected ? null : (mat.key as string)
-                              )
-                            }
-                            className={cn(
-                              "group p-3 rounded-xl border cursor-pointer transition-all duration-200",
-                              isSelected
-                                ? "border-teal-300 dark:border-teal-700 bg-teal-50/50 dark:bg-teal-950/20 shadow-md"
-                                : "border-gray-100 dark:border-gray-800 hover:border-teal-200 dark:hover:border-teal-800 hover:shadow-sm"
-                            )}
-                          >
-                            <div className="flex items-center justify-between mb-1.5">
-                              <div className="flex items-center gap-2">
-                                <div
-                                  className="w-3 h-3 rounded-full shadow-sm"
-                                  style={{ backgroundColor: mat.color }}
-                                />
-                                <span className="text-sm font-medium">{mat.label}</span>
-                                {idx === 0 && mat.total > 0 && (
-                                  <span className="text-[9px] bg-gradient-to-r from-amber-400 to-orange-500 text-white px-1.5 py-0.5 rounded-full font-bold">
-                                    TOP
-                                  </span>
-                                )}
-                              </div>
-                              <div className="text-right">
-                                <span className="text-sm font-bold tabular-nums">
-                                  {formatNumber(mat.total)}
-                                </span>
-                                <span className="text-[10px] text-muted-foreground ml-1">
-                                  {mat.unit}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="relative h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                              <motion.div
-                                initial={{ width: 0 }}
-                                animate={{ width: `${percentage}%` }}
-                                transition={{ duration: 0.8, delay: 0.05 * idx, ease: "easeOut" }}
-                                className="absolute inset-y-0 left-0 rounded-full"
-                                style={{
-                                  background: `linear-gradient(90deg, ${mat.color}cc, ${mat.color})`,
-                                }}
-                              />
-                            </div>
-                          </motion.div>
-                        );
-                      })}
+                  <div className="space-y-4 max-h-[360px] overflow-y-auto pr-1 custom-scrollbar">
+                    {Object.entries(unitGroups).map(([unit, mats]) => {
+                      const groupMax = Math.max(...mats.map((m) => m.total), 1);
+                      return (
+                        <div key={unit}>
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-teal-500" />
+                            {unit}
+                          </p>
+                          <div className="space-y-1.5">
+                            {mats.map((mat, idx) => {
+                              const percentage = groupMax > 0 ? (mat.total / groupMax) * 100 : 0;
+                              const isSelected = pemakaianSelectedMaterial === (mat.key as string);
+                              return (
+                                <motion.div
+                                  key={mat.key as string}
+                                  initial={{ opacity: 0, x: 20 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ delay: 0.03 * idx }}
+                                  onClick={() =>
+                                    setPemakaianSelectedMaterial(
+                                      isSelected ? null : (mat.key as string)
+                                    )
+                                  }
+                                  className={cn(
+                                    "group p-2.5 rounded-xl border cursor-pointer transition-all duration-200",
+                                    isSelected
+                                      ? "border-teal-300 dark:border-teal-700 bg-teal-50/50 dark:bg-teal-950/20 shadow-md"
+                                      : "border-gray-100 dark:border-gray-800 hover:border-teal-200 dark:hover:border-teal-800 hover:shadow-sm"
+                                  )}
+                                >
+                                  <div className="flex items-center justify-between mb-1">
+                                    <div className="flex items-center gap-2">
+                                      <div
+                                        className="w-3 h-3 rounded-full shadow-sm"
+                                        style={{ backgroundColor: mat.color }}
+                                      />
+                                      <span className="text-sm font-medium">{mat.label}</span>
+                                    </div>
+                                    <div className="text-right">
+                                      <span className="text-sm font-bold tabular-nums">
+                                        {formatNumber(mat.total)}
+                                      </span>
+                                      <span className="text-[10px] text-muted-foreground ml-1">
+                                        {mat.unit}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="relative h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                                    <motion.div
+                                      initial={{ width: 0 }}
+                                      animate={{ width: `${percentage}%` }}
+                                      transition={{ duration: 0.8, delay: 0.05 * idx, ease: "easeOut" }}
+                                      className="absolute inset-y-0 left-0 rounded-full"
+                                      style={{
+                                        background: `linear-gradient(90deg, ${mat.color}cc, ${mat.color})`,
+                                      }}
+                                    />
+                                  </div>
+                                </motion.div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
