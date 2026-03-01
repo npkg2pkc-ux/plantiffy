@@ -788,7 +788,7 @@ const VersionBadge = () => {
         title="Klik untuk melihat perjalanan versi"
       >
         <History className="h-3 w-3" />
-        v3.1.2
+        v3.2.1
       </button>
       <VersionHistoryModal
         isOpen={showVersionHistory}
