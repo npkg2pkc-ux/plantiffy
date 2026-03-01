@@ -69,7 +69,7 @@ const MATERIAL_FIELDS = [
   { key: "clayJumbo", label: "Clay (Jumbo)", unit: "Jumbo" },
   { key: "clayBucket", label: "Clay (Bucket)", unit: "Bucket" },
   { key: "pewarna", label: "Pewarna", unit: "Bag" },
-  { key: "coatingOilLigno", label: "Coating Oil LIGNO", unit: "Dus" },
+  { key: "coatingOilLigno", label: "Coating Oil", unit: "Dus" },
   { key: "riject", label: "Riject", unit: "Bucket" },
   { key: "tinta", label: "Tinta", unit: "pcs" },
   { key: "rekon", label: "Rekon", unit: "Ton" },
