@@ -1,0 +1,860 @@
+import { useState, useEffect, useCallback } from "react";
+import { Plus, Edit2, Trash2, Search, Package, History, X, Download } from "lucide-react";
+import { useSaveShortcut, useDataWithLogging, useOptimisticList, generateTempId } from "@/hooks";
+import {
+  Button,
+  Card,
+  CardHeader,
+  CardTitle,
+  Input,
+  Select,
+  Modal,
+  ConfirmDialog,
+  DataTable,
+  SuccessOverlay,
+  ApprovalDialog,
+  ActivityLogModal,
+  ExportExcelModal,
+} from "@/components/ui";
+import { useAuthStore } from "@/stores";
+import {
+  formatDate,
+  formatNumber,
+  parseNumber,
+  canAdd,
+  needsApprovalForEdit,
+  needsApprovalForDelete,
+  isViewOnly,
+  getCurrentDate,
+} from "@/lib/utils";
+import { SHEETS } from "@/services/api";
+import type { PlantType } from "@/types";
+
+// Interface for Bahan Baku NPK
+interface BahanBakuNPKEntry {
+  berat: number;
+  unit: string;
+}
+
+interface BahanBakuNPK {
+  id?: string;
+  tanggal: string;
+  bahanBaku: string;
+  entries: BahanBakuNPKEntry[]; // Array of berat and unit
+  totalBerat: number;
+  _plant?: PlantType;
+  _isPending?: boolean; // For optimistic updates
+}
+
+// Generate year options from 2023 to current year + 1
+const currentYear = new Date().getFullYear();
+const YEAR_OPTIONS = [
+  ...Array.from({ length: currentYear - 2022 }, (_, i) => ({
+    value: String(2023 + i),
+    label: String(2023 + i),
+  })),
+  { value: String(currentYear + 1), label: String(currentYear + 1) },
+];
+
+// Month options
+const MONTH_OPTIONS = [
+  { value: "ALL", label: "Semua Bulan" },
+  { value: "1", label: "Januari" },
+  { value: "2", label: "Februari" },
+  { value: "3", label: "Maret" },
+  { value: "4", label: "April" },
+  { value: "5", label: "Mei" },
+  { value: "6", label: "Juni" },
+  { value: "7", label: "Juli" },
+  { value: "8", label: "Agustus" },
+  { value: "9", label: "September" },
+  { value: "10", label: "Oktober" },
+  { value: "11", label: "November" },
+  { value: "12", label: "Desember" },
+];
+
+const BAHAN_BAKU_OPTIONS = [
+  { value: "Urea", label: "Urea" },
+  { value: "DAP", label: "DAP" },
+  { value: "KCL", label: "KCL" },
+  { value: "ZA", label: "ZA" },
+  { value: "Clay", label: "Clay" },
+  { value: "Dolomite", label: "Dolomite" },
+  { value: "Coating Oil", label: "Coating Oil" },
+  { value: "Pewarna", label: "Pewarna" },
+  { value: "Silika", label: "Silika" },
+  { value: "Amnit", label: "Amnit" },
+];
+
+const UNIT_OPTIONS = [
+  { value: "Ton", label: "Ton" },
+  { value: "Pallet", label: "Pallet" },
+  { value: "Jumbo", label: "Jumbo" },
+];
+
+const initialFormState: BahanBakuNPK = {
+  tanggal: getCurrentDate(),
+  bahanBaku: "",
+  entries: [{ berat: 0, unit: "Ton" }],
+  totalBerat: 0,
+};
+
+interface BahanBakuNPKPageProps {
+  plant: PlantType;
+}
+
+const BahanBakuNPKPage = ({ plant }: BahanBakuNPKPageProps) => {
+  const { user } = useAuthStore();
+  const { createWithLog, updateWithLog, deleteWithLog } = useDataWithLogging();
+  const { optimisticAdd, optimisticUpdate, optimisticDelete, confirmAdd, confirmUpdate } = useOptimisticList<BahanBakuNPK>();
+  const [data, setData] = useState<BahanBakuNPK[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [form, setForm] = useState<BahanBakuNPK>(initialFormState);
+  const [selectedYear, setSelectedYear] = useState<string>(
+    String(new Date().getFullYear())
+  );
+  const [selectedMonth, setSelectedMonth] = useState<string>(
+    String(new Date().getMonth() + 1)
+  );
+  const currentPlant = plant;
+
+  // Approval states
+  const [showApprovalDialog, setShowApprovalDialog] = useState(false);
+  const [approvalAction, setApprovalAction] = useState<"edit" | "delete">(
+    "edit"
+  );
+  const [pendingEditItem, setPendingEditItem] = useState<BahanBakuNPK | null>(
+    null
+  );
+
+  // Log modal state
+  const [showLogModal, setShowLogModal] = useState(false);
+  const [logRecordId, setLogRecordId] = useState<string>("");
+
+  // Export modal state
+  const [showExportModal, setShowExportModal] = useState(false);
+
+  // Handle view log
+  const handleViewLog = (id: string) => {
+    setLogRecordId(id);
+    setShowLogModal(true);
+  };
+
+  // Check if user is view only
+  const userIsViewOnly = isViewOnly(user?.role || "");
+  const userCanAdd = canAdd(user?.role || "") && !userIsViewOnly;
+
+  // Alt+S shortcut to save
+  const triggerSave = useCallback(() => {
+    if (showForm && !loading) {
+      const formEl = document.querySelector("form");
+      if (formEl) formEl.requestSubmit();
+    }
+  }, [showForm, loading]);
+  useSaveShortcut(triggerSave, showForm);
+
+  const userNeedsApprovalEdit = needsApprovalForEdit(user?.role || "");
+  const userNeedsApprovalDelete = needsApprovalForDelete(user?.role || "");
+
+  // Calculate total berat from entries
+  const calculateTotalBerat = (entries: BahanBakuNPKEntry[]): number => {
+    return entries.reduce((sum, entry) => sum + (entry.berat || 0), 0);
+  };
+
+  // Update form entries
+  const updateEntry = (
+    index: number,
+    field: keyof BahanBakuNPKEntry,
+    value: string | number
+  ) => {
+    setForm((prev) => {
+      const newEntries = [...prev.entries];
+      newEntries[index] = {
+        ...newEntries[index],
+        [field]: field === "berat" ? parseFloat(value as string) || 0 : value,
+      };
+      return {
+        ...prev,
+        entries: newEntries,
+        totalBerat: calculateTotalBerat(newEntries),
+      };
+    });
+  };
+
+  // Add new entry
+  const addEntry = () => {
+    setForm((prev) => ({
+      ...prev,
+      entries: [...prev.entries, { berat: 0, unit: "Ton" }],
+    }));
+  };
+
+  // Handle Enter key to add new entry
+  const handleEntryKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (e.key === "Enter") {
+      e.preventDefault(); // Prevent form submission
+      addEntry();
+      // Focus on the new entry's input after render
+      setTimeout(() => {
+        const inputs = document.querySelectorAll<HTMLInputElement>('input[type="number"][placeholder="Berat"]');
+        const newInput = inputs[inputs.length - 1];
+        if (newInput) newInput.focus();
+      }, 50);
+    }
+  };
+
+  // Remove entry
+  const removeEntry = (index: number) => {
+    if (form.entries.length <= 1) return;
+    setForm((prev) => {
+      const newEntries = prev.entries.filter((_, i) => i !== index);
+      return {
+        ...prev,
+        entries: newEntries,
+        totalBerat: calculateTotalBerat(newEntries),
+      };
+    });
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const { readData, getSheetNameByPlant } = await import(
+          "@/services/api"
+        );
+        // Use plant-specific sheet name to fetch only data for current plant
+        const sheetName = getSheetNameByPlant(
+          SHEETS.BAHAN_BAKU_NPK,
+          currentPlant
+        );
+        const result = await readData<BahanBakuNPK>(sheetName);
+        if (result.success && result.data) {
+          // Parse entries JSON if stored as string
+          const parsedData = result.data.map((item) => ({
+            ...item,
+            entries:
+              typeof item.entries === "string"
+                ? JSON.parse(item.entries)
+                : item.entries || [{ berat: 0, unit: "Ton" }],
+            totalBerat: item.totalBerat || 0,
+            _plant: currentPlant, // Add plant info
+          }));
+          const sortedData = [...parsedData].sort(
+            (a, b) =>
+              new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime()
+          );
+          setData(sortedData);
+        } else {
+          setData([]);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [currentPlant]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // VALIDATION: Check required fields before submitting
+    if (!form.tanggal) {
+      alert("Tanggal wajib diisi!");
+      return;
+    }
+    if (!form.bahanBaku) {
+      alert("Bahan Baku wajib dipilih!");
+      return;
+    }
+    if (
+      form.entries.length === 0 ||
+      form.entries.every((entry) => entry.berat === 0)
+    ) {
+      alert("Minimal satu entry berat harus diisi!");
+      return;
+    }
+
+    // Close form immediately for faster UX
+    setShowForm(false);
+    setShowSuccess(true);
+
+    // Prepare data with entries as JSON string for storage
+    const dataToSave = {
+      ...form,
+      entries: JSON.stringify(form.entries),
+      totalBerat: calculateTotalBerat(form.entries),
+      _plant: currentPlant,
+    };
+
+    if (editingId) {
+      // OPTIMISTIC UPDATE - Update UI immediately
+      const itemToUpdate: BahanBakuNPK = {
+        ...form,
+        id: editingId,
+        _plant: currentPlant,
+        totalBerat: calculateTotalBerat(form.entries),
+      };
+      const { rollback } = optimisticUpdate(data, itemToUpdate);
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === editingId ? { ...itemToUpdate, _isPending: true } : item
+        )
+      );
+
+      // Update in background
+      const dataToUpdate = { ...dataToSave, id: editingId };
+      updateWithLog<typeof dataToUpdate>(SHEETS.BAHAN_BAKU_NPK, dataToUpdate)
+        .then((result) => {
+          if (result.success) {
+            // Confirm update - remove pending state
+            setData((prev) => confirmUpdate(prev, editingId));
+          } else {
+            // Rollback on error
+            setData(rollback());
+            alert(result.error || "Gagal mengupdate data");
+          }
+        })
+        .catch(() => {
+          setData(rollback());
+          alert("Terjadi kesalahan saat mengupdate data");
+        });
+    } else {
+      // OPTIMISTIC ADD - Add to UI immediately with temp ID
+      const tempId = generateTempId();
+      const newItem: BahanBakuNPK = {
+        ...form,
+        id: tempId,
+        _plant: currentPlant,
+        totalBerat: calculateTotalBerat(form.entries),
+        _isPending: true,
+      };
+      const { rollback } = optimisticAdd(data, newItem, tempId);
+      setData((prev) => [newItem, ...prev]);
+
+      // Create in background
+      createWithLog<typeof dataToSave>(SHEETS.BAHAN_BAKU_NPK, dataToSave)
+        .then((result) => {
+          if (result.success && result.data) {
+            // Replace temp ID with real ID
+            setData((prev) => confirmAdd(prev, tempId, result.data!.id || tempId));
+          } else {
+            // Rollback on error
+            setData(rollback());
+            alert(result.error || "Gagal menyimpan data");
+          }
+        })
+        .catch(() => {
+          setData(rollback());
+          alert("Terjadi kesalahan saat menyimpan data");
+        });
+    }
+
+    setForm(initialFormState);
+    setEditingId(null);
+    setTimeout(() => setShowSuccess(false), 1500);
+  };
+
+  const handleEdit = (item: BahanBakuNPK) => {
+    if (userNeedsApprovalEdit) {
+      setPendingEditItem(item);
+      setApprovalAction("edit");
+      setShowApprovalDialog(true);
+      return;
+    }
+    // Parse entries if string
+    const parsedEntries =
+      typeof item.entries === "string"
+        ? JSON.parse(item.entries)
+        : item.entries || [{ berat: 0, unit: "Ton" }];
+
+    setForm({
+      ...item,
+      entries: parsedEntries,
+      totalBerat: calculateTotalBerat(parsedEntries),
+    });
+    setEditingId(item.id || null);
+    setShowForm(true);
+  };
+
+  const handleDelete = (id: string) => {
+    if (userNeedsApprovalDelete) {
+      setDeleteId(id);
+      setApprovalAction("delete");
+      setShowApprovalDialog(true);
+      return;
+    }
+    setDeleteId(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleApprovalSubmit = async (reason: string) => {
+    setLoading(true);
+    try {
+      const { createData, SHEETS } = await import("@/services/api");
+      const approvalData = {
+        type: "BAHAN_BAKU_NPK" as const,
+        action: approvalAction,
+        itemId: approvalAction === "edit" ? pendingEditItem?.id : deleteId,
+        itemData:
+          approvalAction === "edit"
+            ? pendingEditItem
+            : data.find((d) => d.id === deleteId),
+        reason,
+        submittedBy: user?.nama || user?.email || "Unknown",
+        submittedAt: new Date().toISOString(),
+        status: "pending" as const,
+      };
+      const result = await createData(SHEETS.APPROVAL_REQUESTS, approvalData);
+      if (result.success) {
+        setShowApprovalDialog(false);
+        setPendingEditItem(null);
+        setDeleteId(null);
+        alert("Permintaan telah dikirim dan menunggu persetujuan");
+      } else {
+        throw new Error(result.error || "Gagal mengirim permintaan");
+      }
+    } catch (error) {
+      console.error("Error submitting approval:", error);
+      alert(error instanceof Error ? error.message : "Terjadi kesalahan");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+
+    const itemToDelete = data.find((item) => item.id === deleteId);
+    
+    // OPTIMISTIC DELETE - Remove from UI immediately
+    const { rollback } = optimisticDelete(data, deleteId);
+    setData((prev) => prev.filter((item) => item.id !== deleteId));
+    setShowDeleteConfirm(false);
+    setShowSuccess(true);
+    
+    // Delete in background - use currentPlant as fallback for safety
+    deleteWithLog(SHEETS.BAHAN_BAKU_NPK, {
+      id: deleteId,
+      _plant: itemToDelete?._plant || currentPlant,
+    })
+      .then((result) => {
+        if (!result.success) {
+          // Rollback on error
+          setData(rollback());
+          alert(result.error || "Gagal menghapus data");
+        }
+      })
+      .catch(() => {
+        setData(rollback());
+        alert("Terjadi kesalahan saat menghapus data");
+      });
+
+    setDeleteId(null);
+    setTimeout(() => setShowSuccess(false), 1500);
+  };
+
+  const openAddForm = () => {
+    setForm(initialFormState);
+    setEditingId(null);
+    setShowForm(true);
+  };
+
+  const filteredData = data.filter((item) => {
+    const matchesPlant = item._plant === currentPlant;
+
+    // Filter by year
+    const itemDate = new Date(item.tanggal);
+    const itemYear = itemDate.getFullYear();
+    const itemMonth = itemDate.getMonth() + 1;
+    const matchesYear = itemYear === parseInt(selectedYear);
+    const matchesMonth = selectedMonth === "ALL" || itemMonth === parseInt(selectedMonth);
+
+    return matchesPlant && matchesYear && matchesMonth;
+  });
+
+  // Calculate totals per bahan baku
+  const totalsByBahanBaku = filteredData.reduce((acc, item) => {
+    const key = item.bahanBaku || "Unknown";
+    acc[key] = (acc[key] || 0) + (item.totalBerat || 0);
+    return acc;
+  }, {} as Record<string, number>);
+
+  // Format entries for display
+  const formatEntries = (entries: BahanBakuNPKEntry[] | string) => {
+    const parsedEntries =
+      typeof entries === "string" ? JSON.parse(entries) : entries;
+    if (!parsedEntries || !Array.isArray(parsedEntries)) return "-";
+    return parsedEntries
+      .map((e: BahanBakuNPKEntry) => `${formatNumber(e.berat)} ${e.unit}`)
+      .join(", ");
+  };
+
+  const columns = [
+    {
+      key: "tanggal",
+      header: "Tanggal",
+      sortable: true,
+      render: (value: unknown) => formatDate(value as string),
+    },
+    {
+      key: "bahanBaku",
+      header: "Bahan Baku",
+      render: (value: unknown) => (
+        <div className="flex items-center gap-2">
+          <Package className="h-4 w-4 text-dark-400" />
+          <span className="font-medium">{value as string}</span>
+        </div>
+      ),
+    },
+    {
+      key: "entries",
+      header: "Detail Berat & Unit",
+      render: (value: unknown) => (
+        <span className="text-sm text-dark-600 dark:text-dark-300">
+          {formatEntries(value as BahanBakuNPKEntry[] | string)}
+        </span>
+      ),
+    },
+    {
+      key: "totalBerat",
+      header: "Total Berat",
+      render: (value: unknown) => (
+        <span className="font-semibold text-primary-600 dark:text-primary-400">
+          {formatNumber(parseNumber(value as number))}
+        </span>
+      ),
+    },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-display font-bold text-dark-900 dark:text-white">
+            Data Bahan Baku NPK {currentPlant === "NPK1" ? "1" : "2"}
+          </h1>
+          <p className="text-dark-500 dark:text-dark-400 mt-1">
+            Kelola data penerimaan bahan baku NPK
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Button
+            variant="secondary"
+            onClick={() => setShowExportModal(true)}
+            className="border-green-300 text-green-700 hover:bg-green-50 dark:border-green-700 dark:text-green-400 dark:hover:bg-green-900/20"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export Excel
+          </Button>
+          {userCanAdd && (
+            <Button onClick={openAddForm}>
+              <Plus className="h-4 w-4 mr-2" />
+              Tambah Data
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Summary - Top Items */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
+        {Object.entries(totalsByBahanBaku)
+          .slice(0, 5)
+          .map(([name, total]) => (
+            <Card key={name} className="p-3 sm:p-4">
+              <p className="text-xs sm:text-sm text-dark-500 dark:text-dark-400 truncate">
+                {name}
+              </p>
+              <p className="text-base sm:text-lg font-bold text-dark-900 dark:text-white">
+                {formatNumber(total)}
+              </p>
+            </Card>
+          ))}
+      </div>
+
+      {/* Data Table */}
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <CardTitle>
+              Data Bahan Baku NPK - {selectedMonth === "ALL" ? "Tahun" : MONTH_OPTIONS.find(m => m.value === selectedMonth)?.label} {selectedYear}
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                options={MONTH_OPTIONS}
+                className="w-40"
+              />
+              <Select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(e.target.value)}
+                options={YEAR_OPTIONS}
+                className="w-28"
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <DataTable
+          data={filteredData}
+          columns={columns}
+          loading={loading}
+          searchable={true}
+          searchPlaceholder="Cari tanggal, bahan baku, total berat..."
+          searchKeys={["tanggal", "bahanBaku", "totalBerat"]}
+          actions={
+            !userIsViewOnly
+              ? (row) => (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewLog(row.id!);
+                      }}
+                      title="Lihat Log"
+                    >
+                      <History className="h-4 w-4 text-blue-600" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(row);
+                      }}
+                      title="Edit"
+                    >
+                      <Edit2 className="h-4 w-4 text-primary-600" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(row.id!);
+                      }}
+                      title="Hapus"
+                    >
+                      <Trash2 className="h-4 w-4 text-red-600" />
+                    </Button>
+                  </div>
+                )
+              : (row) => (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewLog(row.id!);
+                      }}
+                      title="Lihat Log"
+                    >
+                      <History className="h-4 w-4 text-blue-600" />
+                    </Button>
+                  </div>
+                )
+          }
+        />
+      </Card>
+
+      {/* Add/Edit Modal */}
+      <Modal
+        isOpen={showForm}
+        onClose={() => {
+          setShowForm(false);
+          setForm(initialFormState);
+          setEditingId(null);
+        }}
+        title={
+          editingId ? "Edit Data Bahan Baku NPK" : "Tambah Data Bahan Baku NPK"
+        }
+        size="lg"
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input
+            label="Tanggal"
+            type="date"
+            value={form.tanggal}
+            onChange={(e) =>
+              setForm((prev) => ({ ...prev, tanggal: e.target.value }))
+            }
+            required
+          />
+
+          <Select
+            label="Bahan Baku"
+            value={form.bahanBaku}
+            onChange={(e) =>
+              setForm((prev) => ({ ...prev, bahanBaku: e.target.value }))
+            }
+            options={BAHAN_BAKU_OPTIONS}
+            placeholder="Pilih bahan baku"
+            required
+          />
+
+          {/* Entries Section */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-dark-700 dark:text-dark-300">
+                Detail Berat & Unit
+              </label>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={addEntry}
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Tambah
+              </Button>
+            </div>
+
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {form.entries.map((entry, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-2 p-3 bg-dark-50 dark:bg-dark-800 rounded-lg"
+                >
+                  <div className="flex-1">
+                    <Input
+                      type="number"
+                      value={entry.berat || ""}
+                      onChange={(e) =>
+                        updateEntry(index, "berat", e.target.value)
+                      }
+                      onKeyDown={(e) => handleEntryKeyDown(e, index)}
+                      placeholder="Berat"
+                      step="0.01"
+                      min="0"
+                      required
+                    />
+                  </div>
+                  <div className="w-32">
+                    <Select
+                      value={entry.unit}
+                      onChange={(e) =>
+                        updateEntry(index, "unit", e.target.value)
+                      }
+                      options={UNIT_OPTIONS}
+                      required
+                    />
+                  </div>
+                  {form.entries.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeEntry(index)}
+                      className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Total Display */}
+            <div className="flex items-center justify-between p-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800">
+              <span className="font-medium text-dark-700 dark:text-dark-300">
+                Total Berat:
+              </span>
+              <span className="text-xl font-bold text-primary-600 dark:text-primary-400">
+                {formatNumber(calculateTotalBerat(form.entries))}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                setShowForm(false);
+                setForm(initialFormState);
+                setEditingId(null);
+              }}
+            >
+              Batal
+            </Button>
+            <Button type="submit" isLoading={loading}>
+              {editingId ? "Update" : "Simpan"}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Delete Confirmation */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setDeleteId(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Hapus Data"
+        message="Apakah Anda yakin ingin menghapus data ini?"
+        confirmText="Hapus"
+        variant="danger"
+        isLoading={loading}
+      />
+
+      <ApprovalDialog
+        isOpen={showApprovalDialog}
+        onClose={() => {
+          setShowApprovalDialog(false);
+          setPendingEditItem(null);
+          setDeleteId(null);
+        }}
+        onSubmit={handleApprovalSubmit}
+        action={approvalAction}
+        itemName="data bahan baku NPK"
+        loading={loading}
+      />
+
+      <SuccessOverlay
+        isVisible={showSuccess}
+        message="Data berhasil disimpan!"
+        onClose={() => setShowSuccess(false)}
+      />
+
+      {/* Export Excel Modal */}
+      <ExportExcelModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        data={data}
+        plantName={currentPlant === "NPK1" ? "NPK 1" : "NPK 2"}
+        bahanBakuOptions={BAHAN_BAKU_OPTIONS}
+      />
+
+      {/* Activity Log Modal */}
+      <ActivityLogModal
+        isOpen={showLogModal}
+        onClose={() => {
+          setShowLogModal(false);
+          setLogRecordId("");
+        }}
+        sheetName={
+          currentPlant === "NPK1" ? "bahanbaku_npk_NPK1" : "bahanbaku_npk"
+        }
+        recordId={logRecordId}
+        title="Log Aktivitas Bahan Baku NPK"
+      />
+    </div>
+  );
+};
+
+export default BahanBakuNPKPage;

@@ -408,6 +408,9 @@ export const SHEETS = {
   // NPK2 only features
   RIKSA_TIMB_PORTABEL: "riksa_timb_portabel",
 
+  // Shared (non-plant-specific)
+  SARANA_3R: "sarana_3r",
+
   // Shared
   USERS: "users",
   SESSIONS: "sessions",

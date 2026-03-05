@@ -247,6 +247,15 @@ export interface GatePass {
   _plant?: PlantType;
 }
 
+// Sarana 3R
+export interface Sarana3R {
+  id?: string;
+  tanggal: string;
+  judul: string;
+  catatan: string;
+  createdBy?: string;
+}
+
 // Akun (Password Storage)
 export interface Akun {
   id?: string;

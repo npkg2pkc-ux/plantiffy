@@ -42,6 +42,22 @@ interface VersionEntry {
 
 const versionHistory: VersionEntry[] = [
   {
+    version: "3.3.0",
+    date: "5 Maret 2026",
+    title: "Sarana 3R & Reorganisasi Menu Laporan",
+    type: "minor",
+    icon: <ClipboardList className="h-5 w-5" />,
+    highlights: [
+      "Halaman baru: Sarana 3R di menu Laporan — catatan Reduce, Reuse, Recycle",
+      "Tampilan card modern dengan warna-warni, bukan tabel, seperti sticky notes",
+      "Summary cards: Total Catatan, Bulan Ini, Minggu Ini, Hasil Pencarian",
+      "Fitur pencarian cepat, tambah/edit/hapus catatan dengan approval system",
+      "Penerimaan Bahan Baku dipindahkan dari menu Data ke menu Laporan (di bawah Downtime)",
+      "Route baru: /laporan/bahan-baku-npk1, /laporan/bahan-baku-npk2, /laporan/sarana-3r",
+      "Apps Script backend: sheet sarana_3r dengan CRUD dan activity logging",
+    ],
+  },
+  {
     version: "3.2.2",
     date: "1 Maret 2026",
     title: "Pemakaian BB — Tabel Collapsible",

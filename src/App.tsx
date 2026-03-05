@@ -27,10 +27,11 @@ import {
   TimesheetLoaderPage,
   KOPPage,
   PemakaianBahanBakuPage,
+  BahanBakuNPKPage,
+  Sarana3RPage,
 } from "@/pages/Laporan";
 import {
   WorkRequestPage,
-  BahanBakuNPKPage,
   VibrasiPage,
   GatePassPage,
   PertaPage,
@@ -181,6 +182,15 @@ function App() {
               path="pemakaian-bb-npk2"
               element={<PemakaianBahanBakuPage plant="NPK2" />}
             />
+            <Route
+              path="bahan-baku-npk1"
+              element={<BahanBakuNPKPage plant="NPK1" />}
+            />
+            <Route
+              path="bahan-baku-npk2"
+              element={<BahanBakuNPKPage plant="NPK2" />}
+            />
+            <Route path="sarana-3r" element={<Sarana3RPage />} />
           </Route>
 
           {/* Data Routes */}
@@ -193,14 +203,6 @@ function App() {
             <Route
               path="work-request-npk2"
               element={<WorkRequestPage plant="NPK2" />}
-            />
-            <Route
-              path="bahan-baku-npk1"
-              element={<BahanBakuNPKPage plant="NPK1" />}
-            />
-            <Route
-              path="bahan-baku-npk2"
-              element={<BahanBakuNPKPage plant="NPK2" />}
             />
             <Route path="vibrasi-npk1" element={<VibrasiPage plant="NPK1" />} />
             <Route path="vibrasi-npk2" element={<VibrasiPage plant="NPK2" />} />

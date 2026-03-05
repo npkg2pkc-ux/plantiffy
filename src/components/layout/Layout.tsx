@@ -727,8 +727,11 @@ const navItems: NavItemProps[] = [
       { name: "Timesheet Loader NPK2", path: "/laporan/timesheet-loader-npk2" },
       { name: "Downtime NPK1", path: "/laporan/downtime-npk1" },
       { name: "Downtime NPK2", path: "/laporan/downtime-npk2" },
+      { name: "Penerimaan Bahan Baku NPK1", path: "/laporan/bahan-baku-npk1" },
+      { name: "Penerimaan Bahan Baku NPK2", path: "/laporan/bahan-baku-npk2" },
       { name: "Pemakaian BB NPK1", path: "/laporan/pemakaian-bb-npk1" },
       { name: "Pemakaian BB NPK2", path: "/laporan/pemakaian-bb-npk2" },
+      { name: "Sarana 3R", path: "/laporan/sarana-3r" },
     ],
   },
   {
@@ -739,8 +742,6 @@ const navItems: NavItemProps[] = [
       { name: "Inventaris Material", path: "/data/inventaris" },
       { name: "Work Request NPK1", path: "/data/work-request-npk1" },
       { name: "Work Request NPK2", path: "/data/work-request-npk2" },
-      { name: "Penerimaan Bahan Baku NPK1", path: "/data/bahan-baku-npk1" },
-      { name: "Penerimaan Bahan Baku NPK2", path: "/data/bahan-baku-npk2" },
       { name: "Vibrasi NPK1", path: "/data/vibrasi-npk1" },
       { name: "Vibrasi NPK2", path: "/data/vibrasi-npk2" },
       { name: "Gate Pass NPK1", path: "/data/gate-pass-npk1" },
@@ -788,7 +789,7 @@ const VersionBadge = () => {
         title="Klik untuk melihat perjalanan versi"
       >
         <History className="h-3 w-3" />
-        v3.2.2
+        v3.3.0
       </button>
       <VersionHistoryModal
         isOpen={showVersionHistory}

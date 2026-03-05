@@ -1,5 +1,4 @@
 export { default as WorkRequestPage } from "./WorkRequestPage";
-export { default as BahanBakuNPKPage } from "./BahanBakuNPKPage";
 export { default as VibrasiPage } from "./VibrasiPage";
 export { default as GatePassPage } from "./GatePassPage";
 export { default as PertaPage } from "./PertaPage";

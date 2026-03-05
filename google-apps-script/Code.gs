@@ -424,6 +424,14 @@ const SHEET_HEADERS = {
     "keterangan",
     "created_at",
   ],
+  // Sarana 3R
+  sarana_3r: [
+    "id",
+    "tanggal",
+    "judul",
+    "catatan",
+    "createdBy",
+  ],
   // Activity Logs for tracking all changes
   activity_logs: [
     "id",
@@ -1562,6 +1570,7 @@ function initializeAllSheets() {
     "rekap_bbm_NPK1",
     "pemakaian_bahan_baku",
     "pemakaian_bahan_baku_NPK1",
+    "sarana_3r",
     "akun",
     "rkap",
     "approval_requests",
@@ -2060,6 +2069,7 @@ function fillEmptyIdsAllSheets() {
     "kop_NPK1",
     "perbaikan_tahunan",
     "perbaikan_tahunan_NPK1",
+    "sarana_3r",
   ];
 
   let totalFilled = 0;
@@ -2997,6 +3007,7 @@ function getSheetDisplayName(sheetName) {
     pemakaian_bahan_baku: "Pemakaian Bahan Baku",
     pemakaian_bahan_baku_NPK1: "Pemakaian Bahan Baku",
     riksa_timb_portabel: "Riksa Timbangan Portabel",
+    sarana_3r: "Sarana 3R",
     kop: "KOP",
     kop_NPK1: "KOP",
     materials: "Inventaris Material",
