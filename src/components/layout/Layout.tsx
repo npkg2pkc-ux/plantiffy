@@ -789,7 +789,7 @@ const VersionBadge = () => {
         title="Klik untuk melihat perjalanan versi"
       >
         <History className="h-3 w-3" />
-        v3.3.0
+        v3.3.1
       </button>
       <VersionHistoryModal
         isOpen={showVersionHistory}
@@ -892,14 +892,18 @@ const Sidebar = () => {
           let filteredChildren = item.children;
 
           if (userPlant === "NPK1") {
-            // NPK1: Only show NPK1 reports
-            filteredChildren = item.children.filter((child) =>
-              child.path.includes("npk1")
+            // NPK1: Only show NPK1 reports + shared pages
+            filteredChildren = item.children.filter(
+              (child) =>
+                child.path.includes("npk1") ||
+                child.path === "/laporan/sarana-3r"
             );
           } else if (userPlant === "NPK2") {
-            // NPK2: Only show NPK2 reports
-            filteredChildren = item.children.filter((child) =>
-              child.path.includes("npk2")
+            // NPK2: Only show NPK2 reports + shared pages
+            filteredChildren = item.children.filter(
+              (child) =>
+                child.path.includes("npk2") ||
+                child.path === "/laporan/sarana-3r"
             );
           }
           // Admin (ALL) sees all

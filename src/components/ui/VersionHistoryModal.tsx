@@ -42,6 +42,17 @@ interface VersionEntry {
 
 const versionHistory: VersionEntry[] = [
   {
+    version: "3.3.1",
+    date: "5 Maret 2026",
+    title: "Fix Sarana 3R — Visibility di Sidebar",
+    type: "patch",
+    icon: <Bug className="h-5 w-5" />,
+    highlights: [
+      "Fix: Sarana 3R tidak muncul di sidebar untuk user NPK1/NPK2 karena filter plant",
+      "Sarana 3R sekarang visible untuk semua plant (NPK1, NPK2, ALL)",
+    ],
+  },
+  {
     version: "3.3.0",
     date: "5 Maret 2026",
     title: "Sarana 3R & Reorganisasi Menu Laporan",
