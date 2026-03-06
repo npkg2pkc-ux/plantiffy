@@ -46,6 +46,7 @@
  * - rekap_bbm, rekap_bbm_NPK1
  * - pemakaian_bahan_baku, pemakaian_bahan_baku_NPK1
  * - riksa_timb_portabel (NPK2 only - NO NPK1 version)
+ * - personil (shared - admin only)
  * - akun
  * - rkap
  * - approval_requests
@@ -423,6 +424,19 @@ const SHEET_HEADERS = {
     "jumlah",
     "keterangan",
     "created_at",
+  ],
+  // Data Personil (admin only)
+  personil: [
+    "id",
+    "noBadge",
+    "idCardPhoto",
+    "jabatan",
+    "nama",
+    "tempatTanggalLahir",
+    "alamat",
+    "noTelepon",
+    "mulaiBekerja",
+    "status",
   ],
   // Sarana 3R
   sarana_3r: [
