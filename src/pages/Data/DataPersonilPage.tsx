@@ -211,6 +211,52 @@ const DataPersonilPage = () => {
     setCameraReady(false);
   }, []);
 
+  // Compress image to fit Google Sheets 50k char cell limit
+  const compressImage = useCallback((dataUrl: string, maxChars = 48000): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const cv = document.createElement("canvas");
+        const ctx = cv.getContext("2d")!;
+
+        // Scale down if needed — target max dimension
+        const MAX_DIM = 600;
+        let w = img.width;
+        let h = img.height;
+        if (w > MAX_DIM || h > MAX_DIM) {
+          const scale = MAX_DIM / Math.max(w, h);
+          w = Math.round(w * scale);
+          h = Math.round(h * scale);
+        }
+        cv.width = w;
+        cv.height = h;
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(img, 0, 0, w, h);
+
+        // Reduce quality until it fits
+        let quality = 0.7;
+        let result = cv.toDataURL("image/jpeg", quality);
+        while (result.length > maxChars && quality > 0.1) {
+          quality -= 0.1;
+          result = cv.toDataURL("image/jpeg", quality);
+        }
+
+        // If still too large, scale down further
+        if (result.length > maxChars) {
+          const ratio = Math.sqrt(maxChars / result.length) * 0.9;
+          cv.width = Math.round(w * ratio);
+          cv.height = Math.round(h * ratio);
+          ctx.drawImage(img, 0, 0, cv.width, cv.height);
+          result = cv.toDataURL("image/jpeg", 0.5);
+        }
+
+        resolve(result);
+      };
+      img.src = dataUrl;
+    });
+  }, []);
+
   // Capture photo with auto-crop to guide overlay area
   const capturePhoto = useCallback(() => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -274,10 +320,12 @@ const DataPersonilPage = () => {
     context.imageSmoothingQuality = "high";
     context.drawImage(video, srcX, srcY, srcW, srcH, 0, 0, canvas.width, canvas.height);
 
-    const imageData = canvas.toDataURL("image/jpeg", 0.9);
-    setCapturedImage(imageData);
+    const rawData = canvas.toDataURL("image/jpeg", 0.8);
+    compressImage(rawData).then((compressed) => {
+      setCapturedImage(compressed);
+    });
     stopCamera();
-  }, [stopCamera, photoTarget]);
+  }, [stopCamera, photoTarget, compressImage]);
 
   // Switch camera
   const switchCamera = useCallback(() => {
@@ -302,9 +350,10 @@ const DataPersonilPage = () => {
     }
 
     const reader = new FileReader();
-    reader.onload = (ev) => {
-      const imageData = ev.target?.result as string;
-      setForm((prev) => ({ ...prev, [target]: imageData }));
+    reader.onload = async (ev) => {
+      const rawData = ev.target?.result as string;
+      const compressed = await compressImage(rawData);
+      setForm((prev) => ({ ...prev, [target]: compressed }));
     };
     reader.readAsDataURL(file);
   };

@@ -43,6 +43,19 @@ interface VersionEntry {
 
 const versionHistory: VersionEntry[] = [
   {
+    version: "3.4.4",
+    date: "6 Maret 2026",
+    title: "Fix — Kompresi Foto untuk Google Sheets",
+    type: "patch",
+    icon: <Bug className="h-5 w-5" />,
+    highlights: [
+      "Fix: error 'more than 50000 characters in a single cell' saat simpan foto",
+      "Auto compress: foto otomatis di-resize & dikompres agar muat di Google Sheets",
+      "Berlaku untuk kamera maupun upload file",
+      "Kualitas visual tetap terjaga dengan resolusi maks 600px",
+    ],
+  },
+  {
     version: "3.4.3",
     date: "6 Maret 2026",
     title: "Kamera — Auto Crop Sesuai Garis Panduan",
