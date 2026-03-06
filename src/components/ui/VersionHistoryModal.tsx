@@ -43,6 +43,18 @@ interface VersionEntry {
 
 const versionHistory: VersionEntry[] = [
   {
+    version: "3.4.1",
+    date: "6 Maret 2026",
+    title: "Fix Data Personil — Sidebar Visibility",
+    type: "patch",
+    icon: <Bug className="h-5 w-5" />,
+    highlights: [
+      "Fix: Data Personil tidak muncul di sidebar untuk Admin NPK1/NPK2 karena filter plant",
+      "Data Personil sekarang visible untuk semua admin (NPK1, NPK2, ALL)",
+      "Backend Code.gs: tambah sheet headers personil untuk CRUD ke Google Sheets",
+    ],
+  },
+  {
     version: "3.4.0",
     date: "6 Maret 2026",
     title: "Data Personil — Manajemen Karyawan Plant NPK",

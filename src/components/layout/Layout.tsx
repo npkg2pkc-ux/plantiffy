@@ -790,7 +790,7 @@ const VersionBadge = () => {
         title="Klik untuk melihat perjalanan versi"
       >
         <History className="h-3 w-3" />
-        v3.4.0
+        v3.4.1
       </button>
       <VersionHistoryModal
         isOpen={showVersionHistory}
@@ -925,7 +925,8 @@ const Sidebar = () => {
           if (userPlant === "NPK1") {
             // NPK1: Only show NPK1 data forms (exclude Riksa Timb Portabel and Inventaris Material)
             filteredChildren = filteredChildren.filter((child) =>
-              child.path.includes("npk1")
+              child.path.includes("npk1") ||
+              (child.path === "/data/personil" && userRole === "admin")
             );
           } else if (userPlant === "NPK2") {
             // NPK2: Show NPK2 data forms AND Riksa Timb Portabel + Inventaris Material
@@ -933,7 +934,8 @@ const Sidebar = () => {
               (child) =>
                 child.path.includes("npk2") ||
                 child.path === "/data/riksa-timb-portabel" ||
-                child.path === "/data/inventaris"
+                child.path === "/data/inventaris" ||
+                (child.path === "/data/personil" && userRole === "admin")
             );
           }
           // Admin (ALL) sees all
