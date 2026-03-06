@@ -43,6 +43,19 @@ interface VersionEntry {
 
 const versionHistory: VersionEntry[] = [
   {
+    version: "3.4.3",
+    date: "6 Maret 2026",
+    title: "Kamera — Auto Crop Sesuai Garis Panduan",
+    type: "patch",
+    icon: <Sparkles className="h-5 w-5" />,
+    highlights: [
+      "Auto crop: foto otomatis ter-crop sesuai garis panduan overlay saat mengambil foto",
+      "ID Card: hasil foto langsung terpotong sesuai bingkai kotak",
+      "Foto Personil: hasil foto langsung terpotong sesuai bingkai bulat (square crop)",
+      "Mendukung object-cover: perhitungan crop memperhitungkan scaling kamera",
+    ],
+  },
+  {
     version: "3.4.2",
     date: "6 Maret 2026",
     title: "Data Personil — Foto Personil Terpisah",

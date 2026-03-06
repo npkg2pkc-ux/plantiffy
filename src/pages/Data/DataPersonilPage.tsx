@@ -211,7 +211,7 @@ const DataPersonilPage = () => {
     setCameraReady(false);
   }, []);
 
-  // Capture photo
+  // Capture photo with auto-crop to guide overlay area
   const capturePhoto = useCallback(() => {
     if (!videoRef.current || !canvasRef.current) return;
     const video = videoRef.current;
@@ -219,16 +219,65 @@ const DataPersonilPage = () => {
     const context = canvas.getContext("2d");
     if (!context) return;
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    const vw = video.videoWidth;
+    const vh = video.videoHeight;
+
+    // Get the displayed container size to calculate crop proportions
+    const container = video.parentElement;
+    if (!container) return;
+    const cw = container.clientWidth;
+    const ch = container.clientHeight;
+
+    // The overlay guide uses inset-4 (16px) from all sides of the container
+    const insetPx = 16;
+    const guideLeft = insetPx / cw;
+    const guideTop = insetPx / ch;
+    const guideWidth = (cw - insetPx * 2) / cw;
+    const guideHeight = (ch - insetPx * 2) / ch;
+
+    // object-cover: video is scaled to cover the container, some parts may be clipped
+    const videoAspect = vw / vh;
+    const containerAspect = cw / ch;
+
+    let srcX: number, srcY: number, srcW: number, srcH: number;
+
+    if (videoAspect > containerAspect) {
+      // Video is wider — left/right are clipped
+      const visibleWidth = vh * containerAspect;
+      const offsetX = (vw - visibleWidth) / 2;
+      srcX = offsetX + guideLeft * visibleWidth;
+      srcY = guideTop * vh;
+      srcW = guideWidth * visibleWidth;
+      srcH = guideHeight * vh;
+    } else {
+      // Video is taller — top/bottom are clipped
+      const visibleHeight = vw / containerAspect;
+      const offsetY = (vh - visibleHeight) / 2;
+      srcX = guideLeft * vw;
+      srcY = offsetY + guideTop * visibleHeight;
+      srcW = guideWidth * vw;
+      srcH = guideHeight * visibleHeight;
+    }
+
+    // For foto personil (circle), crop square from center of guide area
+    if (photoTarget === "foto") {
+      const side = Math.min(srcW, srcH);
+      srcX = srcX + (srcW - side) / 2;
+      srcY = srcY + (srcH - side) / 2;
+      srcW = side;
+      srcH = side;
+    }
+
+    canvas.width = Math.round(srcW);
+    canvas.height = Math.round(srcH);
     context.imageSmoothingEnabled = true;
     context.imageSmoothingQuality = "high";
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    context.drawImage(video, srcX, srcY, srcW, srcH, 0, 0, canvas.width, canvas.height);
 
     const imageData = canvas.toDataURL("image/jpeg", 0.9);
     setCapturedImage(imageData);
     stopCamera();
-  }, [stopCamera]);
+  }, [stopCamera, photoTarget]);
 
   // Switch camera
   const switchCamera = useCallback(() => {
