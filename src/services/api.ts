@@ -426,6 +426,9 @@ export const SHEETS = {
   // Inventaris Material Consumable
   MATERIALS: "materials",
   MATERIAL_TRANSACTIONS: "material_transactions",
+
+  // Data Personil
+  PERSONIL: "personil",
 } as const;
 
 // ============================================

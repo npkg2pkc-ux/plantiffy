@@ -755,6 +755,7 @@ const navItems: NavItemProps[] = [
       { name: "Rekap BBM NPK1", path: "/data/rekap-bbm-npk1" },
       { name: "Rekap BBM NPK2", path: "/data/rekap-bbm-npk2" },
       { name: "Riksa Timb Portabel", path: "/data/riksa-timb-portabel" },
+      { name: "Data Personil", path: "/data/personil" },
     ],
   },
   {
@@ -789,7 +790,7 @@ const VersionBadge = () => {
         title="Klik untuk melihat perjalanan versi"
       >
         <History className="h-3 w-3" />
-        v3.3.1
+        v3.4.0
       </button>
       <VersionHistoryModal
         isOpen={showVersionHistory}
@@ -912,16 +913,23 @@ const Sidebar = () => {
 
         // Filter Data menu based on plant
         if (item.name === "Data" && item.children) {
-          let filteredChildren = item.children;
+          // First, filter out admin-only items for non-admin users
+          let filteredChildren = item.children.filter((child) => {
+            // Data Personil is admin-only
+            if (child.path === "/data/personil") {
+              return userRole === "admin";
+            }
+            return true;
+          });
 
           if (userPlant === "NPK1") {
             // NPK1: Only show NPK1 data forms (exclude Riksa Timb Portabel and Inventaris Material)
-            filteredChildren = item.children.filter((child) =>
+            filteredChildren = filteredChildren.filter((child) =>
               child.path.includes("npk1")
             );
           } else if (userPlant === "NPK2") {
             // NPK2: Show NPK2 data forms AND Riksa Timb Portabel + Inventaris Material
-            filteredChildren = item.children.filter(
+            filteredChildren = filteredChildren.filter(
               (child) =>
                 child.path.includes("npk2") ||
                 child.path === "/data/riksa-timb-portabel" ||

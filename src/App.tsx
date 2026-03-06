@@ -41,6 +41,7 @@ import {
   RekapBBMPage,
   RiksaTimbPortabelPage,
   InventarisPage,
+  DataPersonilPage,
 } from "@/pages/Data";
 import { AkunPage, RKAPPage, UsersPage, ApprovalPage } from "@/pages/Settings";
 
@@ -89,6 +90,15 @@ const UsersPageRoute = ({ children }: { children: ReactNode }) => {
     return <Navigate to="/dashboard" replace />;
   }
 
+  return <>{children}</>;
+};
+
+// Admin Only Route Guard
+const AdminRoute = ({ children }: { children: ReactNode }) => {
+  const { user } = useAuthStore();
+  if (user?.role !== "admin") {
+    return <Navigate to="/dashboard" replace />;
+  }
   return <>{children}</>;
 };
 
@@ -249,6 +259,14 @@ function App() {
             <Route
               path="riksa-timb-portabel"
               element={<RiksaTimbPortabelPage />}
+            />
+            <Route
+              path="personil"
+              element={
+                <AdminRoute>
+                  <DataPersonilPage />
+                </AdminRoute>
+              }
             />
             {/* Legacy routes for backwards compatibility */}
             <Route path="perta" element={<PertaPage />} />

@@ -22,6 +22,7 @@ import {
   ClipboardList,
   FileSpreadsheet,
   Palette,
+  UserCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +42,23 @@ interface VersionEntry {
 }
 
 const versionHistory: VersionEntry[] = [
+  {
+    version: "3.4.0",
+    date: "6 Maret 2026",
+    title: "Data Personil — Manajemen Karyawan Plant NPK",
+    type: "minor",
+    icon: <UserCheck className="h-5 w-5" />,
+    highlights: [
+      "Halaman baru: Data Personil di menu Data — kelola data karyawan Plant NPK",
+      "Form isian lengkap: No Badge, ID Card (foto), Jabatan, Nama, TTL, Alamat, No Telepon, Mulai Bekerja, Status",
+      "Fitur foto ID Card: ambil foto langsung dari kamera atau upload file gambar",
+      "Aksi View detail personil dengan tampilan profil modern dan preview foto ID Card",
+      "Filter berdasarkan status: Aktif, Mutasi, Tidak Aktif",
+      "Summary cards: Total Personil, Aktif, Mutasi, Tidak Aktif",
+      "Hanya tampil untuk role Admin (admin-only page)",
+      "Route guard: non-admin otomatis dialihkan ke Dashboard",
+    ],
+  },
   {
     version: "3.3.1",
     date: "5 Maret 2026",

@@ -552,6 +552,21 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
+// Personil (Data Karyawan)
+export interface Personil {
+  id?: string;
+  noBadge: string;
+  idCardPhoto: string;
+  jabatan: string;
+  nama: string;
+  tempatTanggalLahir: string;
+  alamat: string;
+  noTelepon: string;
+  mulaiBekerja: string;
+  status: "Aktif" | "Mutasi" | "Tidak Aktif";
+  _plant?: string;
+}
+
 // Print Config
 export interface PrintConfig {
   startDate: string;
