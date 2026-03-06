@@ -980,6 +980,7 @@ const DashboardPage = () => {
   // Pemakaian BB dashboard states
   const [pemakaianViewMode, setPemakaianViewMode] = useState<"chart" | "shift" | "trend">("chart");
   const [pemakaianSelectedMaterial, setPemakaianSelectedMaterial] = useState<string | null>(null);
+  const [pemakaianMonthFilter, setPemakaianMonthFilter] = useState<number | "all">("all");
 
   const [dashboardData, setDashboardData] = useState<DashboardData>({
     produksiNPK: [],
@@ -2340,7 +2341,13 @@ const DashboardPage = () => {
           { key: "makeupIjp", label: "MAKEUP IJP", unit: "pcs", color: "#84cc16" },
         ];
 
-        const pemakaianData = filteredData.pemakaianBB;
+        const pemakaianDataAll = filteredData.pemakaianBB;
+        const pemakaianData = pemakaianMonthFilter === "all"
+          ? pemakaianDataAll
+          : pemakaianDataAll.filter((d) => {
+              if (!d.tanggal) return false;
+              return new Date(d.tanggal).getMonth() === pemakaianMonthFilter;
+            });
         const totalRecords = pemakaianData.length;
 
         // Calculate totals per material
@@ -2435,27 +2442,44 @@ const DashboardPage = () => {
                     <div>
                       <h3 className="font-bold text-base">
                         Pemakaian Bahan Baku {dashboardYear}
+                        {pemakaianMonthFilter !== "all" && (
+                          <span className="text-teal-100 font-normal"> — {MONTH_SHORT[pemakaianMonthFilter as number]}</span>
+                        )}
                       </h3>
                       <p className="text-teal-100 text-xs">
                         {totalRecords} record dari {pemakaianData.filter((d) => d.shift === "Malam").length + pemakaianData.filter((d) => d.shift === "Pagi").length + pemakaianData.filter((d) => d.shift === "Sore").length} shift
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    {(["chart", "shift", "trend"] as const).map((mode) => (
-                      <button
-                        key={mode}
-                        onClick={() => setPemakaianViewMode(mode)}
-                        className={cn(
-                          "px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200",
-                          pemakaianViewMode === mode
-                            ? "bg-white/25 shadow-lg backdrop-blur-sm border border-white/20"
-                            : "bg-white/10 hover:bg-white/15 border border-transparent"
-                        )}
-                      >
-                        {mode === "chart" ? "📊 Material" : mode === "shift" ? "🔄 Shift" : "📈 Trend"}
-                      </button>
-                    ))}
+                  <div className="flex items-center gap-2">
+                    {/* Month Filter */}
+                    <select
+                      value={pemakaianMonthFilter === "all" ? "all" : String(pemakaianMonthFilter)}
+                      onChange={(e) => setPemakaianMonthFilter(e.target.value === "all" ? "all" : Number(e.target.value))}
+                      className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-white/15 backdrop-blur-sm border border-white/10 text-white appearance-none cursor-pointer hover:bg-white/20 transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-white/30 pr-6"
+                      style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 6px center' }}
+                    >
+                      <option value="all" className="text-dark-900">Semua Bulan</option>
+                      {MONTH_SHORT.map((m, i) => (
+                        <option key={i} value={i} className="text-dark-900">{m}</option>
+                      ))}
+                    </select>
+                    <div className="flex items-center gap-1.5">
+                      {(["chart", "shift", "trend"] as const).map((mode) => (
+                        <button
+                          key={mode}
+                          onClick={() => setPemakaianViewMode(mode)}
+                          className={cn(
+                            "px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200",
+                            pemakaianViewMode === mode
+                              ? "bg-white/25 shadow-lg backdrop-blur-sm border border-white/20"
+                              : "bg-white/10 hover:bg-white/15 border border-transparent"
+                          )}
+                        >
+                          {mode === "chart" ? "📊 Material" : mode === "shift" ? "🔄 Shift" : "📈 Trend"}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 

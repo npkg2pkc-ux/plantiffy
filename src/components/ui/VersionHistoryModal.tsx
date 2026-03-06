@@ -43,6 +43,19 @@ interface VersionEntry {
 
 const versionHistory: VersionEntry[] = [
   {
+    version: "3.4.5",
+    date: "6 Maret 2026",
+    title: "Dashboard — Filter Bulan Pemakaian Bahan Baku",
+    type: "minor",
+    icon: <BarChart3 className="h-5 w-5" />,
+    highlights: [
+      "Filter bulan: dropdown filter bulan di section Pemakaian Bahan Baku dashboard",
+      "Default 'Semua Bulan' menampilkan data setahun penuh",
+      "Pilih bulan spesifik untuk melihat pemakaian material bulan tersebut",
+      "Filter berlaku untuk semua view mode (Material, Shift, Trend)",
+    ],
+  },
+  {
     version: "3.4.4",
     date: "6 Maret 2026",
     title: "Fix — Kompresi Foto untuk Google Sheets",
