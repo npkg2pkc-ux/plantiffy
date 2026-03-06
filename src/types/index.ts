@@ -556,6 +556,7 @@ export interface ApiResponse<T> {
 export interface Personil {
   id?: string;
   noBadge: string;
+  foto: string;
   idCardPhoto: string;
   jabatan: string;
   nama: string;

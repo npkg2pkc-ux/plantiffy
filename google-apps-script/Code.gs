@@ -429,6 +429,7 @@ const SHEET_HEADERS = {
   personil: [
     "id",
     "noBadge",
+    "foto",
     "idCardPhoto",
     "jabatan",
     "nama",

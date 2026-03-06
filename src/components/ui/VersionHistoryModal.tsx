@@ -43,6 +43,20 @@ interface VersionEntry {
 
 const versionHistory: VersionEntry[] = [
   {
+    version: "3.4.2",
+    date: "6 Maret 2026",
+    title: "Data Personil — Foto Personil Terpisah",
+    type: "minor",
+    icon: <Sparkles className="h-5 w-5" />,
+    highlights: [
+      "Foto Personil (wajah) terpisah dari Foto ID Card",
+      "Detail modal header menampilkan foto wajah, bukan ID Card",
+      "Form: dua kolom upload terpisah — Foto Personil & Foto ID Card",
+      "Kamera: guide overlay dinamis (bulat untuk wajah, kotak untuk ID Card)",
+      "Tabel: avatar thumbnail menggunakan foto personil",
+    ],
+  },
+  {
     version: "3.4.1",
     date: "6 Maret 2026",
     title: "Fix Data Personil — Sidebar Visibility",

@@ -19,6 +19,7 @@ import {
   Briefcase,
   Calendar,
   BadgeCheck,
+  User,
 } from "lucide-react";
 import { useSaveShortcut, useDataWithLogging } from "@/hooks";
 import {
@@ -53,6 +54,7 @@ const STATUS_OPTIONS = [
 
 const initialFormState: Personil = {
   noBadge: "",
+  foto: "",
   idCardPhoto: "",
   jabatan: "",
   nama: "",
@@ -86,9 +88,11 @@ const DataPersonilPage = () => {
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [cameraReady, setCameraReady] = useState(false);
   const [facingMode, setFacingMode] = useState<"environment" | "user">("environment");
+  const [photoTarget, setPhotoTarget] = useState<"foto" | "idCardPhoto">("idCardPhoto");
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const fotoFileInputRef = useRef<HTMLInputElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
   // Log modal state
@@ -234,7 +238,7 @@ const DataPersonilPage = () => {
   }, [facingMode, startCamera]);
 
   // Handle file upload
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, target: "foto" | "idCardPhoto") => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -250,13 +254,15 @@ const DataPersonilPage = () => {
 
     const reader = new FileReader();
     reader.onload = (ev) => {
-      setCapturedImage(ev.target?.result as string);
+      const imageData = ev.target?.result as string;
+      setForm((prev) => ({ ...prev, [target]: imageData }));
     };
     reader.readAsDataURL(file);
   };
 
   // Open camera modal
-  const openCameraModal = () => {
+  const openCameraModal = (target: "foto" | "idCardPhoto") => {
+    setPhotoTarget(target);
     setCapturedImage(null);
     setCameraError(null);
     setShowCameraModal(true);
@@ -272,7 +278,7 @@ const DataPersonilPage = () => {
   // Confirm captured photo
   const confirmPhoto = () => {
     if (capturedImage) {
-      setForm((prev) => ({ ...prev, idCardPhoto: capturedImage }));
+      setForm((prev) => ({ ...prev, [photoTarget]: capturedImage }));
     }
     closeCameraModal();
   };
@@ -284,11 +290,6 @@ const DataPersonilPage = () => {
 
     try {
       const formData = { ...form };
-
-      // If there's a new captured image, include it
-      if (capturedImage && capturedImage !== form.idCardPhoto) {
-        formData.idCardPhoto = capturedImage;
-      }
 
       if (editingId) {
         const dataToUpdate = { ...formData, id: editingId };
@@ -340,7 +341,7 @@ const DataPersonilPage = () => {
   // Handle edit
   const handleEdit = (item: Personil) => {
     setForm(item);
-    setCapturedImage(item.idCardPhoto || null);
+    setCapturedImage(null);
     setEditingId(item.id || null);
     setShowForm(true);
   };
@@ -440,10 +441,10 @@ const DataPersonilPage = () => {
       sortable: true,
       render: (value: unknown, row: Personil) => (
         <div className="flex items-center gap-3">
-          {row.idCardPhoto ? (
+          {row.foto ? (
             <div className="h-8 w-8 rounded-full overflow-hidden ring-2 ring-primary-200 dark:ring-primary-800 flex-shrink-0">
               <img
-                src={row.idCardPhoto}
+                src={row.foto}
                 alt={row.nama}
                 className="h-full w-full object-cover"
               />
@@ -664,70 +665,81 @@ const DataPersonilPage = () => {
         size="lg"
       >
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* ID Card Photo Section */}
-          <div className="space-y-3">
-            <label className="text-sm font-medium text-dark-700 dark:text-dark-300 flex items-center gap-2">
-              <CreditCard className="h-4 w-4" />
-              Foto ID Card
-            </label>
-            <div className="flex flex-col sm:flex-row items-start gap-4">
-              {/* Photo Preview */}
-              <div className="relative group">
-                {capturedImage || form.idCardPhoto ? (
-                  <div className="relative w-48 h-32 rounded-xl overflow-hidden border-2 border-primary-200 dark:border-primary-800 shadow-md">
-                    <img
-                      src={capturedImage || form.idCardPhoto}
-                      alt="ID Card"
-                      className="w-full h-full object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCapturedImage(null);
-                        setForm((prev) => ({ ...prev, idCardPhoto: "" }));
-                      }}
-                      className="absolute top-1 right-1 p-1 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="w-48 h-32 rounded-xl border-2 border-dashed border-dark-300 dark:border-dark-600 flex flex-col items-center justify-center text-dark-400 dark:text-dark-500 bg-dark-50 dark:bg-dark-800/50">
-                    <CreditCard className="h-8 w-8 mb-1" />
-                    <span className="text-xs">Belum ada foto</span>
-                  </div>
-                )}
+          {/* Photo Uploads - Two columns */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            {/* Foto Personil */}
+            <div className="space-y-3">
+              <label className="text-sm font-medium text-dark-700 dark:text-dark-300 flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Foto Personil
+              </label>
+              <div className="flex flex-col items-center gap-3">
+                <div className="relative group">
+                  {form.foto ? (
+                    <div className="relative w-28 h-28 rounded-full overflow-hidden border-3 border-primary-200 dark:border-primary-800 shadow-lg">
+                      <img src={form.foto} alt="Foto" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setForm((prev) => ({ ...prev, foto: "" }))}
+                        className="absolute top-0 right-0 p-1 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-28 h-28 rounded-full border-2 border-dashed border-dark-300 dark:border-dark-600 flex flex-col items-center justify-center text-dark-400 dark:text-dark-500 bg-dark-50 dark:bg-dark-800/50">
+                      <User className="h-8 w-8 mb-1" />
+                      <span className="text-[10px]">Foto Diri</span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => openCameraModal("foto")} className="text-xs">
+                    <Camera className="h-3 w-3 mr-1" /> Kamera
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => fotoFileInputRef.current?.click()} className="text-xs">
+                    <Upload className="h-3 w-3 mr-1" /> Upload
+                  </Button>
+                  <input ref={fotoFileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, "foto")} />
+                </div>
               </div>
+            </div>
 
-              {/* Photo Buttons */}
-              <div className="flex flex-col gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={openCameraModal}
-                  className="text-sm"
-                >
-                  <Camera className="h-4 w-4 mr-2" />
-                  Ambil Foto
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="text-sm"
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload File
-                </Button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleFileUpload}
-                />
+            {/* Foto ID Card */}
+            <div className="space-y-3">
+              <label className="text-sm font-medium text-dark-700 dark:text-dark-300 flex items-center gap-2">
+                <CreditCard className="h-4 w-4" />
+                Foto ID Card
+              </label>
+              <div className="flex flex-col items-center gap-3">
+                <div className="relative group">
+                  {form.idCardPhoto ? (
+                    <div className="relative w-44 h-28 rounded-xl overflow-hidden border-2 border-primary-200 dark:border-primary-800 shadow-lg">
+                      <img src={form.idCardPhoto} alt="ID Card" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setForm((prev) => ({ ...prev, idCardPhoto: "" }))}
+                        className="absolute top-1 right-1 p-1 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-44 h-28 rounded-xl border-2 border-dashed border-dark-300 dark:border-dark-600 flex flex-col items-center justify-center text-dark-400 dark:text-dark-500 bg-dark-50 dark:bg-dark-800/50">
+                      <CreditCard className="h-8 w-8 mb-1" />
+                      <span className="text-[10px]">ID Card</span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => openCameraModal("idCardPhoto")} className="text-xs">
+                    <Camera className="h-3 w-3 mr-1" /> Kamera
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="text-xs">
+                    <Upload className="h-3 w-3 mr-1" /> Upload
+                  </Button>
+                  <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, "idCardPhoto")} />
+                </div>
               </div>
             </div>
           </div>
@@ -830,7 +842,7 @@ const DataPersonilPage = () => {
       <Modal
         isOpen={showCameraModal}
         onClose={closeCameraModal}
-        title="Foto ID Card"
+        title={photoTarget === "foto" ? "Foto Personil" : "Foto ID Card"}
         size="lg"
       >
         <div className="space-y-4">
@@ -894,10 +906,10 @@ const DataPersonilPage = () => {
                     </div>
                   </div>
                 )}
-                {/* ID Card overlay guide */}
-                <div className="absolute inset-4 border-2 border-dashed border-white/40 rounded-xl pointer-events-none">
+                {/* Camera overlay guide */}
+                <div className={`absolute inset-4 border-2 border-dashed border-white/40 ${photoTarget === "foto" ? "rounded-full" : "rounded-xl"} pointer-events-none`}>
                   <div className="absolute top-2 left-1/2 -translate-x-1/2 text-white/60 text-xs bg-black/40 px-3 py-1 rounded-full">
-                    Posisikan ID Card di dalam bingkai
+                    {photoTarget === "foto" ? "Posisikan wajah di dalam bingkai" : "Posisikan ID Card di dalam bingkai"}
                   </div>
                 </div>
               </div>
@@ -938,16 +950,16 @@ const DataPersonilPage = () => {
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
               <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
               <div className="relative flex flex-col sm:flex-row items-center gap-5">
-                {selectedPersonil.idCardPhoto ? (
-                  <div className="w-20 h-20 rounded-2xl overflow-hidden ring-4 ring-white/30 shadow-xl flex-shrink-0">
+                {selectedPersonil.foto ? (
+                  <div className="w-20 h-20 rounded-full overflow-hidden ring-4 ring-white/30 shadow-xl flex-shrink-0">
                     <img
-                      src={selectedPersonil.idCardPhoto}
+                      src={selectedPersonil.foto}
                       alt={selectedPersonil.nama}
                       className="w-full h-full object-cover"
                     />
                   </div>
                 ) : (
-                  <div className="w-20 h-20 rounded-2xl bg-white/20 flex items-center justify-center ring-4 ring-white/30 flex-shrink-0">
+                  <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center ring-4 ring-white/30 flex-shrink-0">
                     <span className="text-3xl font-bold">
                       {selectedPersonil.nama?.charAt(0)?.toUpperCase() || "?"}
                     </span>
