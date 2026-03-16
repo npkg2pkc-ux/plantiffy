@@ -345,9 +345,11 @@ const SHEET_HEADERS = {
     "clayBucket",
     "pewarna",
     "coatingOilLigno",
+    "dolomite",
     "riject",
-    "tinta",
     "rekon",
+    "ga",
+    "tinta",
     "makeupIjp",
   ],
   riksa_timb_portabel: [
@@ -2162,6 +2164,8 @@ function onOpen() {
     .addItem("🔑 Fill Empty IDs - All Sheets", "fillEmptyIdsAllSheets")
     .addItem("🔑 Fill Empty IDs - Pemakaian BB", "fillEmptyIdsPemakaianBB")
     .addSeparator()
+    .addItem("🚀 Migrasi Pemakaian BB (tambah dolomite & ga)", "migratePemakaianBahanBakuHeaders")
+    .addSeparator()
     .addItem("🩺 Diagnose Bahan Baku NPK", "diagnoseBahanBakuNPK")
     .addItem(
       "🧹 Cleanup Empty Rows - Bahan Baku NPK",
@@ -2219,6 +2223,114 @@ function fillEmptyIdsPemakaianBB() {
   SpreadsheetApp.getActiveSpreadsheet().toast(
     "Berhasil mengisi " + totalFilled + " ID kosong di pemakaian_bahan_baku!",
     "✅ Selesai",
+    5
+  );
+}
+
+/**
+ * Migration: Add new columns (dolomite, ga) to pemakaian_bahan_baku sheets
+ * This safely appends new header columns at the correct positions
+ * without disrupting existing data.
+ * 
+ * Run this ONCE after deploying the new version.
+ */
+function migratePemakaianBahanBakuHeaders() {
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  var sheetNames = ["pemakaian_bahan_baku", "pemakaian_bahan_baku_NPK1"];
+  var expectedHeaders = SHEET_HEADERS["pemakaian_bahan_baku"];
+  
+  sheetNames.forEach(function(sheetName) {
+    var sheet = spreadsheet.getSheetByName(sheetName);
+    if (!sheet) {
+      Logger.log("Sheet " + sheetName + " not found, skipping.");
+      return;
+    }
+    
+    var lastCol = sheet.getLastColumn();
+    if (lastCol === 0) {
+      // Empty sheet - just write all headers
+      sheet.getRange(1, 1, 1, expectedHeaders.length).setValues([expectedHeaders]);
+      sheet.getRange(1, 1, 1, expectedHeaders.length).setFontWeight("bold");
+      sheet.setFrozenRows(1);
+      Logger.log("Added all headers to empty sheet " + sheetName);
+      return;
+    }
+    
+    var currentHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+    Logger.log("Current headers in " + sheetName + ": " + JSON.stringify(currentHeaders));
+    
+    // Find missing headers that need to be added
+    var missingHeaders = [];
+    for (var i = 0; i < expectedHeaders.length; i++) {
+      if (currentHeaders.indexOf(expectedHeaders[i]) === -1) {
+        missingHeaders.push({
+          header: expectedHeaders[i],
+          expectedIndex: i
+        });
+      }
+    }
+    
+    if (missingHeaders.length === 0) {
+      Logger.log("No missing headers in " + sheetName + " - already up to date!");
+      return;
+    }
+    
+    Logger.log("Missing headers in " + sheetName + ": " + JSON.stringify(missingHeaders.map(function(m) { return m.header; })));
+    
+    var lastRow = sheet.getLastRow();
+    
+    // For each missing header, insert it at the correct position
+    // We need to process from right to left to maintain correct indices
+    missingHeaders.sort(function(a, b) { return b.expectedIndex - a.expectedIndex; });
+    
+    for (var j = 0; j < missingHeaders.length; j++) {
+      var missing = missingHeaders[j];
+      // Find the correct column position based on expected order
+      // Look at current headers and find where this header should be inserted
+      var insertCol = lastCol + 1; // default: append at end
+      
+      // Find the position: after the last existing header that comes before this one in expected order
+      for (var k = missing.expectedIndex - 1; k >= 0; k--) {
+        var prevHeader = expectedHeaders[k];
+        var prevCol = -1;
+        var refreshedHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+        for (var c = 0; c < refreshedHeaders.length; c++) {
+          if (refreshedHeaders[c] === prevHeader) {
+            prevCol = c + 1; // 1-indexed
+            break;
+          }
+        }
+        if (prevCol !== -1) {
+          insertCol = prevCol + 1;
+          break;
+        }
+      }
+      
+      // Insert column
+      sheet.insertColumnAfter(insertCol - 1);
+      // Set header
+      sheet.getRange(1, insertCol).setValue(missing.header).setFontWeight("bold");
+      
+      // Fill existing data rows with 0 (empty/default)
+      if (lastRow > 1) {
+        var emptyValues = [];
+        for (var r = 0; r < lastRow - 1; r++) {
+          emptyValues.push([0]);
+        }
+        sheet.getRange(2, insertCol, lastRow - 1, 1).setValues(emptyValues);
+      }
+      
+      Logger.log("Inserted column '" + missing.header + "' at position " + insertCol + " in " + sheetName);
+    }
+    
+    SpreadsheetApp.flush();
+    Logger.log("Migration complete for " + sheetName + ". New headers: " + 
+      JSON.stringify(sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0]));
+  });
+  
+  SpreadsheetApp.getActiveSpreadsheet().toast(
+    "Migrasi pemakaian_bahan_baku selesai! Kolom dolomite & ga telah ditambahkan.",
+    "✅ Migrasi Selesai",
     5
   );
 }

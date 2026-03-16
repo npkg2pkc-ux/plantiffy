@@ -69,11 +69,13 @@ const MATERIAL_FIELDS = [
   { key: "clayJumbo", label: "Clay (Jumbo)", unit: "Jumbo" },
   { key: "clayBucket", label: "Clay (Bucket)", unit: "Bucket" },
   { key: "pewarna", label: "Pewarna", unit: "Bag" },
-  { key: "coatingOilLigno", label: "Coating Oil", unit: "Dus" },
-  { key: "riject", label: "Riject", unit: "Bucket" },
-  { key: "tinta", label: "Tinta", unit: "pcs" },
+  { key: "coatingOilLigno", label: "Coating Oil LIGNO", unit: "Dus" },
+  { key: "dolomite", label: "Dolomite", unit: "Bag" },
+  { key: "riject", label: "Reject", unit: "Bucket" },
   { key: "rekon", label: "Rekon", unit: "Ton" },
-  { key: "makeupIjp", label: "MAKEUP IJP", unit: "pcs" },
+  { key: "ga", label: "GA", unit: "Bag" },
+  { key: "tinta", label: "Tinta", unit: "pcs" },
+  { key: "makeupIjp", label: "Make Up", unit: "pcs" },
 ] as const;
 
 const initialFormState: PemakaianBahanBaku = {
@@ -87,10 +89,33 @@ const initialFormState: PemakaianBahanBaku = {
   clayBucket: 0,
   pewarna: 0,
   coatingOilLigno: 0,
+  dolomite: 0,
   riject: 0,
-  tinta: 0,
   rekon: 0,
+  ga: 0,
+  tinta: 0,
   makeupIjp: 0,
+};
+
+// Initial state for multi-shift form (Malam, Pagi, Sore)
+interface MultiShiftForm {
+  tanggal: string;
+  malam: Omit<PemakaianBahanBaku, 'tanggal' | 'shift' | '_plant' | 'id'>;
+  pagi: Omit<PemakaianBahanBaku, 'tanggal' | 'shift' | '_plant' | 'id'>;
+  sore: Omit<PemakaianBahanBaku, 'tanggal' | 'shift' | '_plant' | 'id'>;
+}
+
+const initialMaterialValues = {
+  urea: 0, dap: 0, kcl: 0, za: 0, clayJumbo: 0, clayBucket: 0,
+  pewarna: 0, coatingOilLigno: 0, dolomite: 0, riject: 0, rekon: 0,
+  ga: 0, tinta: 0, makeupIjp: 0,
+};
+
+const initialMultiShiftForm: MultiShiftForm = {
+  tanggal: getCurrentDate(),
+  malam: { ...initialMaterialValues },
+  pagi: { ...initialMaterialValues },
+  sore: { ...initialMaterialValues },
 };
 
 interface PemakaianBahanBakuPageProps {
@@ -108,6 +133,8 @@ const PemakaianBahanBakuPage = ({ plant }: PemakaianBahanBakuPageProps) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState<PemakaianBahanBaku>(initialFormState);
+  const [multiForm, setMultiForm] = useState<MultiShiftForm>(initialMultiShiftForm);
+  const [isMultiShiftMode, setIsMultiShiftMode] = useState(true);
   const [filterShift, setFilterShift] = useState("");
   const [selectedYear, setSelectedYear] = useState<string>(
     String(new Date().getFullYear())
@@ -203,6 +230,7 @@ const PemakaianBahanBakuPage = ({ plant }: PemakaianBahanBakuPageProps) => {
 
     try {
       if (editingId) {
+        // Edit mode: single record update
         const dataToUpdate = { ...form, id: editingId, _plant: plant };
         const updateResult = await updateWithLog<PemakaianBahanBaku>(
           "pemakaian_bahan_baku",
@@ -219,6 +247,55 @@ const PemakaianBahanBakuPage = ({ plant }: PemakaianBahanBakuPageProps) => {
         } else {
           throw new Error(updateResult.error || "Gagal mengupdate data");
         }
+      } else if (isMultiShiftMode) {
+        // Multi-shift mode: create up to 3 records
+        const shifts = [
+          { key: "malam" as const, label: "Malam" },
+          { key: "pagi" as const, label: "Pagi" },
+          { key: "sore" as const, label: "Sore" },
+        ];
+
+        const newItems: PemakaianBahanBaku[] = [];
+
+        for (const shift of shifts) {
+          const shiftData = multiForm[shift.key];
+          // Check if any material has a value > 0
+          const hasData = MATERIAL_FIELDS.some(
+            (f) => Number((shiftData as unknown as Record<string, unknown>)[f.key]) > 0
+          );
+          if (!hasData) continue;
+
+          const newData: PemakaianBahanBaku = {
+            tanggal: multiForm.tanggal,
+            shift: shift.label,
+            ...initialMaterialValues,
+            ...shiftData,
+            _plant: plant,
+          };
+
+          const createResult = await createWithLog<PemakaianBahanBaku>(
+            "pemakaian_bahan_baku",
+            newData
+          );
+          if (createResult.success && createResult.data) {
+            newItems.push({ ...createResult.data, _plant: plant });
+          } else {
+            throw new Error(
+              createResult.error || `Gagal menambah data shift ${shift.label}`
+            );
+          }
+        }
+
+        if (newItems.length === 0) {
+          throw new Error("Minimal satu shift harus memiliki data material");
+        }
+
+        setData((prev) =>
+          [...newItems, ...prev].sort(
+            (a, b) =>
+              new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime()
+          )
+        );
       } else {
         const newData = { ...form, _plant: plant };
         const createResult = await createWithLog<PemakaianBahanBaku>(
@@ -244,6 +321,7 @@ const PemakaianBahanBakuPage = ({ plant }: PemakaianBahanBakuPageProps) => {
       setShowForm(false);
       setEditingId(null);
       setForm(initialFormState);
+      setMultiForm(initialMultiShiftForm);
       setShowSuccess(true);
     } catch (error) {
       console.error("Error saving data:", error);
@@ -263,6 +341,7 @@ const PemakaianBahanBakuPage = ({ plant }: PemakaianBahanBakuPageProps) => {
     } else {
       setForm(item);
       setEditingId(item.id || null);
+      setIsMultiShiftMode(false);
       setShowForm(true);
     }
   };
@@ -541,7 +620,9 @@ const PemakaianBahanBakuPage = ({ plant }: PemakaianBahanBakuPageProps) => {
           <Button
             onClick={() => {
               setForm(initialFormState);
+              setMultiForm(initialMultiShiftForm);
               setEditingId(null);
+              setIsMultiShiftMode(true);
               setShowForm(true);
             }}
           >
@@ -884,58 +965,121 @@ const PemakaianBahanBakuPage = ({ plant }: PemakaianBahanBakuPageProps) => {
           setShowForm(false);
           setEditingId(null);
           setForm(initialFormState);
+          setMultiForm(initialMultiShiftForm);
         }}
         title={
           editingId
             ? "Edit Data Pemakaian Bahan Baku"
             : "Tambah Data Pemakaian Bahan Baku"
         }
+        size="lg"
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             label="Tanggal"
             type="date"
-            value={form.tanggal}
-            onChange={(e) => setForm({ ...form, tanggal: e.target.value })}
+            value={editingId ? form.tanggal : multiForm.tanggal}
+            onChange={(e) => {
+              if (editingId) {
+                setForm({ ...form, tanggal: e.target.value });
+              } else {
+                setMultiForm({ ...multiForm, tanggal: e.target.value });
+              }
+            }}
             required
           />
 
-          <Select
-            label="Shift"
-            value={form.shift}
-            onChange={(e) => setForm({ ...form, shift: e.target.value })}
-            options={SHIFT_OPTIONS}
-            placeholder="Pilih Shift"
-            required
-          />
+          {/* Edit mode: single shift */}
+          {editingId ? (
+            <>
+              <Select
+                label="Shift"
+                value={form.shift}
+                onChange={(e) => setForm({ ...form, shift: e.target.value })}
+                options={SHIFT_OPTIONS}
+                placeholder="Pilih Shift"
+                required
+              />
+              <div className="border-t border-dark-200 dark:border-dark-600 pt-4 mt-4">
+                <h4 className="font-semibold text-sm text-gray-700 dark:text-gray-300 mb-3">
+                  Jumlah Pemakaian per Bahan Baku
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {MATERIAL_FIELDS.map((field) => (
+                    <Input
+                      key={field.key}
+                      label={`${field.label} (${field.unit})`}
+                      type="number"
+                      step="any"
+                      min="0"
+                      value={
+                        (form as unknown as Record<string, unknown>)[field.key] as number || ""
+                      }
+                      onChange={(e) => {
+                        const val = e.target.value === "" ? 0 : parseFloat(e.target.value);
+                        setForm((prev) => ({
+                          ...prev,
+                          [field.key]: isNaN(val) ? 0 : val,
+                        }));
+                      }}
+                      placeholder="0"
+                    />
+                  ))}
+                </div>
+              </div>
+            </>
+          ) : (
+            /* Add mode: multi-shift (Malam → Pagi → Sore) */
+            <>
+              {(["malam", "pagi", "sore"] as const).map((shiftKey) => {
+                const shiftLabel = shiftKey === "malam" ? "Malam" : shiftKey === "pagi" ? "Pagi" : "Sore";
+                const shiftIcon = shiftKey === "malam" ? <Moon className="h-4 w-4" /> : shiftKey === "pagi" ? <Sun className="h-4 w-4" /> : <Sunset className="h-4 w-4" />;
+                const shiftColor = shiftKey === "malam"
+                  ? "from-indigo-500 to-indigo-600"
+                  : shiftKey === "pagi"
+                  ? "from-amber-500 to-amber-600"
+                  : "from-orange-500 to-orange-600";
 
-          <div className="border-t border-dark-200 dark:border-dark-600 pt-4 mt-4">
-            <h4 className="font-semibold text-sm text-gray-700 dark:text-gray-300 mb-3">
-              Jumlah Pemakaian per Bahan Baku
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {MATERIAL_FIELDS.map((field) => (
-                <Input
-                  key={field.key}
-                  label={`${field.label} (${field.unit})`}
-                  type="number"
-                  step="any"
-                  min="0"
-                  value={
-                    (form as unknown as Record<string, unknown>)[field.key] as number || ""
-                  }
-                  onChange={(e) => {
-                    const val = e.target.value === "" ? 0 : parseFloat(e.target.value);
-                    setForm((prev) => ({
-                      ...prev,
-                      [field.key]: isNaN(val) ? 0 : val,
-                    }));
-                  }}
-                  placeholder="0"
-                />
-              ))}
-            </div>
-          </div>
+                return (
+                  <div key={shiftKey} className="border border-dark-200 dark:border-dark-600 rounded-xl overflow-hidden">
+                    <div className={`bg-gradient-to-r ${shiftColor} px-4 py-2.5 flex items-center gap-2`}>
+                      <span className="text-white">{shiftIcon}</span>
+                      <h4 className="font-semibold text-sm text-white">
+                        Shift {shiftLabel}
+                      </h4>
+                    </div>
+                    <div className="p-4">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        {MATERIAL_FIELDS.map((field) => (
+                          <Input
+                            key={field.key}
+                            label={`${field.label} (${field.unit})`}
+                            type="number"
+                            step="any"
+                            min="0"
+                            value={
+                              (multiForm[shiftKey] as unknown as Record<string, unknown>)[field.key] as number || ""
+                            }
+                            onChange={(e) => {
+                              const val = e.target.value === "" ? 0 : parseFloat(e.target.value);
+                              setMultiForm((prev) => ({
+                                ...prev,
+                                [shiftKey]: {
+                                  ...prev[shiftKey],
+                                  [field.key]: isNaN(val) ? 0 : val,
+                                },
+                              }));
+                            }}
+                            placeholder="0"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </>
+          )}
 
           <div className="flex justify-end gap-3 pt-4">
             <Button
@@ -945,6 +1089,7 @@ const PemakaianBahanBakuPage = ({ plant }: PemakaianBahanBakuPageProps) => {
                 setShowForm(false);
                 setEditingId(null);
                 setForm(initialFormState);
+                setMultiForm(initialMultiShiftForm);
               }}
             >
               Batal

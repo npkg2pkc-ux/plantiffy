@@ -43,6 +43,21 @@ interface VersionEntry {
 
 const versionHistory: VersionEntry[] = [
   {
+    version: "3.5.0",
+    date: "16 Maret 2026",
+    title: "Pemakaian Bahan Baku — Material Baru & Input Multi-Shift",
+    type: "minor",
+    icon: <Database className="h-5 w-5" />,
+    highlights: [
+      "Material baru: Dolomite dan GA ditambahkan ke daftar bahan baku",
+      "Input multi-shift: satu modal untuk input Malam, Pagi, dan Sore sekaligus",
+      "Urutan input: Malam → Pagi → Sore → Simpan",
+      "Label update: Coating Oil → Coating Oil LIGNO, Riject → Reject, MAKEUP IJP → Make Up",
+      "Edit tetap per-shift (single record) seperti sebelumnya",
+      "Backend: migrasi kolom baru tanpa mengganggu data yang sudah ada",
+    ],
+  },
+  {
     version: "3.4.5",
     date: "6 Maret 2026",
     title: "Dashboard — Filter Bulan Pemakaian Bahan Baku",

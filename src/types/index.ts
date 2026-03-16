@@ -213,9 +213,11 @@ export interface PemakaianBahanBaku {
   clayBucket: number;
   pewarna: number;
   coatingOilLigno: number;
+  dolomite: number;
   riject: number;
-  tinta: number;
   rekon: number;
+  ga: number;
+  tinta: number;
   makeupIjp: number;
   _plant?: PlantType;
 }

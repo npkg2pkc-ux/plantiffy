@@ -2335,10 +2335,12 @@ const DashboardPage = () => {
           { key: "clayBucket", label: "Clay (Bucket)", unit: "Bucket", color: "#8b5cf6" },
           { key: "pewarna", label: "Pewarna", unit: "Bag", color: "#ec4899" },
           { key: "coatingOilLigno", label: "Coating Oil LIGNO", unit: "Dus", color: "#14b8a6" },
-          { key: "riject", label: "Riject", unit: "Bucket", color: "#f97316" },
-          { key: "tinta", label: "Tinta", unit: "pcs", color: "#a855f7" },
+          { key: "dolomite", label: "Dolomite", unit: "Bag", color: "#78716c" },
+          { key: "riject", label: "Reject", unit: "Bucket", color: "#f97316" },
           { key: "rekon", label: "Rekon", unit: "Ton", color: "#0ea5e9" },
-          { key: "makeupIjp", label: "MAKEUP IJP", unit: "pcs", color: "#84cc16" },
+          { key: "ga", label: "GA", unit: "Bag", color: "#65a30d" },
+          { key: "tinta", label: "Tinta", unit: "pcs", color: "#a855f7" },
+          { key: "makeupIjp", label: "Make Up", unit: "pcs", color: "#84cc16" },
         ];
 
         const pemakaianDataAll = filteredData.pemakaianBB;
