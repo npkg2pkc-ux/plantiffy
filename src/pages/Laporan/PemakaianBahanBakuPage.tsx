@@ -76,7 +76,7 @@ const MATERIAL_FIELDS = [
   { key: "ga", label: "GA", unit: "Bag" },
   { key: "tinta", label: "Tinta", unit: "pcs" },
   { key: "makeupIjp", label: "Make Up", unit: "pcs" },
-  { key: "kaptan", label: "Kaptan", unit: "Bag" },
+  { key: "kaptan", label: "Kaptan", unit: "Jumbo" },
 ] as const;
 
 const initialFormState: PemakaianBahanBaku = {
