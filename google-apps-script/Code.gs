@@ -351,6 +351,7 @@ const SHEET_HEADERS = {
     "ga",
     "tinta",
     "makeupIjp",
+    "kaptan",
   ],
   riksa_timb_portabel: [
     "id",
@@ -2164,7 +2165,7 @@ function onOpen() {
     .addItem("🔑 Fill Empty IDs - All Sheets", "fillEmptyIdsAllSheets")
     .addItem("🔑 Fill Empty IDs - Pemakaian BB", "fillEmptyIdsPemakaianBB")
     .addSeparator()
-    .addItem("🚀 Migrasi Pemakaian BB (tambah dolomite & ga)", "migratePemakaianBahanBakuHeaders")
+    .addItem("🚀 Migrasi Pemakaian BB (tambah dolomite, ga, kaptan)", "migratePemakaianBahanBakuHeaders")
     .addSeparator()
     .addItem("🩺 Diagnose Bahan Baku NPK", "diagnoseBahanBakuNPK")
     .addItem(
@@ -2329,7 +2330,7 @@ function migratePemakaianBahanBakuHeaders() {
   });
   
   SpreadsheetApp.getActiveSpreadsheet().toast(
-    "Migrasi pemakaian_bahan_baku selesai! Kolom dolomite & ga telah ditambahkan.",
+    "Migrasi pemakaian_bahan_baku selesai! Kolom dolomite, ga & kaptan telah ditambahkan.",
     "✅ Migrasi Selesai",
     5
   );

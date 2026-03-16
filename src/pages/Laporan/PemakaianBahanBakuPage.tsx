@@ -76,6 +76,7 @@ const MATERIAL_FIELDS = [
   { key: "ga", label: "GA", unit: "Bag" },
   { key: "tinta", label: "Tinta", unit: "pcs" },
   { key: "makeupIjp", label: "Make Up", unit: "pcs" },
+  { key: "kaptan", label: "Kaptan", unit: "Bag" },
 ] as const;
 
 const initialFormState: PemakaianBahanBaku = {
@@ -95,6 +96,7 @@ const initialFormState: PemakaianBahanBaku = {
   ga: 0,
   tinta: 0,
   makeupIjp: 0,
+  kaptan: 0,
 };
 
 // Initial state for multi-shift form (Malam, Pagi, Sore)
@@ -108,7 +110,7 @@ interface MultiShiftForm {
 const initialMaterialValues = {
   urea: 0, dap: 0, kcl: 0, za: 0, clayJumbo: 0, clayBucket: 0,
   pewarna: 0, coatingOilLigno: 0, dolomite: 0, riject: 0, rekon: 0,
-  ga: 0, tinta: 0, makeupIjp: 0,
+  ga: 0, tinta: 0, makeupIjp: 0, kaptan: 0,
 };
 
 const initialMultiShiftForm: MultiShiftForm = {

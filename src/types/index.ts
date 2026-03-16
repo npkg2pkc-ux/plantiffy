@@ -219,6 +219,7 @@ export interface PemakaianBahanBaku {
   ga: number;
   tinta: number;
   makeupIjp: number;
+  kaptan: number;
   _plant?: PlantType;
 }
 

@@ -43,6 +43,17 @@ interface VersionEntry {
 
 const versionHistory: VersionEntry[] = [
   {
+    version: "3.5.1",
+    date: "16 Maret 2026",
+    title: "Pemakaian Bahan Baku — Tambah Material Kaptan",
+    type: "patch",
+    icon: <Database className="h-5 w-5" />,
+    highlights: [
+      "Material baru: Kaptan (Bag) ditambahkan di bawah Make Up",
+      "Backend: kolom kaptan ditambahkan ke migrasi sheet",
+    ],
+  },
+  {
     version: "3.5.0",
     date: "16 Maret 2026",
     title: "Pemakaian Bahan Baku — Material Baru & Input Multi-Shift",

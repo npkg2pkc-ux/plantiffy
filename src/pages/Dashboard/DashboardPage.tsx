@@ -2341,6 +2341,7 @@ const DashboardPage = () => {
           { key: "ga", label: "GA", unit: "Bag", color: "#65a30d" },
           { key: "tinta", label: "Tinta", unit: "pcs", color: "#a855f7" },
           { key: "makeupIjp", label: "Make Up", unit: "pcs", color: "#84cc16" },
+          { key: "kaptan", label: "Kaptan", unit: "Bag", color: "#d97706" },
         ];
 
         const pemakaianDataAll = filteredData.pemakaianBB;
