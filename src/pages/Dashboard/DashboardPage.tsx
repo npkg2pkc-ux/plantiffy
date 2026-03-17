@@ -1818,24 +1818,26 @@ const DashboardPage = () => {
           />
         </div>
 
-        {/* Quick Access Cards */}
-        <div className="grid grid-cols-4 gap-3">
+        {/* Quick Access Cards — horizontal scroll */}
+        <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1 scroll-snap-x">
           {[
             { icon: Factory, label: "Produksi", color: "bg-blue-500", path: `/produksi/${effectivePlantFilter === "NPK1" ? "npk1" : "npk2"}` },
             { icon: Clock, label: "Downtime", color: "bg-red-500", path: `/laporan/downtime-${effectivePlantFilter === "NPK1" ? "npk1" : "npk2"}` },
             { icon: FileText, label: "Laporan", color: "bg-emerald-500", path: `/laporan/kop-${effectivePlantFilter === "NPK1" ? "npk1" : "npk2"}` },
             { icon: AlertTriangle, label: "Work Req", color: "bg-amber-500", path: `/data/work-request-${effectivePlantFilter === "NPK1" ? "npk1" : "npk2"}` },
+            { icon: Gauge, label: "Vibrasi", color: "bg-purple-500", path: `/data/vibrasi-${effectivePlantFilter === "NPK1" ? "npk1" : "npk2"}` },
+            { icon: Fuel, label: "BBM", color: "bg-orange-500", path: `/data/rekap-bbm-${effectivePlantFilter === "NPK1" ? "npk1" : "npk2"}` },
           ].map((item) => (
             <motion.button
               key={item.label}
               whileTap={{ scale: 0.92 }}
               onClick={() => navigate(item.path)}
-              className="flex flex-col items-center gap-1.5 p-3 bg-card rounded-2xl border border-border/40 shadow-sm active:shadow-none transition-all"
+              className="flex flex-col items-center gap-1.5 min-w-[72px] p-3 bg-card rounded-2xl border border-border/40 shadow-sm active:shadow-none transition-all flex-shrink-0"
             >
               <div className={cn("p-2.5 rounded-2xl text-white", item.color)}>
                 <item.icon className="h-5 w-5" />
               </div>
-              <span className="text-[11px] font-semibold text-foreground">{item.label}</span>
+              <span className="text-[10px] font-semibold text-foreground whitespace-nowrap">{item.label}</span>
             </motion.button>
           ))}
         </div>

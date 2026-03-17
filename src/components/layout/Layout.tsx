@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -794,7 +794,7 @@ const VersionBadge = () => {
         title="Klik untuk melihat perjalanan versi"
       >
         <History className="h-3 w-3" />
-        v3.6.0
+        v3.6.1
       </button>
       <VersionHistoryModal
         isOpen={showVersionHistory}
@@ -1181,6 +1181,150 @@ const Sidebar = () => {
   );
 };
 
+// ============================================
+// MOBILE SEARCH BAR — Functional search across pages
+// ============================================
+const MobileSearchBar = () => {
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const allPages = useMemo(() => {
+    const userPlant = user?.plant;
+    const userRole = user?.role || "";
+    const pages: { name: string; path: string; keywords: string[] }[] = [
+      { name: "Dashboard", path: "/dashboard", keywords: ["beranda", "home", "ringkasan", "kpi"] },
+    ];
+
+    // Produksi
+    const produksi = [
+      { name: "Produksi NPK Granul 1", path: "/produksi/npk1", keywords: ["produksi", "npk1", "granul", "plant 1"] },
+      { name: "Produksi NPK Granul 2", path: "/produksi/npk2", keywords: ["produksi", "npk2", "granul", "plant 2"] },
+      { name: "Produksi Blending", path: "/produksi/blending", keywords: ["blending", "retail", "campur"] },
+      { name: "Produksi NPK Mini", path: "/produksi/npk-mini", keywords: ["mini", "npk mini", "kecil"] },
+      { name: "Produksi Retail", path: "/produksi/retail", keywords: ["retail", "eceran"] },
+    ];
+    if (userPlant === "NPK1") pages.push(...produksi.filter(p => p.path === "/produksi/npk1" || p.path === "/produksi/retail"));
+    else if (userPlant === "NPK2") pages.push(...produksi.filter(p => ["/produksi/npk2", "/produksi/blending", "/produksi/npk-mini"].includes(p.path)));
+    else pages.push(...produksi);
+
+    // Laporan
+    const laporan = [
+      { name: "KOP NPK1", path: "/laporan/kop-npk1", keywords: ["kop", "laporan", "npk1"] },
+      { name: "KOP NPK2", path: "/laporan/kop-npk2", keywords: ["kop", "laporan", "npk2"] },
+      { name: "Downtime NPK1", path: "/laporan/downtime-npk1", keywords: ["downtime", "npk1", "mesin mati"] },
+      { name: "Downtime NPK2", path: "/laporan/downtime-npk2", keywords: ["downtime", "npk2", "mesin mati"] },
+      { name: "Timesheet Forklift NPK1", path: "/laporan/timesheet-forklift-npk1", keywords: ["forklift", "timesheet", "npk1"] },
+      { name: "Timesheet Forklift NPK2", path: "/laporan/timesheet-forklift-npk2", keywords: ["forklift", "timesheet", "npk2"] },
+      { name: "Timesheet Loader NPK1", path: "/laporan/timesheet-loader-npk1", keywords: ["loader", "timesheet", "npk1"] },
+      { name: "Timesheet Loader NPK2", path: "/laporan/timesheet-loader-npk2", keywords: ["loader", "timesheet", "npk2"] },
+      { name: "Penerimaan BB NPK1", path: "/laporan/bahan-baku-npk1", keywords: ["bahan baku", "penerimaan", "npk1"] },
+      { name: "Penerimaan BB NPK2", path: "/laporan/bahan-baku-npk2", keywords: ["bahan baku", "penerimaan", "npk2"] },
+      { name: "Pemakaian BB NPK1", path: "/laporan/pemakaian-bb-npk1", keywords: ["pemakaian", "bahan baku", "npk1"] },
+      { name: "Pemakaian BB NPK2", path: "/laporan/pemakaian-bb-npk2", keywords: ["pemakaian", "bahan baku", "npk2"] },
+      { name: "Sarana 3R", path: "/laporan/sarana-3r", keywords: ["sarana", "3r", "reduce", "reuse", "recycle"] },
+    ];
+    if (userPlant === "NPK1") pages.push(...laporan.filter(p => p.path.includes("npk1") || p.path === "/laporan/sarana-3r"));
+    else if (userPlant === "NPK2") pages.push(...laporan.filter(p => p.path.includes("npk2") || p.path === "/laporan/sarana-3r"));
+    else pages.push(...laporan);
+
+    // Data
+    const data = [
+      { name: "Inventaris Material", path: "/data/inventaris", keywords: ["inventaris", "stok", "material"] },
+      { name: "Work Request NPK1", path: "/data/work-request-npk1", keywords: ["work request", "wr", "npk1", "perbaikan"] },
+      { name: "Work Request NPK2", path: "/data/work-request-npk2", keywords: ["work request", "wr", "npk2", "perbaikan"] },
+      { name: "Vibrasi NPK1", path: "/data/vibrasi-npk1", keywords: ["vibrasi", "getaran", "npk1"] },
+      { name: "Vibrasi NPK2", path: "/data/vibrasi-npk2", keywords: ["vibrasi", "getaran", "npk2"] },
+      { name: "Gate Pass NPK1", path: "/data/gate-pass-npk1", keywords: ["gate pass", "keluar masuk", "npk1"] },
+      { name: "Gate Pass NPK2", path: "/data/gate-pass-npk2", keywords: ["gate pass", "keluar masuk", "npk2"] },
+      { name: "Trouble Record NPK1", path: "/data/trouble-record-npk1", keywords: ["trouble", "masalah", "npk1"] },
+      { name: "Trouble Record NPK2", path: "/data/trouble-record-npk2", keywords: ["trouble", "masalah", "npk2"] },
+      { name: "Rekap BBM NPK1", path: "/data/rekap-bbm-npk1", keywords: ["bbm", "solar", "npk1"] },
+      { name: "Rekap BBM NPK2", path: "/data/rekap-bbm-npk2", keywords: ["bbm", "solar", "npk2"] },
+      { name: "Riksa Timb Portabel", path: "/data/riksa-timb-portabel", keywords: ["riksa", "timbangan", "portabel"] },
+      { name: "Data Personil", path: "/data/personil", keywords: ["personil", "karyawan", "pegawai"] },
+    ];
+    let filteredData = data;
+    if (userPlant === "NPK1") filteredData = data.filter(p => p.path.includes("npk1") || (p.path === "/data/personil" && userRole === "admin"));
+    else if (userPlant === "NPK2") filteredData = data.filter(p => p.path.includes("npk2") || p.path === "/data/riksa-timb-portabel" || p.path === "/data/inventaris" || (p.path === "/data/personil" && userRole === "admin"));
+    pages.push(...filteredData);
+
+    // Settings
+    pages.push({ name: "Profil", path: "/settings/akun", keywords: ["profil", "akun", "pengaturan"] });
+
+    return pages;
+  }, [user]);
+
+  const filteredPages = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase();
+    return allPages.filter(
+      (p) => p.name.toLowerCase().includes(q) || p.keywords.some((k) => k.includes(q))
+    ).slice(0, 8);
+  }, [searchQuery, allPages]);
+
+  useEffect(() => {
+    if (searchOpen && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [searchOpen]);
+
+  if (!searchOpen) {
+    return (
+      <div
+        onClick={() => setSearchOpen(true)}
+        className="flex items-center gap-3 bg-white/15 hover:bg-white/20 rounded-2xl px-4 py-3 transition-colors cursor-pointer"
+      >
+        <Search className="h-4 w-4 text-white/60" />
+        <span className="text-sm text-white/60">Mau cari apa hari ini?</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <div className="flex items-center gap-3 bg-white/20 rounded-2xl px-4 py-2.5">
+        <Search className="h-4 w-4 text-white/60 flex-shrink-0" />
+        <input
+          ref={inputRef}
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") { setSearchOpen(false); setSearchQuery(""); }
+            if (e.key === "Enter" && filteredPages.length > 0) {
+              navigate(filteredPages[0].path);
+              setSearchOpen(false);
+              setSearchQuery("");
+            }
+          }}
+          placeholder="Cari halaman..."
+          className="flex-1 bg-transparent text-white text-sm placeholder:text-white/50 outline-none"
+        />
+        <button onClick={() => { setSearchOpen(false); setSearchQuery(""); }} className="p-1">
+          <X className="h-4 w-4 text-white/60" />
+        </button>
+      </div>
+      {filteredPages.length > 0 && (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-card rounded-2xl shadow-soft-2xl border border-border/40 overflow-hidden z-50">
+          {filteredPages.map((page) => (
+            <button
+              key={page.path}
+              onClick={() => { navigate(page.path); setSearchOpen(false); setSearchQuery(""); }}
+              className="w-full text-left px-4 py-3 text-sm text-foreground hover:bg-muted transition-colors flex items-center gap-3 border-b border-border/20 last:border-0"
+            >
+              <Search className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+              <span>{page.name}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const Header = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
@@ -1430,8 +1574,8 @@ const Header = () => {
     {/* ===== MOBILE HEADER — Gradient e-commerce style ===== */}
     {!forceDesktopView && (
       <header className="lg:hidden fixed top-0 left-0 right-0 z-30">
-        {/* Blue gradient header */}
-        <div className="header-gradient px-5 pt-5 pb-4 text-white">
+        {/* Blue gradient header with curved bottom */}
+        <div className="header-gradient px-5 pt-5 pb-8 text-white" style={{ borderRadius: "0 0 24px 24px" }}>
           <div className="flex items-center justify-between mb-4">
             <div>
               <p className="text-white/70 text-xs font-medium">
@@ -1485,16 +1629,8 @@ const Header = () => {
             </div>
           </div>
 
-          {/* Search bar */}
-          <div
-            onClick={() => {
-              // Future: open search modal
-            }}
-            className="flex items-center gap-3 bg-white/15 hover:bg-white/20 rounded-2xl px-4 py-3 transition-colors cursor-pointer"
-          >
-            <Search className="h-4 w-4 text-white/60" />
-            <span className="text-sm text-white/60">Mau cari apa hari ini?</span>
-          </div>
+          {/* Search bar — functional: navigates to pages */}
+          <MobileSearchBar />
         </div>
 
         {/* Mobile notification panel */}
@@ -2418,19 +2554,107 @@ const ChatPanel = () => {
 // ============================================
 // BOTTOM NAVIGATION BAR (Mobile E-Commerce Style)
 // ============================================
+
+// Nav items for bottom bar submenu (reuse sidebar structure)
+const bottomNavItems = [
+  {
+    name: "Produksi",
+    children: [
+      { name: "NPK Granul 1", path: "/produksi/npk1" },
+      { name: "NPK Granul 2", path: "/produksi/npk2" },
+      { name: "Blending", path: "/produksi/blending" },
+      { name: "NPK Mini", path: "/produksi/npk-mini" },
+      { name: "Retail", path: "/produksi/retail" },
+    ],
+  },
+  {
+    name: "Laporan",
+    children: [
+      { name: "KOP NPK1", path: "/laporan/kop-npk1" },
+      { name: "KOP NPK2", path: "/laporan/kop-npk2" },
+      { name: "Timesheet Forklift NPK1", path: "/laporan/timesheet-forklift-npk1" },
+      { name: "Timesheet Forklift NPK2", path: "/laporan/timesheet-forklift-npk2" },
+      { name: "Timesheet Loader NPK1", path: "/laporan/timesheet-loader-npk1" },
+      { name: "Timesheet Loader NPK2", path: "/laporan/timesheet-loader-npk2" },
+      { name: "Downtime NPK1", path: "/laporan/downtime-npk1" },
+      { name: "Downtime NPK2", path: "/laporan/downtime-npk2" },
+      { name: "Penerimaan BB NPK1", path: "/laporan/bahan-baku-npk1" },
+      { name: "Penerimaan BB NPK2", path: "/laporan/bahan-baku-npk2" },
+      { name: "Pemakaian BB NPK1", path: "/laporan/pemakaian-bb-npk1" },
+      { name: "Pemakaian BB NPK2", path: "/laporan/pemakaian-bb-npk2" },
+      { name: "Sarana 3R", path: "/laporan/sarana-3r" },
+    ],
+  },
+  {
+    name: "Data",
+    children: [
+      { name: "Inventaris Material", path: "/data/inventaris" },
+      { name: "Work Request NPK1", path: "/data/work-request-npk1" },
+      { name: "Work Request NPK2", path: "/data/work-request-npk2" },
+      { name: "Vibrasi NPK1", path: "/data/vibrasi-npk1" },
+      { name: "Vibrasi NPK2", path: "/data/vibrasi-npk2" },
+      { name: "Gate Pass NPK1", path: "/data/gate-pass-npk1" },
+      { name: "Gate Pass NPK2", path: "/data/gate-pass-npk2" },
+      { name: "Perbaikan Tahunan NPK1", path: "/data/perbaikan-tahunan-npk1" },
+      { name: "Perbaikan Tahunan NPK2", path: "/data/perbaikan-tahunan-npk2" },
+      { name: "Trouble Record NPK1", path: "/data/trouble-record-npk1" },
+      { name: "Trouble Record NPK2", path: "/data/trouble-record-npk2" },
+      { name: "Dokumentasi Foto NPK1", path: "/data/dokumentasi-foto-npk1" },
+      { name: "Dokumentasi Foto NPK2", path: "/data/dokumentasi-foto-npk2" },
+      { name: "Rekap BBM NPK1", path: "/data/rekap-bbm-npk1" },
+      { name: "Rekap BBM NPK2", path: "/data/rekap-bbm-npk2" },
+      { name: "Riksa Timb Portabel", path: "/data/riksa-timb-portabel" },
+      { name: "Data Personil", path: "/data/personil" },
+    ],
+  },
+];
+
+const getFilteredBottomNavChildren = (tabName: string, userPlant?: string, userRole?: string) => {
+  const item = bottomNavItems.find((i) => i.name === tabName);
+  if (!item) return [];
+
+  let children = item.children;
+
+  if (tabName === "Produksi") {
+    if (userPlant === "NPK1") {
+      children = children.filter((c) => c.path === "/produksi/npk1" || c.path === "/produksi/retail");
+    } else if (userPlant === "NPK2") {
+      children = children.filter((c) => c.path === "/produksi/npk2" || c.path === "/produksi/blending" || c.path === "/produksi/npk-mini");
+    }
+  } else if (tabName === "Laporan") {
+    if (userPlant === "NPK1") {
+      children = children.filter((c) => c.path.includes("npk1") || c.path === "/laporan/sarana-3r");
+    } else if (userPlant === "NPK2") {
+      children = children.filter((c) => c.path.includes("npk2") || c.path === "/laporan/sarana-3r");
+    }
+  } else if (tabName === "Data") {
+    children = children.filter((c) => {
+      if (c.path === "/data/personil") return userRole === "admin";
+      return true;
+    });
+    if (userPlant === "NPK1") {
+      children = children.filter((c) => c.path.includes("npk1") || (c.path === "/data/personil" && userRole === "admin"));
+    } else if (userPlant === "NPK2") {
+      children = children.filter((c) => c.path.includes("npk2") || c.path === "/data/riksa-timb-portabel" || c.path === "/data/inventaris" || (c.path === "/data/personil" && userRole === "admin"));
+    }
+  }
+
+  return children;
+};
+
 const BottomNavBar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { toggleChat, unreadChatCount } = useChatStore();
-  const [showMoreMenu, setShowMoreMenu] = useState(false);
-  const moreMenuRef = useRef<HTMLDivElement>(null);
+  const [activePopup, setActivePopup] = useState<string | null>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
 
-  // Close more menu on outside click
+  // Close popup on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) {
-        setShowMoreMenu(false);
+      if (popupRef.current && !popupRef.current.contains(e.target as Node)) {
+        setActivePopup(null);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -2439,61 +2663,75 @@ const BottomNavBar = () => {
 
   const isActive = (paths: string[]) => paths.some(p => location.pathname.startsWith(p));
 
+  const handleTabClick = (tabName: string) => {
+    if (tabName === "Beranda") {
+      navigate("/dashboard");
+      setActivePopup(null);
+    } else if (tabName === "Saya") {
+      setActivePopup(activePopup === "Saya" ? null : "Saya");
+    } else {
+      // Produksi, Laporan, Data — show submenu popup
+      setActivePopup(activePopup === tabName ? null : tabName);
+    }
+  };
+
   const tabs = [
-    {
-      name: "Beranda",
-      icon: LayoutDashboard,
-      paths: ["/dashboard"],
-      onClick: () => navigate("/dashboard"),
-    },
-    {
-      name: "Produksi",
-      icon: Factory,
-      paths: ["/produksi"],
-      onClick: () => {
-        const plant = user?.plant;
-        if (plant === "NPK1") navigate("/produksi/npk1");
-        else if (plant === "NPK2") navigate("/produksi/npk2");
-        else navigate("/produksi/npk1");
-      },
-    },
-    {
-      name: "Laporan",
-      icon: BarChart3,
-      paths: ["/laporan"],
-      onClick: () => {
-        const plant = user?.plant;
-        if (plant === "NPK1") navigate("/laporan/kop-npk1");
-        else if (plant === "NPK2") navigate("/laporan/kop-npk2");
-        else navigate("/laporan/kop-npk1");
-      },
-    },
-    {
-      name: "Data",
-      icon: ClipboardList,
-      paths: ["/data"],
-      onClick: () => {
-        const plant = user?.plant;
-        if (plant === "NPK1") navigate("/data/work-request-npk1");
-        else if (plant === "NPK2") navigate("/data/work-request-npk2");
-        else navigate("/data/inventaris");
-      },
-    },
-    {
-      name: "Saya",
-      icon: User,
-      paths: ["/settings"],
-      onClick: () => setShowMoreMenu(!showMoreMenu),
-    },
+    { name: "Beranda", icon: LayoutDashboard, paths: ["/dashboard"] },
+    { name: "Produksi", icon: Factory, paths: ["/produksi"] },
+    { name: "Laporan", icon: BarChart3, paths: ["/laporan"] },
+    { name: "Data", icon: ClipboardList, paths: ["/data"] },
+    { name: "Saya", icon: User, paths: ["/settings"] },
   ];
 
+  const popupChildren = activePopup && activePopup !== "Saya"
+    ? getFilteredBottomNavChildren(activePopup, user?.plant, user?.role)
+    : [];
+
   return (
-    <div className="mobile-bottom-nav fixed bottom-0 left-0 right-0 z-40">
-      {/* More menu popup */}
+    <div className="mobile-bottom-nav fixed bottom-0 left-0 right-0 z-40" ref={popupRef}>
+      {/* Submenu popup for Produksi / Laporan / Data */}
       <AnimatePresence>
-        {showMoreMenu && (
+        {activePopup && activePopup !== "Saya" && popupChildren.length > 0 && (
           <motion.div
-            ref={moreMenuRef}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="absolute bottom-full left-3 right-3 mb-2 bg-card rounded-2xl shadow-soft-2xl border border-border/40 overflow-hidden"
+          >
+            <div className="px-4 py-3 border-b border-border/40 flex items-center gap-2">
+              {activePopup === "Produksi" && <Factory className="h-4 w-4 text-primary-500" />}
+              {activePopup === "Laporan" && <BarChart3 className="h-4 w-4 text-primary-500" />}
+              {activePopup === "Data" && <ClipboardList className="h-4 w-4 text-primary-500" />}
+              <h3 className="text-sm font-bold text-foreground">{activePopup}</h3>
+            </div>
+            <div className="max-h-64 overflow-y-auto py-1">
+              {popupChildren.map((child) => (
+                <button
+                  key={child.path}
+                  onClick={() => { navigate(child.path); setActivePopup(null); }}
+                  className={cn(
+                    "w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center gap-2",
+                    location.pathname === child.path
+                      ? "bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 font-semibold"
+                      : "text-foreground hover:bg-muted"
+                  )}
+                >
+                  {location.pathname === child.path && (
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary-500 flex-shrink-0" />
+                  )}
+                  <span>{child.name}</span>
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Saya popup */}
+      <AnimatePresence>
+        {activePopup === "Saya" && (
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
@@ -2515,14 +2753,14 @@ const BottomNavBar = () => {
             </div>
             <div className="py-1">
               <button
-                onClick={() => { navigate("/settings/akun"); setShowMoreMenu(false); }}
+                onClick={() => { navigate("/settings/akun"); setActivePopup(null); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
               >
                 <User className="h-4 w-4" />
                 Profil
               </button>
               <button
-                onClick={() => { toggleChat(); setShowMoreMenu(false); }}
+                onClick={() => { toggleChat(); setActivePopup(null); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
               >
                 <MessageCircle className="h-4 w-4" />
@@ -2535,13 +2773,12 @@ const BottomNavBar = () => {
               </button>
               <button
                 onClick={() => {
-                  // Logout
                   if (user && user.username) {
                     setUserOffline(user.username);
                   }
                   useAuthStore.getState().logout();
                   navigate("/login");
-                  setShowMoreMenu(false);
+                  setActivePopup(null);
                 }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
               >
@@ -2559,21 +2796,22 @@ const BottomNavBar = () => {
           {tabs.map((tab) => {
             const active = isActive(tab.paths);
             const Icon = tab.icon;
+            const isPopupOpen = activePopup === tab.name;
             return (
               <button
                 key={tab.name}
-                onClick={tab.onClick}
+                onClick={() => handleTabClick(tab.name)}
                 className={cn(
                   "flex flex-col items-center justify-center gap-0.5 w-16 h-full transition-all duration-200",
                   "active:scale-90",
-                  active ? "text-primary-500" : "text-muted-foreground"
+                  (active || isPopupOpen) ? "text-primary-500" : "text-muted-foreground"
                 )}
               >
                 <div className={cn(
                   "relative p-1.5 rounded-2xl transition-all duration-200",
-                  active && "bg-primary-50 dark:bg-primary-900/30"
+                  (active || isPopupOpen) && "bg-primary-50 dark:bg-primary-900/30"
                 )}>
-                  <Icon className={cn("h-5 w-5", active && "stroke-[2.5]")} />
+                  <Icon className={cn("h-5 w-5", (active || isPopupOpen) && "stroke-[2.5]")} />
                   {tab.name === "Saya" && unreadChatCount > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 bg-red-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center">
                       {unreadChatCount > 9 ? "!" : unreadChatCount}
@@ -2582,7 +2820,7 @@ const BottomNavBar = () => {
                 </div>
                 <span className={cn(
                   "text-[10px] font-medium",
-                  active && "font-bold"
+                  (active || isPopupOpen) && "font-bold"
                 )}>
                   {tab.name}
                 </span>
@@ -2652,7 +2890,7 @@ const Layout = ({ children }: LayoutProps) => {
           // Mobile: full width with bottom nav padding, no top offset for marquee
           forceDesktopView
             ? "pt-[5.5rem] pl-64"
-            : "pt-0 lg:pt-[5.5rem] pl-0 lg:pl-64",
+            : "pt-[170px] lg:pt-[5.5rem] pl-0 lg:pl-64",
           sidebarCollapsed && (forceDesktopView ? "pl-20" : "lg:pl-20")
         )}
       >

@@ -44,6 +44,21 @@ interface VersionEntry {
 
 const versionHistory: VersionEntry[] = [
   {
+    version: "3.6.1",
+    date: "17 Maret 2026",
+    title: "Mobile UX Fix — Bottom Nav Submenu, Search & Header Curve",
+    type: "patch",
+    icon: <Smartphone className="h-5 w-5" />,
+    highlights: [
+      "Bottom nav submenu: klik Produksi/Laporan/Data menampilkan popup pilihan menu (bukan langsung buka 1 halaman)",
+      "Submenu difilter sesuai plant user (NPK1/NPK2/ALL) — sama seperti sidebar desktop",
+      "Search bar fungsional: ketik untuk mencari halaman, navigasi langsung ke halaman yang dipilih",
+      "Header biru bawahnya lengkung (rounded bottom) agar tampilan lebih modern",
+      "Quick access cards di dashboard: horizontal scroll dengan 6 shortcut (termasuk Vibrasi & BBM)",
+      "Fix padding konten mobile agar tidak tertimpa header",
+    ],
+  },
+  {
     version: "3.6.0",
     date: "17 Maret 2026",
     title: "E-Commerce UI Redesign — Mobile-First Modern Interface",
