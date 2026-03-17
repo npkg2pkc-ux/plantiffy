@@ -370,10 +370,14 @@ const BBMPrintModal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end lg:items-center justify-center z-50 lg:p-4">
+      <div className="bg-white dark:bg-card rounded-t-3xl lg:rounded-2xl shadow-2xl w-full max-w-5xl max-h-[92vh] lg:max-h-[90vh] overflow-hidden flex flex-col">
+        {/* Drag Handle (mobile) */}
+        <div className="lg:hidden flex justify-center pt-3 pb-1">
+          <div className="w-10 h-1 bg-dark-300 rounded-full" />
+        </div>
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b bg-gradient-to-r from-amber-500 to-orange-500">
+        <div className="flex items-center justify-between p-5 border-b border-border/40 bg-gradient-to-r from-amber-500 to-orange-500">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-white/20 rounded-lg">
               <Fuel className="h-6 w-6 text-white" />

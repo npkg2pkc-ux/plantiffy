@@ -17,7 +17,7 @@ interface TableProps {
 
 const Table = ({ children, className }: TableProps) => {
   return (
-    <div className={cn("w-full overflow-x-auto", className)}>
+    <div className={cn("w-full overflow-x-auto rounded-2xl", className)}>
       <table className="w-full border-collapse">{children}</table>
     </div>
   );
@@ -26,7 +26,7 @@ const Table = ({ children, className }: TableProps) => {
 // Table Header
 const TableHeader = ({ children, className }: TableProps) => {
   return (
-    <thead className={cn("bg-muted/50 border-b border-border", className)}>
+    <thead className={cn("bg-muted/40 border-b border-border/60", className)}>
       {children}
     </thead>
   );
@@ -36,7 +36,7 @@ const TableHeader = ({ children, className }: TableProps) => {
 const TableBody = ({ children, className }: TableProps) => {
   return (
     <tbody
-      className={cn("divide-y divide-border", className)}
+      className={cn("divide-y divide-border/50", className)}
     >
       {children}
     </tbody>
@@ -220,18 +220,18 @@ const Pagination = ({
   if (totalPages <= 1) return null;
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+    <div className="flex items-center justify-between px-5 py-4 border-t border-border/60">
       {totalItems && (
         <p className="text-sm text-muted-foreground">
           Menampilkan {startItem} - {endItem} dari {totalItems} data
         </p>
       )}
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
@@ -242,9 +242,9 @@ const Pagination = ({
             onClick={() => typeof page === "number" && onPageChange(page)}
             disabled={page === "..."}
             className={cn(
-              "min-w-[36px] h-9 px-2.5 text-sm font-medium rounded-lg transition-colors",
+              "min-w-[36px] h-9 px-2.5 text-sm font-semibold rounded-xl transition-all duration-200",
               page === currentPage
-                ? "bg-primary-600 text-white"
+                ? "bg-primary-500 text-white shadow-sm"
                 : page === "..."
                 ? "text-muted-foreground cursor-default"
                 : "text-foreground hover:bg-muted"
@@ -257,7 +257,7 @@ const Pagination = ({
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <ChevronRight className="h-4 w-4" />
         </button>

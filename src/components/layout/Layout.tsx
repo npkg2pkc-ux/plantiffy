@@ -28,6 +28,10 @@ import {
   Volume2,
   VolumeX,
   History,
+  Search,
+  BarChart3,
+  ClipboardList,
+  User,
 } from "lucide-react";
 import {
   cn,
@@ -790,7 +794,7 @@ const VersionBadge = () => {
         title="Klik untuk melihat perjalanan versi"
       >
         <History className="h-3 w-3" />
-        v3.5.2
+        v3.6.0
       </button>
       <VersionHistoryModal
         isOpen={showVersionHistory}
@@ -1422,13 +1426,157 @@ const Header = () => {
   };
 
   return (
+    <>
+    {/* ===== MOBILE HEADER — Gradient e-commerce style ===== */}
+    {!forceDesktopView && (
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-30">
+        {/* Blue gradient header */}
+        <div className="header-gradient px-5 pt-5 pb-4 text-white">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-white/70 text-xs font-medium">
+                {(() => {
+                  const hour = new Date().getHours();
+                  if (hour >= 5 && hour < 11) return "Selamat Pagi 👋";
+                  if (hour >= 11 && hour < 15) return "Selamat Siang ☀️";
+                  if (hour >= 15 && hour < 18) return "Selamat Sore 🌅";
+                  return "Selamat Malam 🌙";
+                })()}
+              </p>
+              <h1 className="text-lg font-bold mt-0.5">
+                {user?.namaLengkap || user?.username}
+              </h1>
+            </div>
+            <div className="flex items-center gap-2">
+              {/* Sound toggle */}
+              <button
+                onClick={() => {
+                  const newState = toggleSound();
+                  setSoundEnabled(newState);
+                  if (newState) playSound("success");
+                }}
+                className="p-2.5 rounded-2xl bg-white/15 hover:bg-white/25 transition-colors"
+              >
+                {soundEnabled ? (
+                  <Volume2 className="h-5 w-5" />
+                ) : (
+                  <VolumeX className="h-5 w-5" />
+                )}
+              </button>
+              {/* Dark mode */}
+              <button
+                onClick={toggleDarkMode}
+                className="p-2.5 rounded-2xl bg-white/15 hover:bg-white/25 transition-colors"
+              >
+                {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              </button>
+              {/* Notifications bell */}
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="relative p-2.5 rounded-2xl bg-white/15 hover:bg-white/25 transition-colors"
+              >
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 h-5 w-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-primary-500">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Search bar */}
+          <div
+            onClick={() => {
+              // Future: open search modal
+            }}
+            className="flex items-center gap-3 bg-white/15 hover:bg-white/20 rounded-2xl px-4 py-3 transition-colors cursor-pointer"
+          >
+            <Search className="h-4 w-4 text-white/60" />
+            <span className="text-sm text-white/60">Mau cari apa hari ini?</span>
+          </div>
+        </div>
+
+        {/* Mobile notification panel */}
+        <AnimatePresence>
+          {showNotifications && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="absolute left-3 right-3 top-full mt-1 bg-card rounded-2xl shadow-soft-2xl border border-border/40 z-50 overflow-hidden"
+            >
+              <div className="px-4 py-3 border-b border-border/60 flex items-center justify-between">
+                <h3 className="font-semibold text-sm text-foreground flex items-center gap-2">
+                  <Bell className="h-4 w-4 text-primary-500" />
+                  Notifikasi
+                </h3>
+                {unreadCount > 0 && (
+                  <button
+                    onClick={handleMarkAllAsRead}
+                    className="text-xs text-primary-600 dark:text-primary-400 font-semibold"
+                  >
+                    Tandai semua dibaca
+                  </button>
+                )}
+              </div>
+              <div className="max-h-72 overflow-y-auto">
+                {notifications.length === 0 ? (
+                  <div className="px-4 py-8 text-center text-muted-foreground">
+                    <Bell className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                    <p className="text-sm">Tidak ada notifikasi</p>
+                  </div>
+                ) : (
+                  notifications.slice(0, 8).map((notif) => (
+                    <div
+                      key={notif.id}
+                      className={cn(
+                        "px-4 py-3 border-b border-border/40 hover:bg-muted/50 transition-colors",
+                        !notif.read && "bg-primary-50/50 dark:bg-primary-900/20"
+                      )}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={cn(
+                          "mt-1.5 h-2 w-2 rounded-full flex-shrink-0",
+                          notif.read ? "bg-muted-foreground/30" : "bg-primary-500"
+                        )} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-foreground line-clamp-2">{notif.message}</p>
+                          <div className="flex items-center justify-between mt-1.5">
+                            <p className="text-xs text-muted-foreground">{formatDateTime(notif.timestamp)}</p>
+                            <div className="flex items-center gap-2">
+                              {notif.sheetName && notif.recordId && (
+                                <button onClick={() => handleNotificationClick(notif)} className="text-xs text-primary-500 font-semibold">
+                                  Lihat
+                                </button>
+                              )}
+                              {!notif.read && (
+                                <button onClick={() => handleMarkAsRead(notif.id)} className="text-xs text-muted-foreground">
+                                  Dibaca
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </header>
+    )}
+
+    {/* ===== DESKTOP HEADER — Original style with improvements ===== */}
     <header
       className={cn(
         "fixed top-8 right-0 z-30 h-14 transition-all duration-300",
         "bg-card/95 dark:bg-dark-800/95 backdrop-blur-sm",
-        "border-b border-border",
-        // Mobile: full width (left-0), Desktop: depends on sidebar
-        forceDesktopView ? "left-64" : "left-0 lg:left-64",
+        "border-b border-border/60",
+        // Desktop only
+        forceDesktopView ? "left-64" : "hidden lg:flex left-0 lg:left-64",
         sidebarCollapsed && (forceDesktopView ? "left-20" : "lg:left-20")
       )}
     >
@@ -1741,6 +1889,7 @@ const Header = () => {
         notification={selectedNotification}
       />
     </header>
+    </>
   );
 };
 
@@ -2266,6 +2415,186 @@ const ChatPanel = () => {
   );
 };
 
+// ============================================
+// BOTTOM NAVIGATION BAR (Mobile E-Commerce Style)
+// ============================================
+const BottomNavBar = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const { toggleChat, unreadChatCount } = useChatStore();
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close more menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) {
+        setShowMoreMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const isActive = (paths: string[]) => paths.some(p => location.pathname.startsWith(p));
+
+  const tabs = [
+    {
+      name: "Beranda",
+      icon: LayoutDashboard,
+      paths: ["/dashboard"],
+      onClick: () => navigate("/dashboard"),
+    },
+    {
+      name: "Produksi",
+      icon: Factory,
+      paths: ["/produksi"],
+      onClick: () => {
+        const plant = user?.plant;
+        if (plant === "NPK1") navigate("/produksi/npk1");
+        else if (plant === "NPK2") navigate("/produksi/npk2");
+        else navigate("/produksi/npk1");
+      },
+    },
+    {
+      name: "Laporan",
+      icon: BarChart3,
+      paths: ["/laporan"],
+      onClick: () => {
+        const plant = user?.plant;
+        if (plant === "NPK1") navigate("/laporan/kop-npk1");
+        else if (plant === "NPK2") navigate("/laporan/kop-npk2");
+        else navigate("/laporan/kop-npk1");
+      },
+    },
+    {
+      name: "Data",
+      icon: ClipboardList,
+      paths: ["/data"],
+      onClick: () => {
+        const plant = user?.plant;
+        if (plant === "NPK1") navigate("/data/work-request-npk1");
+        else if (plant === "NPK2") navigate("/data/work-request-npk2");
+        else navigate("/data/inventaris");
+      },
+    },
+    {
+      name: "Saya",
+      icon: User,
+      paths: ["/settings"],
+      onClick: () => setShowMoreMenu(!showMoreMenu),
+    },
+  ];
+
+  return (
+    <div className="mobile-bottom-nav fixed bottom-0 left-0 right-0 z-40">
+      {/* More menu popup */}
+      <AnimatePresence>
+        {showMoreMenu && (
+          <motion.div
+            ref={moreMenuRef}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="absolute bottom-full right-3 mb-2 w-56 bg-card rounded-2xl shadow-soft-2xl border border-border/40 overflow-hidden"
+          >
+            <div className="p-3 border-b border-border/40">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-2xl bg-primary-500 flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">
+                    {(user?.namaLengkap || user?.username || "U").charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">{user?.namaLengkap}</p>
+                  <p className="text-xs text-muted-foreground capitalize">{user?.role} • {user?.plant}</p>
+                </div>
+              </div>
+            </div>
+            <div className="py-1">
+              <button
+                onClick={() => { navigate("/settings/akun"); setShowMoreMenu(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
+              >
+                <User className="h-4 w-4" />
+                Profil
+              </button>
+              <button
+                onClick={() => { toggleChat(); setShowMoreMenu(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
+              >
+                <MessageCircle className="h-4 w-4" />
+                Chat Tim
+                {unreadChatCount > 0 && (
+                  <span className="ml-auto h-5 w-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                    {unreadChatCount > 9 ? "9+" : unreadChatCount}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  // Logout
+                  if (user && user.username) {
+                    setUserOffline(user.username);
+                  }
+                  useAuthStore.getState().logout();
+                  navigate("/login");
+                  setShowMoreMenu(false);
+                }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              >
+                <LogOut className="h-4 w-4" />
+                Keluar
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Bottom tab bar */}
+      <div className="bg-card/95 backdrop-blur-xl border-t border-border/40 shadow-bottom-nav">
+        <div className="flex items-center justify-around px-2 h-16" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+          {tabs.map((tab) => {
+            const active = isActive(tab.paths);
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.name}
+                onClick={tab.onClick}
+                className={cn(
+                  "flex flex-col items-center justify-center gap-0.5 w-16 h-full transition-all duration-200",
+                  "active:scale-90",
+                  active ? "text-primary-500" : "text-muted-foreground"
+                )}
+              >
+                <div className={cn(
+                  "relative p-1.5 rounded-2xl transition-all duration-200",
+                  active && "bg-primary-50 dark:bg-primary-900/30"
+                )}>
+                  <Icon className={cn("h-5 w-5", active && "stroke-[2.5]")} />
+                  {tab.name === "Saya" && unreadChatCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 bg-red-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center">
+                      {unreadChatCount > 9 ? "!" : unreadChatCount}
+                    </span>
+                  )}
+                </div>
+                <span className={cn(
+                  "text-[10px] font-medium",
+                  active && "font-bold"
+                )}>
+                  {tab.name}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 interface LayoutProps {
   children?: React.ReactNode;
 }
@@ -2299,30 +2628,45 @@ const Layout = ({ children }: LayoutProps) => {
         forceDesktopView && "force-desktop-view"
       )}
     >
-      {/* Active Users Marquee - Fixed at top */}
+      {/* Active Users Marquee - Fixed at top — Desktop only */}
       <div
         className={cn(
           "fixed top-0 right-0 z-40 transition-all duration-300",
-          // Mobile: full width (left-0), Desktop: depends on sidebar
-          forceDesktopView ? "left-64" : "left-0 lg:left-64",
+          // Mobile: hidden, Desktop: show
+          forceDesktopView ? "left-64 block" : "hidden lg:block lg:left-64",
           sidebarCollapsed && (forceDesktopView ? "left-20" : "lg:left-20")
         )}
       >
         <ActiveUsersMarquee />
       </div>
 
+      {/* Sidebar — Desktop only */}
       <Sidebar />
+      
+      {/* Header — Different for mobile vs desktop */}
       <Header />
+
       <main
         className={cn(
-          "pt-[5.5rem] min-h-screen transition-all duration-300",
-          // Mobile: no left padding, Desktop: depends on sidebar
-          forceDesktopView ? "pl-64" : "pl-0 lg:pl-64",
+          "min-h-screen transition-all duration-300",
+          // Mobile: full width with bottom nav padding, no top offset for marquee
+          forceDesktopView
+            ? "pt-[5.5rem] pl-64"
+            : "pt-0 lg:pt-[5.5rem] pl-0 lg:pl-64",
           sidebarCollapsed && (forceDesktopView ? "pl-20" : "lg:pl-20")
         )}
       >
-        <div className="p-4 lg:p-6">{children || <Outlet />}</div>
+        <div className={cn(
+          "p-4 lg:p-6",
+          // Add bottom padding for mobile bottom nav
+          !forceDesktopView && "pb-safe-bottom"
+        )}>
+          {children || <Outlet />}
+        </div>
       </main>
+
+      {/* Bottom Navigation — Mobile only */}
+      {!forceDesktopView && <BottomNavBar />}
 
       {/* Chat Panel */}
       <AnimatePresence>{chatOpen && <ChatPanel />}</AnimatePresence>

@@ -318,14 +318,18 @@ const PrintModal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end lg:items-center justify-center z-50 lg:p-4">
+      <div className="bg-white dark:bg-card rounded-t-3xl lg:rounded-2xl shadow-2xl w-full max-w-4xl max-h-[92vh] lg:max-h-[90vh] overflow-hidden flex flex-col">
+        {/* Drag Handle (mobile) */}
+        <div className="lg:hidden flex justify-center pt-3 pb-1">
+          <div className="w-10 h-1 bg-dark-300 rounded-full" />
+        </div>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-bold text-dark-900">Cetak {title}</h2>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border/40">
+          <h2 className="text-lg font-bold text-foreground">Cetak {title}</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-dark-100 rounded-lg"
+            className="p-2 hover:bg-muted rounded-xl transition-colors"
           >
             <X className="h-5 w-5" />
           </button>

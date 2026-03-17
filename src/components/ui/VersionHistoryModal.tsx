@@ -44,6 +44,24 @@ interface VersionEntry {
 
 const versionHistory: VersionEntry[] = [
   {
+    version: "3.6.0",
+    date: "17 Maret 2026",
+    title: "E-Commerce UI Redesign — Mobile-First Modern Interface",
+    type: "minor",
+    icon: <Palette className="h-5 w-5" />,
+    highlights: [
+      "Mobile bottom navigation bar: 5 tab (Beranda, Produksi, Laporan, Data, Saya) dengan menu profil popup",
+      "Mobile header: gradient biru dengan greeting, search bar, notifikasi — menggantikan header desktop di mobile",
+      "Dashboard mobile: Quick Access grid (4 shortcut), RKAP progress banner animasi, filter row compact",
+      "Bottom sheet modal: modal slide-up dari bawah di mobile dengan drag handle, centered scale di desktop",
+      "Komponen UI modern: Card rounded-2xl, Button rounded-xl dengan active:scale, Input/Select lebih tinggi (h-11), Badge pill shape",
+      "Print modal mobile-friendly: backdrop blur, rounded-t-3xl, drag handle (PrintModal, BBMPrintModal, GatePassPrintModal)",
+      "Design tokens baru: shadow soft-2xl/card-hover/bottom-nav, animasi slide-up-sheet/bounce-in dengan spring curves",
+      "CSS utilities: header-gradient, quick-access-item, scroll-snap-x, pb-safe-bottom untuk iPhone safe area",
+      "Desktop tetap sama — perubahan subtle pada corner radius, shadow, dan animasi komponen",
+    ],
+  },
+  {
     version: "3.5.2",
     date: "17 Maret 2026",
     title: "Timesheet Loader — Fix Data Tidak Muncul Setelah Simpan",

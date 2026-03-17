@@ -41,11 +41,11 @@ export function KPICard({
   return (
     <div
       className={cn(
-        "group relative bg-card rounded-xl border border-border/60 p-5",
+        "group relative bg-card rounded-2xl border border-border/40 p-5",
         "transition-all duration-300 ease-out",
-        "hover:shadow-soft-lg hover:border-border/40 hover:-translate-y-0.5",
+        "hover:shadow-card-hover hover:-translate-y-1",
         "dark:bg-card/80 dark:backdrop-blur-sm",
-        onClick && "cursor-pointer active:scale-[0.98]",
+        onClick && "cursor-pointer active:scale-[0.97]",
         variant === "gradient" && "border-0 bg-gradient-to-br from-card via-card to-muted/30",
         className
       )}
@@ -54,23 +54,23 @@ export function KPICard({
       {/* Subtle accent line at top */}
       {accentColor && (
         <div
-          className="absolute top-0 left-4 right-4 h-[2px] rounded-full opacity-60 group-hover:opacity-100 transition-opacity"
+          className="absolute top-0 left-5 right-5 h-[3px] rounded-full opacity-70 group-hover:opacity-100 transition-opacity"
           style={{ backgroundColor: accentColor }}
         />
       )}
 
       <div className="flex items-start justify-between mb-3">
-        <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+        <span className="text-xs font-semibold text-muted-foreground tracking-wide">
           {label}
         </span>
         {icon && (
-          <div className="flex-shrink-0 p-2 rounded-xl bg-muted/60 text-muted-foreground group-hover:bg-muted/90 transition-colors">
+          <div className="flex-shrink-0 p-2.5 rounded-2xl bg-primary-50 dark:bg-primary-900/30 text-primary-500 group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 transition-colors">
             {icon}
           </div>
         )}
       </div>
 
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         <p className="text-2xl font-display font-bold text-foreground tracking-tight tabular-nums">
           {value}
         </p>

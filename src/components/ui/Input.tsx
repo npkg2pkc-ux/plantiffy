@@ -26,10 +26,10 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           type={type}
           ref={ref}
           className={cn(
-            "flex h-9 w-full rounded-lg border border-input bg-background px-3.5 py-2 text-sm",
+            "flex h-11 lg:h-10 w-full rounded-xl border border-input bg-muted/40 px-4 py-2.5 text-sm",
             "text-foreground placeholder:text-muted-foreground",
-            "focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary-500",
-            "transition-colors duration-150",
+            "focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-400 focus:bg-background",
+            "transition-all duration-200",
             "disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground",
             "file:border-0 file:bg-transparent file:text-sm file:font-medium",
             error && "border-red-500 focus:ring-red-500/20 focus:border-red-500",

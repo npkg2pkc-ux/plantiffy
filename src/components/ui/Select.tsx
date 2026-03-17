@@ -28,10 +28,10 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
             id={selectId}
             ref={ref}
             className={cn(
-              "flex h-9 w-full rounded-lg border border-input bg-background px-3.5 py-2 text-sm",
+              "flex h-11 lg:h-10 w-full rounded-xl border border-input bg-muted/40 px-4 py-2.5 text-sm",
               "text-foreground appearance-none cursor-pointer",
-              "focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary-500",
-              "transition-colors duration-150",
+              "focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-400 focus:bg-background",
+              "transition-all duration-200",
               "disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground",
               "[&>option]:bg-background [&>option]:text-foreground",
               error && "border-red-500 focus:ring-red-500/20 focus:border-red-500",

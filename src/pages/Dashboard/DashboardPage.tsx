@@ -1734,9 +1734,9 @@ const DashboardPage = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+    <div className="space-y-4 lg:space-y-6">
+      {/* Desktop Header — hidden on mobile */}
+      <div className="hidden lg:flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <div className="flex items-center gap-3 mb-1">
             <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 text-white shadow-lg shadow-indigo-500/20">
@@ -1755,7 +1755,6 @@ const DashboardPage = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Only show plant filter if user can view all plants */}
           {canViewAllPlants && (
             <Select
               value={effectivePlantFilter}
@@ -1784,6 +1783,90 @@ const DashboardPage = () => {
             className="w-32"
           />
         </div>
+      </div>
+
+      {/* Mobile Quick Access Grid */}
+      <div className="lg:hidden space-y-4">
+        {/* Filter row */}
+        <div className="flex items-center gap-2">
+          {canViewAllPlants && (
+            <Select
+              value={effectivePlantFilter}
+              onChange={(e) =>
+                setDashboardPlantFilter(
+                  e.target.value as "ALL" | "NPK1" | "NPK2"
+                )
+              }
+              options={[
+                { value: "ALL", label: "Semua Plant" },
+                { value: "NPK1", label: "NPK 1" },
+                { value: "NPK2", label: "NPK 2" },
+              ]}
+              className="flex-1"
+            />
+          )}
+          <Select
+            value={dashboardYear.toString()}
+            onChange={(e) => setDashboardYear(Number(e.target.value))}
+            options={[
+              { value: "2023", label: "2023" },
+              { value: "2024", label: "2024" },
+              { value: "2025", label: "2025" },
+              { value: "2026", label: "2026" },
+            ]}
+            className="flex-1"
+          />
+        </div>
+
+        {/* Quick Access Cards */}
+        <div className="grid grid-cols-4 gap-3">
+          {[
+            { icon: Factory, label: "Produksi", color: "bg-blue-500", path: `/produksi/${effectivePlantFilter === "NPK1" ? "npk1" : "npk2"}` },
+            { icon: Clock, label: "Downtime", color: "bg-red-500", path: `/laporan/downtime-${effectivePlantFilter === "NPK1" ? "npk1" : "npk2"}` },
+            { icon: FileText, label: "Laporan", color: "bg-emerald-500", path: `/laporan/kop-${effectivePlantFilter === "NPK1" ? "npk1" : "npk2"}` },
+            { icon: AlertTriangle, label: "Work Req", color: "bg-amber-500", path: `/data/work-request-${effectivePlantFilter === "NPK1" ? "npk1" : "npk2"}` },
+          ].map((item) => (
+            <motion.button
+              key={item.label}
+              whileTap={{ scale: 0.92 }}
+              onClick={() => navigate(item.path)}
+              className="flex flex-col items-center gap-1.5 p-3 bg-card rounded-2xl border border-border/40 shadow-sm active:shadow-none transition-all"
+            >
+              <div className={cn("p-2.5 rounded-2xl text-white", item.color)}>
+                <item.icon className="h-5 w-5" />
+              </div>
+              <span className="text-[11px] font-semibold text-foreground">{item.label}</span>
+            </motion.button>
+          ))}
+        </div>
+
+        {/* RKAP Info Banner */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl p-4 text-white"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-blue-100 font-medium">Pencapaian RKAP {dashboardYear}</p>
+              <p className="text-2xl font-bold mt-0.5">{metrics.percentage}%</p>
+              <p className="text-xs text-blue-100 mt-0.5">
+                {formatNumber(metrics.totalProduksiNPK)} / {formatNumber(metrics.totalRKAP)} Ton
+              </p>
+            </div>
+            <div className="h-14 w-14 rounded-full bg-white/15 flex items-center justify-center">
+              <Target className="h-7 w-7" />
+            </div>
+          </div>
+          <div className="mt-3 bg-white/20 rounded-full h-2 overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${Math.min(Number(metrics.percentage), 100)}%` }}
+              transition={{ duration: 1, ease: "easeOut" }}
+              className="h-full bg-white rounded-full"
+            />
+          </div>
+        </motion.div>
       </div>
 
       {/* Produksi Bulan Ini — Modern Hero Card */}

@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useRef } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
@@ -28,14 +28,23 @@ const Modal = ({
   className,
 }: ModalProps) => {
   const modalRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   const sizeClasses = {
-    sm: "max-w-sm",
-    md: "max-w-md",
-    lg: "max-w-lg",
-    xl: "max-w-2xl",
-    full: "max-w-4xl",
+    sm: "lg:max-w-sm",
+    md: "lg:max-w-md",
+    lg: "lg:max-w-lg",
+    xl: "lg:max-w-2xl",
+    full: "lg:max-w-4xl",
   };
+
+  // Detect mobile
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 1024);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   // Handle escape key
   useEffect(() => {
@@ -63,8 +72,10 @@ const Modal = ({
 
   // Handle overlay click
   const handleOverlayClick = (e: React.MouseEvent) => {
-    if (closeOnOverlayClick && e.target === e.currentTarget) {
-      onClose();
+    if (e.target === e.currentTarget) {
+      if (closeOnOverlayClick || isMobile) {
+        onClose();
+      }
     }
   };
 
@@ -73,46 +84,64 @@ const Modal = ({
   return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
+        <div className="fixed inset-0 z-50">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-foreground/20 backdrop-blur-sm"
+            className="fixed inset-0 bottom-sheet-overlay"
             onClick={handleOverlayClick}
           />
 
-          {/* Modal Container */}
+          {/* Mobile: Bottom Sheet | Desktop: Centered Modal */}
           <div
-            className="flex min-h-full items-center justify-center p-4"
+            className={cn(
+              // Mobile: bottom-aligned
+              "flex min-h-full lg:items-center lg:justify-center",
+              "items-end justify-center"
+            )}
             onClick={handleOverlayClick}
           >
             <motion.div
               ref={modalRef}
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
+              // Mobile: slide-up bottom sheet | Desktop: scale animation
+              initial={isMobile ? { y: "100%" } : { opacity: 0, scale: 0.95, y: 20 }}
+              animate={isMobile ? { y: 0 } : { opacity: 1, scale: 1, y: 0 }}
+              exit={isMobile ? { y: "100%" } : { opacity: 0, scale: 0.95, y: 20 }}
+              transition={isMobile
+                ? { type: "spring", damping: 30, stiffness: 300 }
+                : { duration: 0.2, ease: "easeOut" }
+              }
               className={cn(
-                "relative w-full bg-card rounded-lg shadow-soft-xl border border-border",
+                "relative w-full bg-card shadow-soft-2xl",
+                // Mobile: bottom sheet style
+                "rounded-t-3xl lg:rounded-2xl",
+                "max-h-[90vh] lg:max-h-[85vh]",
+                // Desktop: centered with max-width
+                "lg:mx-4",
                 sizeClasses[size],
                 className
               )}
               onClick={(e) => e.stopPropagation()}
             >
+              {/* Drag handle - mobile only */}
+              <div className="lg:hidden pt-3 pb-1">
+                <div className="drag-handle" />
+              </div>
+
               {/* Header */}
               {(title || showCloseButton) && (
-                <div className="flex items-start justify-between px-5 py-4 border-b border-border">
-                  <div>
+                <div className="flex items-start justify-between px-5 py-3 lg:py-4 border-b border-border/60">
+                  <div className="flex-1">
                     {title && (
-                      <h2 className="text-sm font-semibold text-foreground">
+                      <h2 className="text-base lg:text-sm font-semibold text-foreground">
                         {title}
                       </h2>
                     )}
                     {description && (
-                      <p className="mt-0.5 text-xs text-muted-foreground">
+                      <p className="mt-0.5 text-sm lg:text-xs text-muted-foreground">
                         {description}
                       </p>
                     )}
@@ -120,16 +149,16 @@ const Modal = ({
                   {showCloseButton && (
                     <button
                       onClick={onClose}
-                      className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+                      className="p-2 -mr-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-colors"
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-5 w-5 lg:h-4 lg:w-4" />
                     </button>
                   )}
                 </div>
               )}
 
               {/* Content */}
-              <div className="px-5 py-4 max-h-[calc(100vh-200px)] overflow-y-auto">
+              <div className="px-5 py-4 max-h-[calc(90vh-120px)] lg:max-h-[calc(85vh-120px)] overflow-y-auto">
                 {children}
               </div>
             </motion.div>
@@ -175,17 +204,29 @@ const ConfirmDialog = ({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="sm" showCloseButton={false}>
-      <div className="text-center py-4">
-        <h3 className="text-sm font-semibold text-foreground mb-2">
+      <div className="text-center py-2 lg:py-4">
+        {/* Icon */}
+        <div className={cn(
+          "w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center",
+          variant === "danger" && "bg-red-100 dark:bg-red-900/30",
+          variant === "warning" && "bg-amber-100 dark:bg-amber-900/30",
+          variant === "info" && "bg-primary-100 dark:bg-primary-900/30"
+        )}>
+          <span className="text-2xl">
+            {variant === "danger" ? "🗑️" : variant === "warning" ? "⚠️" : "ℹ️"}
+          </span>
+        </div>
+        <h3 className="text-base font-semibold text-foreground mb-2">
           {title}
         </h3>
-        <p className="text-sm text-muted-foreground mb-6">
+        <p className="text-sm text-muted-foreground mb-6 px-2">
           {message}
         </p>
-        <div className="flex justify-center gap-3">
+        {/* Mobile: stacked buttons | Desktop: side by side */}
+        <div className="flex flex-col-reverse lg:flex-row justify-center gap-3 lg:gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-foreground bg-secondary border border-border rounded-lg hover:bg-muted transition-colors"
+            className="w-full lg:w-auto px-6 py-3 lg:py-2.5 text-sm font-medium text-foreground bg-secondary border border-border rounded-xl hover:bg-muted transition-colors"
             disabled={isLoading}
           >
             {cancelText}
@@ -193,7 +234,7 @@ const ConfirmDialog = ({
           <button
             onClick={onConfirm}
             className={cn(
-              "px-4 py-2 text-sm font-medium rounded-lg transition-colors",
+              "w-full lg:w-auto px-6 py-3 lg:py-2.5 text-sm font-medium rounded-xl transition-colors",
               variantClasses[variant]
             )}
             disabled={isLoading}

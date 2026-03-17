@@ -9,29 +9,29 @@
 
 @layer base {
   :root {
-    /* Radius */
-    --radius: 0.5rem;
+    /* Radius - rounder for e-commerce feel */
+    --radius: 0.75rem;
 
-    /* Light Mode — Neutral/Slate base, blue accent */
-    --background: 0 0% 98.5%;
-    --foreground: 220 15% 13%;
+    /* Light Mode — Clean white, vibrant blue accent */
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
     --card: 0 0% 100%;
-    --card-foreground: 220 15% 13%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 220 15% 13%;
-    --primary: 211 90% 42%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 220 15% 20%;
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
-    --accent: 220 14% 96%;
-    --accent-foreground: 220 15% 20%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 20%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 20%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 211 90% 42%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 217 91% 60%;
   }
 
   .dark {
@@ -426,6 +426,82 @@
   body { @apply bg-white; }
   .no-print { display: none !important; }
   .print-break { page-break-before: always; }
+}
+
+/* ============================================
+   BOTTOM NAV & MOBILE E-COMMERCE STYLES
+   ============================================ */
+
+/* Safe area for bottom navigation on mobile */
+.pb-safe-bottom {
+  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* Bottom sheet overlay */
+.bottom-sheet-overlay {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* Drag handle for bottom sheet */
+.drag-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: #d1d5db;
+  margin: 0 auto;
+}
+
+.dark .drag-handle {
+  background: #4b5563;
+}
+
+/* Mobile header gradient */
+.header-gradient {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #60a5fa 100%);
+}
+
+.dark .header-gradient {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%);
+}
+
+/* Quick access grid item hover */
+.quick-access-item {
+  transition: all 0.2s ease;
+}
+
+.quick-access-item:active {
+  transform: scale(0.95);
+}
+
+/* Horizontal scroll snap for KPI cards */
+.scroll-snap-x {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scroll-snap-x > * {
+  scroll-snap-align: start;
+}
+
+/* Hide bottom nav on desktop */
+@media (min-width: 1024px) {
+  .mobile-bottom-nav {
+    display: none !important;
+  }
+  .pb-safe-bottom {
+    padding-bottom: 0;
+  }
+}
+
+/* Force desktop view overrides */
+.force-desktop-view .mobile-bottom-nav {
+  display: none !important;
+}
+
+.force-desktop-view .pb-safe-bottom {
+  padding-bottom: 0;
 }
 
 /* ============================================

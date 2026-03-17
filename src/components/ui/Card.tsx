@@ -17,10 +17,10 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
       <div
         ref={ref}
         className={cn(
-          "bg-card text-card-foreground rounded-xl border border-border/60 shadow-soft",
+          "bg-card text-card-foreground rounded-2xl border border-border/40 shadow-soft",
           "transition-all duration-300 ease-out",
-          "hover:shadow-soft-md",
-          "dark:bg-card/90 dark:backdrop-blur-sm dark:border-border/40",
+          "hover:shadow-card-hover",
+          "dark:bg-card/90 dark:backdrop-blur-sm dark:border-border/30",
           className
         )}
         {...props}
@@ -37,7 +37,7 @@ const CardHeader = forwardRef<HTMLDivElement, CardProps>(
     return (
       <div
         ref={ref}
-        className={cn("flex flex-col gap-1 px-5 py-4", className)}
+        className={cn("flex flex-col gap-1.5 px-5 py-4", className)}
         {...props}
       >
         {children}
@@ -53,7 +53,7 @@ const CardTitle = forwardRef<HTMLHeadingElement, HTMLAttributes<HTMLHeadingEleme
       <h3
         ref={ref}
         className={cn(
-          "text-sm font-semibold text-foreground leading-none tracking-tight",
+          "text-base font-semibold text-foreground leading-none tracking-tight",
           className
         )}
         {...props}
