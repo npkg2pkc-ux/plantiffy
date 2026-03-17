@@ -189,7 +189,7 @@ const TimesheetLoaderPage = ({ plant }: TimesheetLoaderPageProps) => {
     setLoading(true);
 
     try {
-      const { readData, SHEETS, getSheetNameByPlant } = await import(
+      const { readDataFresh, SHEETS, getSheetNameByPlant } = await import(
         "@/services/api"
       );
       const sheetName = getSheetNameByPlant(SHEETS.TIMESHEET_LOADER, plant);
@@ -212,32 +212,13 @@ const TimesheetLoaderPage = ({ plant }: TimesheetLoaderPageProps) => {
           };
           await createWithLog<TimesheetLoader>("timesheet_loader", newData);
         }
-        // Refresh data from API
-        const result = await readData<TimesheetLoader>(sheetName);
-        if (result.success && result.data) {
-          const sortedData = result.data
-            .map((item) => ensureKeterangan(item, plant))
-            .sort(
-              (a, b) =>
-                new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime()
-            );
-          setData(sortedData);
-        }
       } else if (editingId) {
         const dataToUpdate = { ...form, id: editingId, _plant: plant };
         const updateResult = await updateWithLog<TimesheetLoader>(
           "timesheet_loader",
           dataToUpdate
         );
-        if (updateResult.success) {
-          setData((prev) =>
-            prev.map((item) =>
-              item.id === editingId
-                ? { ...form, id: editingId, _plant: plant }
-                : item
-            )
-          );
-        } else {
+        if (!updateResult.success) {
           throw new Error(updateResult.error || "Gagal mengupdate data");
         }
       } else {
@@ -246,15 +227,21 @@ const TimesheetLoaderPage = ({ plant }: TimesheetLoaderPageProps) => {
           "timesheet_loader",
           newData
         );
-        if (createResult.success && createResult.data) {
-          const newItem: TimesheetLoader = {
-            ...createResult.data,
-            _plant: plant,
-          };
-          setData((prev) => [newItem, ...prev]);
-        } else {
+        if (!createResult.success) {
           throw new Error(createResult.error || "Gagal menyimpan data");
         }
+      }
+
+      // Refetch fresh data from API (bypass cache) after any successful save
+      const result = await readDataFresh<TimesheetLoader>(sheetName);
+      if (result.success && result.data) {
+        const sortedData = result.data
+          .map((item) => ensureKeterangan(item, plant))
+          .sort(
+            (a, b) =>
+              new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime()
+          );
+        setData(sortedData);
       }
 
       setShowForm(false);

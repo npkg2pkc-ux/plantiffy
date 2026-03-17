@@ -23,6 +23,7 @@ import {
   FileSpreadsheet,
   Palette,
   UserCheck,
+  Wrench,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -42,6 +43,17 @@ interface VersionEntry {
 }
 
 const versionHistory: VersionEntry[] = [
+  {
+    version: "3.5.2",
+    date: "17 Maret 2026",
+    title: "Timesheet Loader — Fix Data Tidak Muncul Setelah Simpan",
+    type: "patch",
+    icon: <Wrench className="h-5 w-5" />,
+    highlights: [
+      "Fix: data langsung tampil setelah simpan tanpa perlu refresh (F5)",
+      "Perbaikan cache: data di-refetch fresh dari server setelah create/update",
+    ],
+  },
   {
     version: "3.5.1",
     date: "16 Maret 2026",
