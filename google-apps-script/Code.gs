@@ -1628,6 +1628,37 @@ function findRowIndexById(sheet, idIndex, searchId) {
   return -1;
 }
 
+/**
+ * Get a row object by ID using id-column lookup only.
+ */
+function getRowObjectById(sheet, headers, idValue) {
+  if (!headers || !headers.length) {
+    return { rowIndex: -1, rowValues: null, rowObject: null };
+  }
+
+  const idIndex = headers.indexOf("id");
+  if (idIndex === -1) {
+    return { rowIndex: -1, rowValues: null, rowObject: null };
+  }
+
+  const searchId = String(idValue || "").trim();
+  const rowIndex = findRowIndexById(sheet, idIndex, searchId);
+  if (rowIndex === -1) {
+    return { rowIndex: -1, rowValues: null, rowObject: null };
+  }
+
+  const rowValues = sheet
+    .getRange(rowIndex, 1, 1, headers.length)
+    .getValues()[0];
+
+  const rowObject = {};
+  headers.forEach(function (header, idx) {
+    rowObject[header] = rowValues[idx];
+  });
+
+  return { rowIndex: rowIndex, rowValues: rowValues, rowObject: rowObject };
+}
+
 function getSheetReadCacheKey(sheetName) {
   return "read:" + sheetName;
 }
@@ -2797,44 +2828,39 @@ function updateStockMasukWithLog(materialId, jumlah, keterangan, userInfo) {
       return { success: false, error: "Jumlah harus lebih dari 0" };
     }
 
-    // Get current material data
+    // Get current material data with minimal reads
     const materialsSheet = getOrCreateSheet("materials");
-    const allData = materialsSheet.getDataRange().getValues();
-    const headers = allData[0];
-    const idIndex = headers.indexOf("id");
+    const lastCol = materialsSheet.getLastColumn();
+    const lastRow = materialsSheet.getLastRow();
+    if (lastCol === 0 || lastRow <= 1) {
+      return { success: false, error: "Material tidak ditemukan (sheet kosong)" };
+    }
+
+    const headers = materialsSheet.getRange(1, 1, 1, lastCol).getValues()[0];
     const stokIndex = headers.indexOf("stok");
     const updatedAtIndex = headers.indexOf("updated_at");
     const kodeMaterialIndex = headers.indexOf("kode_material");
     const namaMaterialIndex = headers.indexOf("nama_material");
 
-    let materialRow = -1;
-    let currentStok = 0;
-    let kodeMaterial = "";
-    let namaMaterial = "";
-
-    // Use string comparison to handle type mismatches
-    const searchId = String(materialId).trim();
-    for (let i = 1; i < allData.length; i++) {
-      const rowId = String(allData[i][idIndex] || "").trim();
-      if (rowId === searchId) {
-        materialRow = i + 1;
-        currentStok = parseFloat(allData[i][stokIndex]) || 0;
-        kodeMaterial = allData[i][kodeMaterialIndex] || "";
-        namaMaterial = allData[i][namaMaterialIndex] || "";
-        break;
-      }
-    }
-
-    if (materialRow === -1) {
+    const materialRef = getRowObjectById(materialsSheet, headers, materialId);
+    if (materialRef.rowIndex === -1) {
+      const searchId = String(materialId).trim();
       Logger.log("updateStockMasukWithLog: Material not found. ID: " + searchId);
       return { success: false, error: "Material tidak ditemukan (ID: " + searchId + ")" };
     }
+
+    const materialRow = materialRef.rowIndex;
+    const currentStok = parseFloat(materialRef.rowValues[stokIndex]) || 0;
+    const kodeMaterial = materialRef.rowValues[kodeMaterialIndex] || "";
+    const namaMaterial = materialRef.rowValues[namaMaterialIndex] || "";
 
     const newStok = currentStok + amount;
     materialsSheet.getRange(materialRow, stokIndex + 1).setValue(newStok);
     materialsSheet
       .getRange(materialRow, updatedAtIndex + 1)
       .setValue(new Date().toISOString());
+
+    invalidateSheetReadCaches("materials");
 
     // Log to stock history
     const historyData = {
@@ -2916,38 +2942,31 @@ function updateStockKeluarWithLog(materialId, jumlah, keterangan, userInfo) {
       return { success: false, error: "Jumlah harus lebih dari 0" };
     }
 
-    // Get current material data
+    // Get current material data with minimal reads
     const materialsSheet = getOrCreateSheet("materials");
-    const allData = materialsSheet.getDataRange().getValues();
-    const headers = allData[0];
-    const idIndex = headers.indexOf("id");
+    const lastCol = materialsSheet.getLastColumn();
+    const lastRow = materialsSheet.getLastRow();
+    if (lastCol === 0 || lastRow <= 1) {
+      return { success: false, error: "Material tidak ditemukan (sheet kosong)" };
+    }
+
+    const headers = materialsSheet.getRange(1, 1, 1, lastCol).getValues()[0];
     const stokIndex = headers.indexOf("stok");
     const updatedAtIndex = headers.indexOf("updated_at");
     const kodeMaterialIndex = headers.indexOf("kode_material");
     const namaMaterialIndex = headers.indexOf("nama_material");
 
-    let materialRow = -1;
-    let currentStok = 0;
-    let kodeMaterial = "";
-    let namaMaterial = "";
-
-    // Use string comparison to handle type mismatches
-    const searchId = String(materialId).trim();
-    for (let i = 1; i < allData.length; i++) {
-      const rowId = String(allData[i][idIndex] || "").trim();
-      if (rowId === searchId) {
-        materialRow = i + 1;
-        currentStok = parseFloat(allData[i][stokIndex]) || 0;
-        kodeMaterial = allData[i][kodeMaterialIndex] || "";
-        namaMaterial = allData[i][namaMaterialIndex] || "";
-        break;
-      }
-    }
-
-    if (materialRow === -1) {
+    const materialRef = getRowObjectById(materialsSheet, headers, materialId);
+    if (materialRef.rowIndex === -1) {
+      const searchId = String(materialId).trim();
       Logger.log("updateStockKeluarWithLog: Material not found. ID: " + searchId);
       return { success: false, error: "Material tidak ditemukan (ID: " + searchId + ")" };
     }
+
+    const materialRow = materialRef.rowIndex;
+    const currentStok = parseFloat(materialRef.rowValues[stokIndex]) || 0;
+    const kodeMaterial = materialRef.rowValues[kodeMaterialIndex] || "";
+    const namaMaterial = materialRef.rowValues[namaMaterialIndex] || "";
 
     if (currentStok < amount) {
       return { success: false, error: "Stok tidak mencukupi" };
@@ -2958,6 +2977,8 @@ function updateStockKeluarWithLog(materialId, jumlah, keterangan, userInfo) {
     materialsSheet
       .getRange(materialRow, updatedAtIndex + 1)
       .setValue(new Date().toISOString());
+
+    invalidateSheetReadCaches("materials");
 
     // Log to stock history
     const historyData = {
@@ -3040,30 +3061,26 @@ function updateStockMasuk(materialId, jumlah, keterangan) {
       return { success: false, error: "Jumlah harus lebih dari 0" };
     }
 
-    // Get current material data
+    // Get current material data with minimal reads
     const materialsSheet = getOrCreateSheet("materials");
-    const allData = materialsSheet.getDataRange().getValues();
-    const headers = allData[0];
-    const idIndex = headers.indexOf("id");
+    const lastCol = materialsSheet.getLastColumn();
+    const lastRow = materialsSheet.getLastRow();
+    if (lastCol === 0 || lastRow <= 1) {
+      return { success: false, error: "Material tidak ditemukan (sheet kosong)" };
+    }
+
+    const headers = materialsSheet.getRange(1, 1, 1, lastCol).getValues()[0];
     const stokIndex = headers.indexOf("stok");
     const updatedAtIndex = headers.indexOf("updated_at");
 
-    // Find material row - use string comparison
-    const searchId = String(materialId).trim();
-    let materialRow = -1;
-    let currentStok = 0;
-    for (let i = 1; i < allData.length; i++) {
-      const rowId = String(allData[i][idIndex] || "").trim();
-      if (rowId === searchId) {
-        materialRow = i + 1;
-        currentStok = parseFloat(allData[i][stokIndex]) || 0;
-        break;
-      }
-    }
-
-    if (materialRow === -1) {
+    const materialRef = getRowObjectById(materialsSheet, headers, materialId);
+    if (materialRef.rowIndex === -1) {
+      const searchId = String(materialId).trim();
       return { success: false, error: "Material tidak ditemukan (ID: " + searchId + ")" };
     }
+
+    const materialRow = materialRef.rowIndex;
+    const currentStok = parseFloat(materialRef.rowValues[stokIndex]) || 0;
 
     // Calculate new stock
     const newStok = currentStok + amount;
@@ -3073,6 +3090,8 @@ function updateStockMasuk(materialId, jumlah, keterangan) {
     materialsSheet
       .getRange(materialRow, updatedAtIndex + 1)
       .setValue(new Date().toISOString());
+
+    invalidateSheetReadCaches("materials");
 
     // Create transaction record
     const transactionData = {
@@ -3126,33 +3145,28 @@ function updateStockKeluar(materialId, jumlah, keterangan) {
       return { success: false, error: "Jumlah harus lebih dari 0" };
     }
 
-    // Get current material data
+    // Get current material data with minimal reads
     const materialsSheet = getOrCreateSheet("materials");
-    const allData = materialsSheet.getDataRange().getValues();
-    const headers = allData[0];
-    const idIndex = headers.indexOf("id");
+    const lastCol = materialsSheet.getLastColumn();
+    const lastRow = materialsSheet.getLastRow();
+    if (lastCol === 0 || lastRow <= 1) {
+      return { success: false, error: "Material tidak ditemukan (sheet kosong)" };
+    }
+
+    const headers = materialsSheet.getRange(1, 1, 1, lastCol).getValues()[0];
     const stokIndex = headers.indexOf("stok");
     const namaIndex = headers.indexOf("nama_material");
     const updatedAtIndex = headers.indexOf("updated_at");
 
-    // Find material row - use string comparison
-    const searchId = String(materialId).trim();
-    let materialRow = -1;
-    let currentStok = 0;
-    let namaMaterial = "";
-    for (let i = 1; i < allData.length; i++) {
-      const rowId = String(allData[i][idIndex] || "").trim();
-      if (rowId === searchId) {
-        materialRow = i + 1;
-        currentStok = parseFloat(allData[i][stokIndex]) || 0;
-        namaMaterial = allData[i][namaIndex] || "";
-        break;
-      }
-    }
-
-    if (materialRow === -1) {
+    const materialRef = getRowObjectById(materialsSheet, headers, materialId);
+    if (materialRef.rowIndex === -1) {
+      const searchId = String(materialId).trim();
       return { success: false, error: "Material tidak ditemukan (ID: " + searchId + ")" };
     }
+
+    const materialRow = materialRef.rowIndex;
+    const currentStok = parseFloat(materialRef.rowValues[stokIndex]) || 0;
+    const namaMaterial = materialRef.rowValues[namaIndex] || "";
 
     // Validate stock won't go negative
     if (currentStok < amount) {
@@ -3170,6 +3184,8 @@ function updateStockKeluar(materialId, jumlah, keterangan) {
     materialsSheet
       .getRange(materialRow, updatedAtIndex + 1)
       .setValue(new Date().toISOString());
+
+    invalidateSheetReadCaches("materials");
 
     // Create transaction record
     const transactionData = {
@@ -3502,20 +3518,14 @@ function updateRecordWithLog(sheetName, data, userInfo) {
     let oldData = null;
     if (data.id) {
       const sheet = getOrCreateSheet(sheetName);
-      const allData = sheet.getDataRange().getValues();
-      const headers = allData[0];
-      const idIndex = headers.indexOf("id");
+      const lastCol = sheet.getLastColumn();
+      const lastRow = sheet.getLastRow();
 
-      // Use string comparison for ID matching
-      const searchId = String(data.id).trim();
-      for (let i = 1; i < allData.length; i++) {
-        const rowId = String(allData[i][idIndex] || "").trim();
-        if (rowId === searchId) {
-          oldData = {};
-          headers.forEach((h, idx) => {
-            oldData[h] = allData[i][idx];
-          });
-          break;
+      if (lastCol > 0 && lastRow > 1) {
+        const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+        const rowRef = getRowObjectById(sheet, headers, data.id);
+        if (rowRef.rowIndex !== -1) {
+          oldData = rowRef.rowObject;
         }
       }
     }
@@ -3585,21 +3595,15 @@ function deleteRecordWithLog(sheetName, data, userInfo) {
     let oldData = null;
     if (data.id) {
       const sheet = getOrCreateSheet(sheetName);
-      const allData = sheet.getDataRange().getValues();
-      const headers = allData[0];
-      const idIndex = headers.indexOf("id");
+      const lastCol = sheet.getLastColumn();
+      const lastRow = sheet.getLastRow();
 
-      // Use string comparison for ID matching
-      const searchId = String(data.id).trim();
-      for (let i = 1; i < allData.length; i++) {
-        const rowId = String(allData[i][idIndex] || "").trim();
-        if (rowId === searchId) {
-          oldData = {};
-          headers.forEach((h, idx) => {
-            oldData[h] = allData[i][idx];
-          });
+      if (lastCol > 0 && lastRow > 1) {
+        const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+        const rowRef = getRowObjectById(sheet, headers, data.id);
+        if (rowRef.rowIndex !== -1) {
+          oldData = rowRef.rowObject;
           recordPreview = createRecordPreview(oldData, sheetName);
-          break;
         }
       }
     }
