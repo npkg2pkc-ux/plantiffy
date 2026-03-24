@@ -20,10 +20,16 @@ const FAST_TIMEOUT = 15000; // 15 seconds for login/logout
 const BACKGROUND_TIMEOUT = 60000; // 60 seconds for background ops
 
 // Create abort controller with timeout
-function createAbortController(timeout: number): AbortController {
+function createAbortController(timeout: number): {
+  controller: AbortController;
+  cleanup: () => void;
+} {
   const controller = new AbortController();
-  setTimeout(() => controller.abort(), timeout);
-  return controller;
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  return {
+    controller,
+    cleanup: () => clearTimeout(timeoutId),
+  };
 }
 
 // ============================================
@@ -35,7 +41,7 @@ async function fetchGET<T>(
   endpoint: string,
   timeout: number = DEFAULT_TIMEOUT
 ): Promise<ApiResponse<T>> {
-  const controller = createAbortController(timeout);
+  const { controller, cleanup } = createAbortController(timeout);
 
   try {
     const response = await fetch(`${API_BASE}${endpoint}`, {
@@ -60,6 +66,8 @@ async function fetchGET<T>(
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
     };
+  } finally {
+    cleanup();
   }
 }
 
@@ -69,7 +77,7 @@ async function fetchPOST<T>(
   data: object,
   timeout: number = DEFAULT_TIMEOUT
 ): Promise<ApiResponse<T>> {
-  const controller = createAbortController(timeout);
+  const { controller, cleanup } = createAbortController(timeout);
 
   try {
     const response = await fetch(API_BASE, {
@@ -107,6 +115,8 @@ async function fetchPOST<T>(
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
     };
+  } finally {
+    cleanup();
   }
 }
 
@@ -129,6 +139,14 @@ async function readDataUncached<T>(
   sheetName: string
 ): Promise<ApiResponse<T[]>> {
   return fetchGET<T[]>(`?action=read&sheet=${sheetName}`);
+}
+
+// Internal uncached batch read for multiple sheets in one round-trip
+async function readManyDataUncached<T>(
+  sheetNames: string[]
+): Promise<ApiResponse<Record<string, T[]>>> {
+  const sheetsParam = encodeURIComponent(sheetNames.join(","));
+  return fetchGET<Record<string, T[]>>(`?action=readMany&sheets=${sheetsParam}`);
 }
 
 // Read data from sheet WITH CACHING
@@ -298,26 +316,36 @@ export async function fetchDataByPlant<T>(
 async function fetchDataByPlantUncached<T>(
   baseSheet: string
 ): Promise<ApiResponse<T[]>> {
-  // Fetch both plants in parallel for speed
-  const [npk2Result, npk1Result] = await Promise.all([
-    readDataUncached<T>(baseSheet),
-    readDataUncached<T>(`${baseSheet}_NPK1`),
+  // Fetch both plants in a single request to reduce Apps Script overhead
+  const batchResult = await readManyDataUncached<T>([
+    baseSheet,
+    `${baseSheet}_NPK1`,
   ]);
+
+  if (!batchResult.success || !batchResult.data) {
+    return {
+      success: false,
+      error: batchResult.error || "Gagal mengambil data plant",
+    };
+  }
+
+  const npk2Data = batchResult.data[baseSheet] || [];
+  const npk1Data = batchResult.data[`${baseSheet}_NPK1`] || [];
 
   const allData: T[] = [];
 
-  if (npk2Result.success && npk2Result.data) {
+  if (npk2Data.length > 0) {
     allData.push(
-      ...npk2Result.data.map((item) => ({
+      ...npk2Data.map((item) => ({
         ...item,
         _plant: "NPK2" as const,
       }))
     );
   }
 
-  if (npk1Result.success && npk1Result.data) {
+  if (npk1Data.length > 0) {
     allData.push(
-      ...npk1Result.data.map((item) => ({
+      ...npk1Data.map((item) => ({
         ...item,
         _plant: "NPK1" as const,
       }))

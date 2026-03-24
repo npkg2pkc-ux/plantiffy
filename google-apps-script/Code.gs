@@ -88,6 +88,7 @@ function authorizeScript() {
 // ============================================
 
 const SPREADSHEET_ID = SpreadsheetApp.getActiveSpreadsheet().getId();
+const SERVER_READ_CACHE_TTL_SECONDS = 20;
 
 // Sheet headers configuration
 const SHEET_HEADERS = {
@@ -495,6 +496,9 @@ function handleRequest(e) {
         case "read":
           result = readSheet(e.parameter.sheet);
           break;
+        case "readMany":
+          result = readSheetsBatch((e.parameter.sheets || "").split(","));
+          break;
         case "checkSession":
           result = checkSession(e.parameter.sessionId);
           break;
@@ -639,15 +643,88 @@ function handleRequest(e) {
  */
 function readSheet(sheetName) {
   try {
-    const sheet = getOrCreateSheet(sheetName);
-    const data = sheet.getDataRange().getValues();
-
-    if (data.length <= 1) {
-      return { success: true, data: [] };
+    if (!sheetName) {
+      return { success: false, error: "Sheet name is required" };
     }
 
-    const headers = data[0];
-    const rows = data.slice(1);
+    const cacheKey = getSheetReadCacheKey(sheetName);
+    const cached = getCachedJson(cacheKey);
+    if (cached) {
+      return { success: true, data: cached };
+    }
+
+    const rows = readSheetRowsFast(sheetName);
+    setCachedJson(cacheKey, rows, SERVER_READ_CACHE_TTL_SECONDS);
+
+    return { success: true, data: rows };
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Read multiple sheets in a single request to reduce Apps Script overhead
+ */
+function readSheetsBatch(sheetNames) {
+  try {
+    if (!sheetNames || !sheetNames.length) {
+      return { success: false, error: "Sheets parameter is required" };
+    }
+
+    const normalizedSheets = sheetNames
+      .map(function (name) {
+        return String(name || "").trim();
+      })
+      .filter(function (name) {
+        return !!name;
+      });
+
+    if (!normalizedSheets.length) {
+      return { success: false, error: "No valid sheet names provided" };
+    }
+
+    const sortedForCache = normalizedSheets.slice().sort();
+    const cacheKey = getReadManyCacheKey(sortedForCache);
+    const cached = getCachedJson(cacheKey);
+    if (cached) {
+      return { success: true, data: cached };
+    }
+
+    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const result = {};
+    normalizedSheets.forEach(function (sheetName) {
+      result[sheetName] = readSheetRowsFast(sheetName, spreadsheet);
+    });
+
+    setCachedJson(cacheKey, result, SERVER_READ_CACHE_TTL_SECONDS);
+    return { success: true, data: result };
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Shared fast sheet reader that only reads used range.
+ */
+function readSheetRowsFast(sheetName, spreadsheet) {
+  const sheet = getOrCreateSheet(sheetName, spreadsheet);
+  const lastCol = sheet.getLastColumn();
+  const lastRow = sheet.getLastRow();
+
+  if (lastCol === 0 || lastRow <= 1) {
+    return [];
+  }
+
+  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  const rows = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+
+  return mapRowsWithHeaderFormatting(headers, rows);
+}
+
+/**
+ * Convert sheet rows into objects while preserving date/time formatting.
+ */
+function mapRowsWithHeaderFormatting(headers, rows) {
 
     // Columns that should be formatted as time (HH:mm)
     const timeColumns = [
@@ -742,10 +819,7 @@ function readSheet(sheetName) {
       })
       .filter((row) => row.id); // Filter out empty rows
 
-    return { success: true, data: result };
-  } catch (error) {
-    return { success: false, error: error.toString() };
-  }
+    return result;
 }
 
 /**
@@ -853,10 +927,10 @@ function createRecord(sheetName, data) {
     );
 
     // Append row
-    sheet.appendRow(rowData);
+    const nextRow = sheet.getLastRow() + 1;
+    sheet.getRange(nextRow, 1, 1, rowData.length).setValues([rowData]);
 
-    // Force flush to ensure data is written
-    SpreadsheetApp.flush();
+    invalidateSheetReadCaches(sheetName);
 
     return { success: true, data: data };
   } catch (error) {
@@ -876,8 +950,14 @@ function updateRecord(sheetName, data) {
 
     const sheet = getOrCreateSheet(sheetName);
     
-    const allData = sheet.getDataRange().getValues();
-    const sheetHeaders = allData[0];
+    const lastCol = sheet.getLastColumn();
+    const lastRow = sheet.getLastRow();
+
+    if (lastCol === 0 || lastRow <= 1) {
+      return { success: false, error: "Record not found (sheet is empty)" };
+    }
+
+    const sheetHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
     
     // ALWAYS use actual sheet headers for column mapping to prevent data misalignment
     const idIndex = sheetHeaders.indexOf("id");
@@ -888,22 +968,15 @@ function updateRecord(sheetName, data) {
 
     // Find row with matching ID - use string comparison to handle type mismatches
     const searchId = String(data.id).trim();
-    let rowIndex = -1;
-    for (let i = 1; i < allData.length; i++) {
-      const rowId = String(allData[i][idIndex] || "").trim();
-      if (rowId === searchId) {
-        rowIndex = i + 1; // +1 because sheet rows are 1-indexed
-        break;
-      }
-    }
+    const rowIndex = findRowIndexById(sheet, idIndex, searchId);
 
     if (rowIndex === -1) {
-      Logger.log("updateRecord: Record not found. Sheet: " + sheetName + ", ID: " + searchId + ", Total rows: " + allData.length);
+      Logger.log("updateRecord: Record not found. Sheet: " + sheetName + ", ID: " + searchId + ", Last row: " + lastRow);
       return { success: false, error: "Record not found (ID: " + searchId + " in " + sheetName + ")" };
     }
 
     // Get existing row data for preserving values
-    const existingRow = allData[rowIndex - 1];
+    const existingRow = sheet.getRange(rowIndex, 1, 1, lastCol).getValues()[0];
 
     // Map data using ACTUAL SHEET headers to ensure correct column placement
     // This prevents data corruption when config headers differ from sheet column order
@@ -919,7 +992,8 @@ function updateRecord(sheetName, data) {
 
     Logger.log("updateRecord: Updating row " + rowIndex + " in " + sheetName + " with " + sheetHeaders.length + " columns");
     sheet.getRange(rowIndex, 1, 1, rowData.length).setValues([rowData]);
-    SpreadsheetApp.flush();
+
+    invalidateSheetReadCaches(sheetName);
 
     return { success: true, data: data };
   } catch (error) {
@@ -938,8 +1012,14 @@ function deleteRecord(sheetName, data) {
     }
 
     const sheet = getOrCreateSheet(sheetName);
-    const allData = sheet.getDataRange().getValues();
-    const headers = allData[0];
+    const lastCol = sheet.getLastColumn();
+    const lastRow = sheet.getLastRow();
+
+    if (lastCol === 0 || lastRow <= 1) {
+      return { success: false, error: "Record not found (sheet is empty)" };
+    }
+
+    const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
     const idIndex = headers.indexOf("id");
 
     if (idIndex === -1) {
@@ -948,14 +1028,7 @@ function deleteRecord(sheetName, data) {
 
     // Find row with matching ID - use string comparison to handle type mismatches
     const searchId = String(data.id).trim();
-    let rowIndex = -1;
-    for (let i = 1; i < allData.length; i++) {
-      const rowId = String(allData[i][idIndex] || "").trim();
-      if (rowId === searchId) {
-        rowIndex = i + 1;
-        break;
-      }
-    }
+    const rowIndex = findRowIndexById(sheet, idIndex, searchId);
 
     if (rowIndex === -1) {
       Logger.log("deleteRecord: Record not found. Sheet: " + sheetName + ", ID: " + searchId);
@@ -964,6 +1037,8 @@ function deleteRecord(sheetName, data) {
 
     // Delete row
     sheet.deleteRow(rowIndex);
+
+    invalidateSheetReadCaches(sheetName);
 
     return { success: true, data: true };
   } catch (error) {
@@ -1443,8 +1518,8 @@ function testExchangeRate() {
  * Get or create a sheet with proper headers
  * Also validates and fixes headers if sheet already exists
  */
-function getOrCreateSheet(sheetName) {
-  const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+function getOrCreateSheet(sheetName, spreadsheetOverride) {
+  const spreadsheet = spreadsheetOverride || SpreadsheetApp.openById(SPREADSHEET_ID);
   let sheet = spreadsheet.getSheetByName(sheetName);
 
   // Get expected headers from config
@@ -1521,6 +1596,84 @@ function getOrCreateSheet(sheetName) {
   }
 
   return sheet;
+}
+
+/**
+ * Find row index (1-based) by id from ID column only.
+ */
+function findRowIndexById(sheet, idIndex, searchId) {
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1 || idIndex < 0) return -1;
+
+  const idRange = sheet.getRange(2, idIndex + 1, lastRow - 1, 1);
+  const finder = idRange
+    .createTextFinder(searchId)
+    .matchEntireCell(true)
+    .matchCase(true)
+    .findNext();
+
+  if (finder) {
+    return finder.getRow();
+  }
+
+  // Fallback for mixed value types (number/string with spaces)
+  const idValues = idRange.getValues();
+  for (let i = 0; i < idValues.length; i++) {
+    const rowId = String(idValues[i][0] || "").trim();
+    if (rowId === searchId) {
+      return i + 2;
+    }
+  }
+
+  return -1;
+}
+
+function getSheetReadCacheKey(sheetName) {
+  return "read:" + sheetName;
+}
+
+function getReadManyCacheKey(sheetNames) {
+  return "readMany:" + sheetNames.join("|");
+}
+
+function getCachedJson(cacheKey) {
+  try {
+    const cachedRaw = CacheService.getScriptCache().get(cacheKey);
+    if (!cachedRaw) return null;
+    return JSON.parse(cachedRaw);
+  } catch (error) {
+    Logger.log("Cache read error for key " + cacheKey + ": " + error.toString());
+    return null;
+  }
+}
+
+function setCachedJson(cacheKey, value, ttlSeconds) {
+  try {
+    const payload = JSON.stringify(value);
+    // Apps Script cache value limit is around 100KB per key.
+    if (payload.length > 95000) {
+      return;
+    }
+    CacheService.getScriptCache().put(cacheKey, payload, ttlSeconds);
+  } catch (error) {
+    Logger.log("Cache write error for key " + cacheKey + ": " + error.toString());
+  }
+}
+
+function invalidateSheetReadCaches(sheetName) {
+  try {
+    const cache = CacheService.getScriptCache();
+    const normalizedSheet = String(sheetName || "").trim();
+    if (!normalizedSheet) return;
+
+    cache.remove(getSheetReadCacheKey(normalizedSheet));
+
+    const baseSheet = normalizedSheet.replace("_NPK1", "");
+    const pairedSheets = [baseSheet, baseSheet + "_NPK1"].sort();
+    cache.remove(getReadManyCacheKey(pairedSheets));
+  } catch (error) {
+    Logger.log("Cache invalidate error for sheet " + sheetName + ": " + error.toString());
+  }
 }
 
 /**
