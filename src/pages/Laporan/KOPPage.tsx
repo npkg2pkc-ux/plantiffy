@@ -45,9 +45,14 @@ import {
 } from "@/lib/utils";
 
 // Interfaces
+type ShiftGroup = "A" | "B" | "C" | "D";
+type ShiftFieldKey = "shiftMalam" | "shiftPagi" | "shiftSore";
+
 interface ShiftPersonel {
+  group?: ShiftGroup;
   sectionHead: string;
   operatorPanel: string;
+  operatorLapangan?: string;
 }
 
 interface ParameterValue {
@@ -107,6 +112,58 @@ const emptyShiftPersonel: ShiftPersonel = {
 };
 const emptyParameterValue: ParameterValue = { malam: "", pagi: "", sore: "" };
 const emptyShiftEnergy: ShiftEnergyInput = { awal: "", akhir: "" };
+
+const NPK2_SHIFT_GROUP_OPTIONS = [
+  { value: "", label: "Pilih Grup Shift" },
+  { value: "A", label: "Grup A" },
+  { value: "B", label: "Grup B" },
+  { value: "C", label: "Grup C" },
+  { value: "D", label: "Grup D" },
+];
+
+const NPK2_SHIFT_PERSONEL_MAP: Record<
+  ShiftGroup,
+  Required<Pick<ShiftPersonel, "sectionHead" | "operatorPanel" | "operatorLapangan">>
+> = {
+  A: {
+    sectionHead: "Joni Harjoni",
+    operatorPanel: "Asep Mulyana",
+    operatorLapangan: "Agung Adiguna J",
+  },
+  B: {
+    sectionHead: "Enjang Rahmat Matin",
+    operatorPanel: "Yogi Darojat",
+    operatorLapangan: "Ibnu Ahmad M",
+  },
+  C: {
+    sectionHead: "Andrias Sulivan",
+    operatorPanel: "Dodi Hariadi",
+    operatorLapangan: "Jijib Jaelani",
+  },
+  D: {
+    sectionHead: "Endin Muhidin",
+    operatorPanel: "Renaldi Kurnaepi",
+    operatorLapangan: "Muhammad Afda Alif",
+  },
+};
+
+const isShiftGroup = (value: string): value is ShiftGroup => {
+  return value === "A" || value === "B" || value === "C" || value === "D";
+};
+
+const getNpk2ShiftPersonelByGroup = (group: string): ShiftPersonel => {
+  if (!isShiftGroup(group)) {
+    return {
+      ...emptyShiftPersonel,
+      operatorLapangan: "",
+    };
+  }
+
+  return {
+    ...NPK2_SHIFT_PERSONEL_MAP[group],
+    group,
+  };
+};
 
 const initialFormState: KOPEntry = {
   tanggal: getCurrentDate(),
@@ -493,6 +550,23 @@ const KOPPage = ({ plant }: KOPPageProps) => {
     { value: "SHUTDOWN", label: "SHUTDOWN" },
     { value: "START UP", label: "START UP" },
   ];
+
+  const handleShiftGroupChange = (
+    shiftField: ShiftFieldKey,
+    selectedGroup: string
+  ) => {
+    if (plant !== "NPK2") return;
+
+    const shiftPersonel = getNpk2ShiftPersonelByGroup(selectedGroup);
+
+    setForm((prev) => ({
+      ...prev,
+      [shiftField]: {
+        ...(prev[shiftField] || emptyShiftPersonel),
+        ...shiftPersonel,
+      },
+    }));
+  };
 
   // Auto-calculate energy values when form changes
   useEffect(() => {
@@ -912,6 +986,22 @@ const KOPPage = ({ plant }: KOPPageProps) => {
                     printItem.shiftSore?.operatorPanel || ""
                   }</td>
                 </tr>
+                ${
+                  plant === "NPK2"
+                    ? `<tr>
+                  <td class="param-name"><strong>Operator Lapangan</strong></td>
+                  <td class="highlight-cyan">${
+                    printItem.shiftMalam?.operatorLapangan || ""
+                  }</td>
+                  <td class="highlight-cyan">${
+                    printItem.shiftPagi?.operatorLapangan || ""
+                  }</td>
+                  <td class="highlight-cyan">${
+                    printItem.shiftSore?.operatorLapangan || ""
+                  }</td>
+                </tr>`
+                    : ""
+                }
               </table>
             </div>
           </div>
@@ -1300,6 +1390,7 @@ const KOPPage = ({ plant }: KOPPageProps) => {
                 <th>Shift</th>
                 <th>Section Head</th>
                 <th>Operator Panel</th>
+                ${plant === "NPK2" ? "<th>Operator Lapangan</th>" : ""}
               </tr>
             </thead>
             <tbody>
@@ -1307,16 +1398,31 @@ const KOPPage = ({ plant }: KOPPageProps) => {
                 <td>Malam (23:00 - 07:00)</td>
                 <td>${reportItem.shiftMalam?.sectionHead || "-"}</td>
                 <td>${reportItem.shiftMalam?.operatorPanel || "-"}</td>
+                ${
+                  plant === "NPK2"
+                    ? `<td>${reportItem.shiftMalam?.operatorLapangan || "-"}</td>`
+                    : ""
+                }
               </tr>
               <tr>
                 <td>Pagi (07:00 - 15:00)</td>
                 <td>${reportItem.shiftPagi?.sectionHead || "-"}</td>
                 <td>${reportItem.shiftPagi?.operatorPanel || "-"}</td>
+                ${
+                  plant === "NPK2"
+                    ? `<td>${reportItem.shiftPagi?.operatorLapangan || "-"}</td>`
+                    : ""
+                }
               </tr>
               <tr>
                 <td>Sore (15:00 - 23:00)</td>
                 <td>${reportItem.shiftSore?.sectionHead || "-"}</td>
                 <td>${reportItem.shiftSore?.operatorPanel || "-"}</td>
+                ${
+                  plant === "NPK2"
+                    ? `<td>${reportItem.shiftSore?.operatorLapangan || "-"}</td>`
+                    : ""
+                }
               </tr>
             </tbody>
           </table>
@@ -1874,6 +1980,16 @@ const KOPPage = ({ plant }: KOPPageProps) => {
                   <Calendar className="h-4 w-4" /> Malam (23:00 - 07:00)
                 </h4>
                 <div className="space-y-3">
+                  {plant === "NPK2" && (
+                    <Select
+                      label="Grup Shift"
+                      value={form.shiftMalam?.group || ""}
+                      onChange={(e) =>
+                        handleShiftGroupChange("shiftMalam", e.target.value)
+                      }
+                      options={NPK2_SHIFT_GROUP_OPTIONS}
+                    />
+                  )}
                   <Input
                     label="Section Head"
                     value={form.shiftMalam?.sectionHead || ""}
@@ -1902,6 +2018,22 @@ const KOPPage = ({ plant }: KOPPageProps) => {
                     }
                     placeholder="Nama Operator Panel"
                   />
+                  {plant === "NPK2" && (
+                    <Input
+                      label="Operator Lapangan"
+                      value={form.shiftMalam?.operatorLapangan || ""}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          shiftMalam: {
+                            ...form.shiftMalam,
+                            operatorLapangan: e.target.value,
+                          },
+                        })
+                      }
+                      placeholder="Nama Operator Lapangan"
+                    />
+                  )}
                 </div>
               </div>
 
@@ -1911,6 +2043,16 @@ const KOPPage = ({ plant }: KOPPageProps) => {
                   <Calendar className="h-4 w-4" /> Pagi (07:00 - 15:00)
                 </h4>
                 <div className="space-y-3">
+                  {plant === "NPK2" && (
+                    <Select
+                      label="Grup Shift"
+                      value={form.shiftPagi?.group || ""}
+                      onChange={(e) =>
+                        handleShiftGroupChange("shiftPagi", e.target.value)
+                      }
+                      options={NPK2_SHIFT_GROUP_OPTIONS}
+                    />
+                  )}
                   <Input
                     label="Section Head"
                     value={form.shiftPagi?.sectionHead || ""}
@@ -1939,6 +2081,22 @@ const KOPPage = ({ plant }: KOPPageProps) => {
                     }
                     placeholder="Nama Operator Panel"
                   />
+                  {plant === "NPK2" && (
+                    <Input
+                      label="Operator Lapangan"
+                      value={form.shiftPagi?.operatorLapangan || ""}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          shiftPagi: {
+                            ...form.shiftPagi,
+                            operatorLapangan: e.target.value,
+                          },
+                        })
+                      }
+                      placeholder="Nama Operator Lapangan"
+                    />
+                  )}
                 </div>
               </div>
 
@@ -1948,6 +2106,16 @@ const KOPPage = ({ plant }: KOPPageProps) => {
                   <Calendar className="h-4 w-4" /> Sore (15:00 - 23:00)
                 </h4>
                 <div className="space-y-3">
+                  {plant === "NPK2" && (
+                    <Select
+                      label="Grup Shift"
+                      value={form.shiftSore?.group || ""}
+                      onChange={(e) =>
+                        handleShiftGroupChange("shiftSore", e.target.value)
+                      }
+                      options={NPK2_SHIFT_GROUP_OPTIONS}
+                    />
+                  )}
                   <Input
                     label="Section Head"
                     value={form.shiftSore?.sectionHead || ""}
@@ -1976,6 +2144,22 @@ const KOPPage = ({ plant }: KOPPageProps) => {
                     }
                     placeholder="Nama Operator Panel"
                   />
+                  {plant === "NPK2" && (
+                    <Input
+                      label="Operator Lapangan"
+                      value={form.shiftSore?.operatorLapangan || ""}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          shiftSore: {
+                            ...form.shiftSore,
+                            operatorLapangan: e.target.value,
+                          },
+                        })
+                      }
+                      placeholder="Nama Operator Lapangan"
+                    />
+                  )}
                 </div>
               </div>
             </div>
@@ -2870,7 +3054,13 @@ const KOPPage = ({ plant }: KOPPageProps) => {
                             {viewItem.shiftSore?.sectionHead || "-"}
                           </td>
                         </tr>
-                        <tr>
+                        <tr
+                          className={
+                            plant === "NPK2"
+                              ? "border-b border-dark-200 dark:border-dark-600"
+                              : ""
+                          }
+                        >
                           <td className="px-4 py-3 font-medium text-dark-900 dark:text-white">
                             Operator Panel
                           </td>
@@ -2884,6 +3074,22 @@ const KOPPage = ({ plant }: KOPPageProps) => {
                             {viewItem.shiftSore?.operatorPanel || "-"}
                           </td>
                         </tr>
+                        {plant === "NPK2" && (
+                          <tr>
+                            <td className="px-4 py-3 font-medium text-dark-900 dark:text-white">
+                              Operator Lapangan
+                            </td>
+                            <td className="px-4 py-3 text-center text-dark-700 dark:text-dark-300">
+                              {viewItem.shiftMalam?.operatorLapangan || "-"}
+                            </td>
+                            <td className="px-4 py-3 text-center text-dark-700 dark:text-dark-300">
+                              {viewItem.shiftPagi?.operatorLapangan || "-"}
+                            </td>
+                            <td className="px-4 py-3 text-center text-dark-700 dark:text-dark-300">
+                              {viewItem.shiftSore?.operatorLapangan || "-"}
+                            </td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
