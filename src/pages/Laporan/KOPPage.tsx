@@ -1683,21 +1683,14 @@ const KOPPage = ({ plant }: KOPPageProps) => {
     const matchesSearch =
       item.tanggal?.includes(searchTerm) ||
       item.jenisOperasi?.toLowerCase().includes(searchLower) ||
-      item.formulaBiaya?.toLowerCase().includes(searchLower) ||
-      item.kursDollar?.toString().includes(searchTerm) ||
-      // Search in calculated fields
-      item.steamMalamCalc?.selisih?.toString().includes(searchTerm) ||
-      item.steamPagiCalc?.selisih?.toString().includes(searchTerm) ||
-      item.steamSoreCalc?.selisih?.toString().includes(searchTerm) ||
-      item.gasMalamCalc?.selisih?.toString().includes(searchTerm) ||
-      item.gasPagiCalc?.selisih?.toString().includes(searchTerm) ||
-      item.gasSoreCalc?.selisih?.toString().includes(searchTerm);
-    const matchesMonth = filterMonth
-      ? item.tanggal?.startsWith(filterMonth)
-      : true;
+      item.kursDollar?.toString().includes(searchTerm);
+
+    // Filter by month (compare YYYY-MM)
+    const itemMonth = item.tanggal ? item.tanggal.slice(0, 7) : "";
+    const matchesMonth = filterMonth ? itemMonth === filterMonth : true;
 
     // Filter by year
-    const itemYear = new Date(item.tanggal).getFullYear();
+    const itemYear = item.tanggal ? new Date(item.tanggal).getFullYear() : null;
     const matchesYear = itemYear === parseInt(selectedYear);
 
     return matchesSearch && matchesMonth && matchesYear;

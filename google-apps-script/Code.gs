@@ -385,6 +385,40 @@ const SHEET_HEADERS = {
     "id",
     "tanggal",
     "jenisOperasi",
+    // Grup Shift (NPK2 only)
+    "grupShiftMalam",
+    "grupShiftPagi",
+    "grupShiftSore",
+    // Personel per shift (JSON)
+    "shiftMalam",
+    "shiftPagi",
+    "shiftSore",
+    // Steam input per shift (JSON: {awal, akhir})
+    "steamMalam",
+    "steamPagi",
+    "steamSore",
+    // Gas input per shift (JSON: {awal, akhir})
+    "gasMalam",
+    "gasPagi",
+    "gasSore",
+    // Kurs Dollar
+    "kursDollar",
+    // Dryer Parameters (JSON)
+    "dryerTempProdukOut",
+    // Produk NPK Parameters (JSON)
+    "produkN",
+    "produkP",
+    "produkK",
+    "produkMoisture",
+    "produkKekerasan",
+    "produkTimbangan",
+    "produkTonase",
+  ],
+  // KOP khusus NPK1 (tetap schema lama)
+  kop_NPK1: [
+    "id",
+    "tanggal",
+    "jenisOperasi",
     // Personel per shift (JSON)
     "shiftMalam",
     "shiftPagi",
@@ -827,6 +861,8 @@ function mapRowsWithHeaderFormatting(headers, rows) {
  */
 function createRecord(sheetName, data) {
   try {
+    data = normalizeKOPDataForSheet(sheetName, data);
+
     // LOG: What data was received
     Logger.log("createRecord called for sheet: " + sheetName);
     Logger.log("createRecord received data: " + JSON.stringify(data));
@@ -849,7 +885,7 @@ function createRecord(sheetName, data) {
 
     // Get headers from SHEET_HEADERS config for consistent column mapping
     const baseSheetName = sheetName.replace("_NPK1", "");
-    const configHeaders = SHEET_HEADERS[baseSheetName];
+    const configHeaders = SHEET_HEADERS[sheetName] || SHEET_HEADERS[baseSheetName];
 
     let headers;
     if (configHeaders && configHeaders.length > 0) {
@@ -947,6 +983,8 @@ function updateRecord(sheetName, data) {
     if (!data.id) {
       return { success: false, error: "ID is required for update" };
     }
+
+    data = normalizeKOPDataForSheet(sheetName, data);
 
     const sheet = getOrCreateSheet(sheetName);
     
@@ -1524,7 +1562,7 @@ function getOrCreateSheet(sheetName, spreadsheetOverride) {
 
   // Get expected headers from config
   let baseSheetName = sheetName.replace("_NPK1", "");
-  let expectedHeaders = SHEET_HEADERS[baseSheetName];
+  let expectedHeaders = SHEET_HEADERS[sheetName] || SHEET_HEADERS[baseSheetName];
 
   if (!sheet) {
     // Create new sheet
@@ -1580,16 +1618,30 @@ function getOrCreateSheet(sheetName, spreadsheetOverride) {
           SpreadsheetApp.flush();
         }
       } else {
-        // Sheet has data rows - do NOT rewrite headers to prevent data corruption
-        // Just log the mismatch for debugging
+        // Sheet has data rows - avoid full rewrite to prevent data corruption.
+        // For sheet `kop` (NPK2), append missing headers safely at the end.
         if (
           currentHeaders.length < expectedHeaders.length ||
           !expectedHeaders.every((h, i) => currentHeaders[i] === h)
         ) {
-          Logger.log("getOrCreateSheet: WARNING - Header mismatch in " + sheetName + 
-            " with " + (lastRow - 1) + " data rows. Skipping header fix to prevent data corruption." +
-            " Current: " + JSON.stringify(currentHeaders) + 
-            " Expected: " + JSON.stringify(expectedHeaders));
+          const missingHeaders = expectedHeaders.filter((header) =>
+            currentHeaders.indexOf(header) === -1
+          );
+
+          if (sheetName === "kop" && missingHeaders.length > 0) {
+            appendHeadersAtEnd(sheet, currentHeaders.length, missingHeaders);
+            Logger.log(
+              "getOrCreateSheet: Appended missing KOP headers in " +
+                sheetName +
+                ": " +
+                JSON.stringify(missingHeaders)
+            );
+          } else {
+            Logger.log("getOrCreateSheet: WARNING - Header mismatch in " + sheetName + 
+              " with " + (lastRow - 1) + " data rows. Skipping header fix to prevent data corruption." +
+              " Current: " + JSON.stringify(currentHeaders) + 
+              " Expected: " + JSON.stringify(expectedHeaders));
+          }
         }
       }
     }
@@ -1626,6 +1678,64 @@ function findRowIndexById(sheet, idIndex, searchId) {
   }
 
   return -1;
+}
+
+function appendHeadersAtEnd(sheet, currentHeaderCount, headersToAppend) {
+  if (!headersToAppend || !headersToAppend.length) return;
+
+  const startCol = currentHeaderCount + 1;
+  sheet.getRange(1, startCol, 1, headersToAppend.length).setValues([headersToAppend]);
+  sheet.getRange(1, startCol, 1, headersToAppend.length).setFontWeight("bold");
+  SpreadsheetApp.flush();
+}
+
+function parseShiftPayload(value) {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  if (typeof value === "object") {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === "object" ? parsed : null;
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  return null;
+}
+
+function getShiftGroupFromPayload(value) {
+  const parsed = parseShiftPayload(value);
+  if (parsed && parsed.group !== undefined && parsed.group !== null) {
+    return String(parsed.group);
+  }
+  return "";
+}
+
+function normalizeKOPDataForSheet(sheetName, data) {
+  if (sheetName !== "kop" || !data || typeof data !== "object") {
+    return data;
+  }
+
+  const normalized = Object.assign({}, data);
+
+  if (Object.prototype.hasOwnProperty.call(normalized, "shiftMalam")) {
+    normalized.grupShiftMalam = getShiftGroupFromPayload(normalized.shiftMalam);
+  }
+  if (Object.prototype.hasOwnProperty.call(normalized, "shiftPagi")) {
+    normalized.grupShiftPagi = getShiftGroupFromPayload(normalized.shiftPagi);
+  }
+  if (Object.prototype.hasOwnProperty.call(normalized, "shiftSore")) {
+    normalized.grupShiftSore = getShiftGroupFromPayload(normalized.shiftSore);
+  }
+
+  return normalized;
 }
 
 /**
@@ -2298,16 +2408,30 @@ function fillEmptyIdsAllSheets() {
 function fixAllSheetHeaders() {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   let fixedCount = 0;
+  const processedSheets = {};
   
   // Process all sheets that have header configs
-  Object.keys(SHEET_HEADERS).forEach(function (baseSheet) {
-    var sheetsToFix = [baseSheet, baseSheet + "_NPK1"];
+  Object.keys(SHEET_HEADERS).forEach(function (configuredSheet) {
+    var sheetsToFix = [configuredSheet];
+
+    if (
+      configuredSheet.indexOf("_NPK1") === -1 &&
+      !SHEET_HEADERS[configuredSheet + "_NPK1"]
+    ) {
+      sheetsToFix.push(configuredSheet + "_NPK1");
+    }
     
     sheetsToFix.forEach(function (sheetName) {
+      if (processedSheets[sheetName]) return;
+      processedSheets[sheetName] = true;
+
       var sheet = spreadsheet.getSheetByName(sheetName);
       if (!sheet) return;
       
-      var expectedHeaders = SHEET_HEADERS[baseSheet];
+      var baseSheet = sheetName.replace("_NPK1", "");
+      var expectedHeaders = SHEET_HEADERS[sheetName] || SHEET_HEADERS[baseSheet];
+      if (!expectedHeaders || !expectedHeaders.length) return;
+
       var lastCol = sheet.getLastColumn();
       if (lastCol === 0) return;
       
